@@ -1,0 +1,20 @@
+<?
+// schedule/schedule.phpinc
+// schedule.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// include_filename_content_goes_here.
+pageHeader('Schedule','',''); // false = no page header, NULL = no page header or tracking.
+sectionHeader();
+?>
+
+You have not created or selected a schedule to work on.
+<script>
+
+</script>
+<?
+sectionFooter();
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

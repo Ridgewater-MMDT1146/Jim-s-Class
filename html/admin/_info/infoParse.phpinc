@@ -1,0 +1,109 @@
+<?
+// admin/_info/infoParse.phpinc
+// Display the parse.
+t_Begin(); // Begin TRACKing included file.
+displayMessage('Parse PHP files for variables');
+// Get form values.
+if ( !isset($f['parseType']) ) { formValue('parseType'); if ( !isset($f['parseType']) ) $f['parseType'] = 'Variables'; }
+formValue('parseFile');
+
+?>
+<form name="change_to_form_name" action="<?=php_self()?>" class="inline_info" method="post">
+<input type="hidden" name="form" value="change_to_form_name">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="task" value="<?=$f['task']?>">
+<input type="radio" name="parseType" value="HTML" onChange="setValue('subtask_id','Parse PHP file for HTML')"<? if ( $f['parseType'] == 'HTML' ) { ?> checked<? } ?>>HTML
+<input type="radio" name="parseType" value="Functions" onChange="setValue('subtask_id','Parse PHP file for Functions')"<? if ( $f['parseType'] == 'Functions' ) { ?> checked<? } ?>>Functions
+<input type="radio" name="parseType" value="Variables" onChange="setValue('subtask_id','Parse PHP file for Variables')"<? if ( $f['parseType'] == 'Variables' ) { ?> checked<? } ?>>Variables
+<br>
+<input type="text" name="parseFile" value="<?=$f['parseFile']?>" style="width:30em;">
+<input type="submit" name="subtask" id="subtask_id" value="">
+<br>
+<?
+if ( isset($f['parseFile']) && $f['parseFile'] ) {
+  // Parse the file.
+  if ( file_exists($ROOT.'/'.$f['parseFile']) ) {
+    #echo $f['parseFile']." exists<br>\n";
+    if ( $f['parseType'] == 'Functions' ) {
+      include('admin/_info/parse/parseFunctions.phpinc');
+      #$parsedItems = parseForFunctions($fileContents);
+      $parsedItems = parseForFunctions($ROOT.'/'.$f['parseFile']);
+    } else {
+      $fileContents = file($ROOT.'/'.$f['parseFile']);
+      $parsedItems = array();
+      foreach ( $fileContents as $line ) {
+        if ( $f['parseType'] == 'HTML' ) $found = preg_match_all("/(<([\w]+)[^>]*>)(.*?)(<\/\\2>)/", $line, $matches, PREG_SET_ORDER); // Find html tags.
+        if ( $f['parseType'] == 'Variables' ) $found = preg_match_all("/(f\['[^']+'\])/",$line,$matches); // Find $f[] variables.
+        if ( $matches && $matches[0] ) {
+          foreach ( $matches as $match ) {
+            foreach ( $match as $var ) {
+              if ( $f['parseType'] == 'Variables' ) $var = '$'.$var; // Find $f[] variables.
+              if ( !in_array($var,$parsedItems) ) $parsedItems[] = $var;
+            }
+          }
+          if ( $f['parseType'] == 'HTML' ) $parsedItems[] = "\n"; // Find html tags.
+        }
+      }
+    }
+    // unsorted.
+    if ( !isset($f['unsorted_value']) ) $f['unsorted_value'] = 1; // Set to hide if unset.
+    ?>
+    <a name="unsorted_name"></a>
+    <input type="hidden" name="unsorted_value" id="unsorted_value_id" value="<?=$f['unsorted_value']?>">
+    <table><tr><td><fieldset><legend><a href="#unsorted_name" name="unsorted" onClick="return info_Set(this);"><div id="unsorted_status" class="inline"><? if ( !$f['unsorted_value']) { ?>+<? } else { ?>-<? } ?></div> unsorted</a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'unsorted_name');"></legend>
+    <div id="unsorted_show" class="<? if ( !$f['unsorted_value']) { ?>d_s_h <? } ?>d_s_l">
+    <textarea class="code_info" wrap="off"><?
+    if ( count($parsedItems) ) {
+      foreach ( $parsedItems as $match ) {
+        echo htmlSafe($match)."\n";
+      }
+    }
+    ?>
+    </textarea>
+    </div>
+    </fieldset></td></tr></table>
+    <?
+    // sorted.
+    if ( !isset($f['sorted_value']) ) $f['sorted_value'] = 1; // Set to hide if unset.
+    ?>
+    <a name="sorted_name"></a>
+    <input type="hidden" name="sorted_value" id="sorted_value_id" value="<?=$f['sorted_value']?>">
+    <table><tr><td><fieldset><legend><a href="#sorted_name" name="sorted" onClick="return info_Set(this);"><div id="sorted_status" class="inline"><? if ( !$f['sorted_value']) { ?>+<? } else { ?>-<? } ?></div> sorted</a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'sorted_name');"></legend>
+    <div id="sorted_show" class="<? if ( !$f['sorted_value']) { ?>d_s_h <? } ?>d_s_l">
+    <textarea class="code_info" wrap="off"><?
+    asort($parsedItems);
+    foreach ( $parsedItems as $match ) {
+      echo htmlSafe($match)."\n";
+    }
+    ?>
+    </textarea>
+    </div>
+    </fieldset></td></tr></table>
+<?
+    #d_Var('$fileContents',$fileContents);
+    d_Var('$parsedItems',$parsedItems);
+  } else {
+    ?><table><tr><td><? displayMessage($f['parseFile'].' does not exist.','error'); ?></td></tr></table><?
+  }
+}
+?>
+</form>
+<script type="text/javascript">
+  function setValue(eId,value) {
+    e = document.getElementById(eId);
+    if ( e ) e.value = value;
+  }
+  function getCheckedValue(radioName) {
+    e = document.forms[0].elements[radioName];
+    if ( !e )  return "";
+    for ( var i=0; i<e.length; i++) {
+      if ( e[i].checked ) return e[i].value;
+    }
+    return "";
+  }
+  var parseType = getCheckedValue('parseType');
+  setValue('subtask_id','Parse PHP file for '+parseType);
+</script>
+<?
+t_End(); // End TRACKing included file.
+?>

@@ -1,0 +1,20 @@
+<?
+// common/pageHeader_nav_DEBUG.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing pageHeader_nav_DEBUG.phpinc.
+#d_Line('','/');
+
+if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] ) {
+?>
+<div class="d_s_c" id="DEBUG_menu">
+<form name="DEBUG_menu_form" class="btn-group-xs" action="/" method="post"><input type="hidden" name="form" value="DEBUG_menu_form"><?
+#require('common/menu_DEBUG.phpinc');
+?>
+</form><!-- name="DEBUG_menu_form" -->
+</div><!-- id="DEBUG_menu" -->
+<?
+}
+
+t_End(); // End TRACKing pageHeader_nav_DEBUG.phpinc.
+?>

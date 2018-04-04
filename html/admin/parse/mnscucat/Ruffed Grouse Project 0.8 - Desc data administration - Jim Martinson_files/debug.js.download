@@ -1,0 +1,490 @@
+// debug.js
+
+var following = false;	// 
+var followParent;				// 
+var followShift;				// 
+var followTarget;				// 
+var followChangeType = '';		// 
+var followElementType;	// 
+var followOriginalClass = {};		// Original class of elements before follow.
+var followOriginalLeft = {};		// Original left of elements before follow.
+var followOriginalTop = {};			// Original top of elements before follow.
+var followOriginalWidth = {};		// Original width of elements before follow.
+var followOriginalHeight = {};	// Original height of elements before follow.
+
+function follow() {
+	if ( following ) {
+		followStop();
+	} else {
+		followStart();
+	}
+}
+
+function followStart() {
+	console.warn('followStart[]');
+	following = true;
+	document.getElementById('id_followStatusOutputFront').className = 'd_s_vt';
+	document.getElementById('id_followStatusOutputFront').innerHTML = 'On';
+	document.getElementById('id_followStatusOutputBack').className = 'd_s_vt';
+	document.getElementById('id_followStatusOutputBack').innerHTML = 'On';
+	document.onmousemove = followMouseMove;
+	document.onclick = followClick;
+	document.ondblclick = followDblClick;
+	document.getElementById('div_debugInfoFront').style.display = 'block';
+	document.getElementById('div_debugInfoBack').style.display = 'block';
+	// Save original span className and set following.
+	var spans = document.getElementsByTagName('span');
+	var l = spans.length;
+	for ( var i=0; i<l; i++ ) {
+		var span = spans[i];
+		var spanClass = span.className;
+		var spanSize;
+		if ( spanClass.indexOf('circleH') !== -1 ) {
+			followOriginalClass[span.id] = spanClass; // Remember original span classes.
+			spanSize = parseInt(spanClass.substr(spanClass.indexOf('circleH')+7,1)); 
+			span.className = 'circleH'+spanSize+' following';
+		} else if ( spanClass.indexOf('circleV') !== -1 ) {
+			followOriginalClass[span.id] = spanClass; // Remember original span classes.
+			spanSize = parseInt(spanClass.substr(spanClass.indexOf('circleV')+7,1)); 
+			span.className = 'circleV'+spanSize+' following';
+		} else if ( spanClass.indexOf('check') !== -1 ) {
+			followOriginalClass[span.id] = spanClass; // Remember original span classes.
+			spanSize = parseInt(spanClass.substr(spanClass.indexOf('check')+5,1)); 
+			switch ( spanSize ) {
+				case 1:
+					span.className = 'check'+spanSize+' fa fa-check fa-lg following unchecked';
+				break;
+				case 2:
+					span.className = 'check'+spanSize+' fa fa-check fa-2x following unchecked';
+				break;
+			}
+			//span.className = 'check'+spanSize+' fa fa-check fa-lg following unchecked';
+		}
+	}
+	// Set input[type=text] cursors to pointer, save original input[type=text] className, and set className=followinge.
+	var inputs =  document.getElementsByTagName('input');
+	l = inputs.length;
+	for ( i=0; i<l; i++ ) {
+		var input = inputs[i];
+		if ( input.type === 'text' ) {
+			input.style.cursor = 'pointer';
+			followOriginalClass[input.id] = input.className; // Remember original input classes.
+			input.className += ' following';
+		}
+	}
+	// Set textarea cursors to pointer, save original textarea className, and set className=followinge.
+	var textareas =  document.getElementsByTagName('textarea');
+	l = textareas.length;
+	for ( i=0; i<l; i++ ) {
+		var textarea = textareas[i];
+		textarea.style.cursor = 'pointer';
+		followOriginalClass[textarea.id] = textarea.className; // Remember original textarea classes.
+		textarea.className += ' following';
+	}
+	document.getElementById('cardGridFront').style.display = 'block';
+	document.getElementById('cardGridBack').style.display = 'block';
+}
+
+function followStop() {
+	console.warn('followStop[]');
+	following = false;
+	document.getElementById('id_followStatusOutputFront').className = 'd_s_vf';
+	document.getElementById('id_followStatusOutputFront').innerHTML = 'Off';
+	document.getElementById('id_followStatusOutputBack').className = 'd_s_vf';
+	document.getElementById('id_followStatusOutputBack').innerHTML = 'Off';
+	document.onmousemove = ttPosition;
+	document.onclick = function() {};
+	document.ondblclick = function() {};
+	document.onkeydown = function() {};
+	document.getElementById('div_debugInfoFront').style.display = 'none';
+	document.getElementById('div_debugInfoBack').style.display = 'none';
+	document.getElementById('id_followClickOutputFront').innerHTML = '';
+	document.getElementById('id_followClickOutputBack').innerHTML = '';
+	document.getElementById('id_followKeyUpOutputFront').innerHTML = '';
+	document.getElementById('id_followKeyUpOutputBack').innerHTML = '';
+	document.getElementById('id_followMouseOutputFront').innerHTML = '';
+	document.getElementById('id_followMouseOutputBack').innerHTML = '';
+	followChangeType = '';
+	// Return spans to original class.
+	var spans = document.getElementsByTagName('span');
+	var l = spans.length;
+	for ( var i=0; i<l; i++ ) { // Loop thru spans.
+		var span = spans[i];
+		var spanClass = span.className;
+		var spanSize;
+		if ( spanClass.indexOf('circleH') !== -1 ) {
+			span.className = followOriginalClass[span.id];
+		} else if ( spanClass.indexOf('circleV') !== -1 ) {
+			span.className = followOriginalClass[span.id];
+		} else if ( spanClass.indexOf('check') !== -1 ) {
+			span.className = followOriginalClass[span.id];
+		}
+	} // Loop thru spans.
+	// Return input[type=text] cursors to text and restore original className.
+	var inputs =  document.getElementsByTagName('input');
+	l = inputs.length;
+	for ( i=0; i<l; i++ ) {
+		var input = inputs[i];
+		if ( input.type === 'text' ) {
+			input.style.cursor = 'text';
+			input.className = followOriginalClass[input.id];
+		}
+	}
+	// Return textarea cursors to text and restore original className.
+	var textareas =  document.getElementsByTagName('textarea');
+	l = textareas.length;
+	for ( i=0; i<l; i++ ) {
+		var textarea = textareas[i];
+		textarea.style.cursor = 'text';
+		textarea.className = followOriginalClass[textarea.id];
+	}
+	document.getElementById('cardGridFront').style.display = 'none';
+	document.getElementById('cardGridBack').style.display = 'none';
+}
+
+// followDblClick(evt)
+// Change size of field.
+function followDblClick(evt) {
+	followChangeType = 'size';
+	if (!evt) { evt = window.event; }
+	followTarget = evt.target;
+	followElementType = followTarget.id.substr(0,3);
+	console.warn('followDblClick[followTarget='+followTarget.id+']');
+	window.followParent = followTarget.parentNode;
+	//var followText = 'followDblClick<br>followTarget='+followTarget.id+' window.followParent='+window.followParent.id;
+	if ( followElementType === 'chk' ) { // Is this an input[type=checkbox]?
+		// Yes, this type of input can be either a circle or check class.
+		// Check for span.
+		if ( window.followParent.id === 'spn'+window.followParent.id.substr(3) ) {
+			// Change target to span.
+			followTarget = window.followParent;
+			// Change the parent to spanParent.
+			window.followParent = followTarget.parentNode;
+			console.info('Changed followTarget='+followTarget.id+' window.followParent='+window.followParent.id);
+			//followText += ' <span class="action">Changed followTarget='+followTarget.id+' window.followParent='+window.followParent.id+'</span>';
+		}
+	} // Is this an input[type=checkbox]?
+	if ( !window.followTarget.id || !window.followParent.id || window.followParent.id.indexOf('div_cardContainer') === -1 ) { return; }
+	var followText = '<span class="action">Change element size:</span>';
+	//followText += '<br><span class="attention">'+followTarget.id+'</span>';
+	followText += '<br>Original size:';
+	if ( typeof followOriginalWidth[followTarget.id] === 'undefined' ) { followOriginalWidth[followTarget.id] = followTarget.clientWidth; }
+	if ( typeof followOriginalHeight[followTarget.id] === 'undefined' ) { followOriginalHeight[followTarget.id] = followTarget.clientHeight; }
+	followText += '<br>followTarget.id='+followTarget.id;
+	followText += '<br><table class="inline"><tr><td>width: </td><td>'+followOriginalWidth[followTarget.id]+'</td><td> height: </td><td>'+followOriginalHeight[followTarget.id]+'</td></tr></table>';
+	followText += '<br>Original class:<br>"'+followOriginalClass[followTarget.id]+'"';
+	document.getElementById('id_followClickOutputFront').innerHTML = followText;
+	document.getElementById('id_followClickOutputBack').innerHTML = followText;
+	document.onkeydown = followKeyDown;	
+	document.getElementById('id_followKeyUpOutputFront').innerHTML = '';
+	document.getElementById('id_followKeyUpOutputBack').innerHTML = '';
+	evt.stopPropagation();
+	evt.preventDefault();
+	followKeyDown(evt);
+}
+
+function followClick(evt) {
+	followChangeType = 'move';
+	if (!evt) { evt = window.event; }
+	followTarget = evt.target;
+	followElementType = followTarget.id.substr(0,3);
+	console.warn('followClick[followTarget='+followTarget.id+']');
+	window.followParent = followTarget.parentNode;
+	if ( followElementType === 'chk' ) {
+		// check for span.
+		if ( window.followParent.id === 'spn'+window.followParent.id.substr(3) ) {
+			// Change target to span.
+			followTarget = window.followParent;
+			// Change the parent to spanParent.
+			window.followParent = followTarget.parentNode;
+			console.info('Changed followTarget='+followTarget.id+' window.followParent='+window.followParent.id);
+			//followText += ' <span class="action">Changed followTarget='+followTarget.id+' window.followParent='+window.followParent.id+'</span>';
+		}
+	}
+	if ( !window.followTarget.id || !window.followParent.id || window.followParent.id.indexOf('div_cardContainer') === -1 ) { return; }
+	var followText = '<span class="action">Move element:</span>';
+	var followTargetTL = getElementTopLeft(window.followTarget);
+	//console.log('followTargetTL.left='+followTargetTL.left+' .top='+followTargetTL.top);
+	//followText += '<br>T left:'+followTargetTL.left+'px top:'+followTargetTL.top+'px';
+	var followParentTL = getElementTopLeft(window.followParent);
+	//console.log('followParentTL.left='+followParentTL.left+' .top='+followParentTL.top);
+	//followText += '<br>P left:'+followParentTL.left+'px top:'+followParentTL.top+'px';
+	if ( typeof followOriginalLeft[followTarget.id] === 'undefined' ) { followOriginalLeft[followTarget.id] = followTargetTL.left - followParentTL.left; }
+	if ( typeof followOriginalTop[followTarget.id] === 'undefined' ) { followOriginalTop[followTarget.id] = followTargetTL.top - followParentTL.top; }
+	followText += '<br><span class="attention">'+followTarget.id+'</span>';
+	followText += '<br>Original position:';
+	followText += '<br><table class="inline"><tr><td>left: </td><td>'+followOriginalLeft[followTarget.id]+'</td><td> top: </td><td>'+followOriginalTop[followTarget.id]+'</td></tr></table>';
+	document.getElementById('id_followClickOutputFront').innerHTML = followText;
+	document.getElementById('id_followClickOutputBack').innerHTML = followText;
+	document.onkeydown = followKeyDown;	
+	document.getElementById('id_followKeyUpOutputFront').innerHTML = '';
+	document.getElementById('id_followKeyUpOutputBack').innerHTML = '';
+	evt.stopPropagation();
+	evt.preventDefault();
+	followKeyDown(evt);
+}
+
+function followKeyDown(evt) {
+	if (!evt) { evt = window.event; }
+	//var followTarget = evt.target;
+	var keyclick = evt.key;
+	var ctrlkey = evt.ctrlKey;
+	var shiftkey = evt.shiftKey;
+	console.warn('followKeyDown[followTarget='+followTarget.id+' keyclick=['+keyclick+'] ctrlkey='+ctrlkey+' shiftkey='+shiftkey+']');
+	var followText = '';
+	var changeX = 0;
+	var changeY = 0;
+	switch ( keyclick ) {
+		case 'ArrowDown':
+			if ( !ctrlkey ) { if ( !shiftkey ) { changeY += 1; } else { changeY += 10; } } else { changeY += 100; }
+		break;
+		case 'ArrowLeft':
+			if ( !ctrlkey ) { if ( !shiftkey ) { changeX -= 1; } else { changeX -= 10; } } else { changeX -= 100; }
+		break;
+		case 'ArrowRight':
+			if ( !ctrlkey ) { if ( !shiftkey ) { changeX += 1; } else { changeX += 10; } } else { changeX += 100; }
+		break;
+		case 'ArrowUp':
+			if ( !ctrlkey ) { if ( !shiftkey ) { changeY -= 1; } else { changeY -= 10; } } else { changeY -= 100; }
+		break;
+	}
+	console.log('followChangeType='+followChangeType+' changeX='+changeX+' changeY='+changeY);
+	switch ( followChangeType ) {
+		case 'move':
+			if ( followElementType !== 'txa' ) { txaAdjust = 0; } else { txaAdjust = 1; }
+			// Get target left top.
+			var followTargetTL = getElementTopLeft(followTarget);
+			followTargetTL.top -= txaAdjust;
+			console.log('followTargetTL.left='+followTargetTL.left+' .top='+followTargetTL.top);
+			// Get container left top.
+			followParentTL = getElementTopLeft(window.followParent);
+			console.log(window.followParent.id+' followParentTL.left='+followParentTL.left+' .top='+followParentTL.top);
+			// get diff.
+			var newLeft = followTargetTL.left - followParentTL.left;
+			var newTop = followTargetTL.top - followParentTL.top;
+			console.log('newLeft='+newLeft+' newTop='+newTop);
+			// Move target.
+			if ( changeX !== 0 ) {
+				newLeft += changeX;
+				followTarget.style.left = parseInt(newLeft) + 'px';
+			}
+			if ( changeY !== 0 ) {
+				newTop += changeY;
+				followTarget.style.top = parseInt(newTop) + 'px';
+			}
+			var leftCLass;
+			var topCLass;
+			var posText;
+			posText = 'Position unchanged';
+			if ( newLeft !== followOriginalLeft[followTarget.id] ) {
+				leftCLass = 'attention';
+				posText = 'New position';
+			} else {
+				leftCLass = 'info';
+			}
+			if ( newTop !== followOriginalTop[followTarget.id] ) {
+				topCLass = 'attention';
+				posText = 'New position';
+			} else {
+				topCLass = 'info';
+			}
+			followText = posText+':<br><table class="inline"><tr><td class="'+leftCLass+'">left: </td><td class="'+leftCLass+'">'+newLeft+'</td><td class="'+topCLass+'"> top: </td><td class="'+topCLass+'">'+newTop+'</td></tr></table>';
+		break;
+		case 'size':
+			inpAdjust = 0;
+			switch ( followElementType ) {
+				case 'chk':
+					if ( changeX !== 0 ) {
+						console.log('followTarget.className='+followTarget.className);
+						var targetClass = CleanClass(followTarget.className); // Get clean target class.
+						// Get uncircled or circled class part.
+						var circledClass = '';
+						if ( followTarget.className.indexOf('uncircled') !== -1 ) { // Is this class uncircled?
+							circledClass = ' uncircled';
+						} else if ( followTarget.className.indexOf('circled') !== -1 ) { // Is this class circled?
+							circledClass = ' circled';
+						}
+						// Get following class part.
+						var followingClass = '';
+						if ( followTarget.className.indexOf('following') !== -1 ) { // Is this class following?
+							followingClass = ' following';
+						}
+						console.log('targetClass='+targetClass+' circledClass='+circledClass+' followingClass='+followingClass);
+						// Get circleH or circleV class.
+						var circleClass = '';
+						if ( targetClass.indexOf('circleH') !== -1 ) { // Is this a horizontal checkbox span?
+							circleClass = 'circleH';
+						} else if ( targetClass.indexOf('circleV') !== -1 ) { // Is this a vertical checkbox span?
+							circleClass = 'circleV';
+						}
+						console.log('circleClass='+circleClass);
+						if ( circleClass ) {
+							var spanSize = parseInt(targetClass.substr(7,1));
+							console.log('spanSize='+spanSize);
+							spanSize += changeX; if ( spanSize < 0 ) { spanSize = 0; } if ( spanSize > 5 ) { spanSize = 5; }
+							console.log('spanSize='+spanSize);
+							followTarget.className = circleClass+spanSize+circledClass+followingClass;
+						} else {
+							console.info(followTarget.id+' is not an circleH or circleV.');
+						}
+						console.info('followTarget.className='+followTarget.className);
+					}
+					var sizeCLass;
+					var sizeText;
+					var followClass = CleanClass(followTarget.className);
+					if ( followClass !== followOriginalClass[followTarget.id] ) {
+						sizeCLass = 'attention';
+						sizeText = 'New size:';
+					} else {
+						sizeCLass = 'info';
+						sizeText = 'Size unchanged:';
+					}
+					followText += '<br>'+sizeText;
+					followText += '<br>class: <span class="'+sizeCLass+'">"'+followClass+'"</span>';
+					followTarget.className = followTarget.className + ' following uncircled';
+				break;
+				case 'inp':
+					inpAdjust = 1;
+				case 'txa':
+					// get target width and height.
+					var tWidth = followTarget.clientWidth - 2 - inpAdjust; // -2 for border.
+					var tHeight = followTarget.clientHeight - 2; // -2 for border.
+					followText += 'inp txa id='+followTarget.id+' w='+tWidth+' h='+tHeight;
+					if ( changeX !== 0 ) {
+						// Change target width.
+						tWidth += changeX; if ( tWidth < 1 ) { tWidth = 1; }
+						followTarget.style.width = parseInt(tWidth) + 'px';
+					}
+					if ( changeY !== 0 ) {
+						// Change target height.
+						tHeight += changeY; if ( tHeight < 1 ) { tHeight = 1; }
+						followTarget.style.height = parseInt(tHeight) + 'px';
+					}
+					followText += '<br><span class="action">width:'+tWidth+'px; height:'+tHeight+'px;</span>';
+				break;
+			}
+		break;
+	}
+	if ( changeX !== 0 || changeY !== 0 ) {
+		evt.stopPropagation();
+		evt.preventDefault();
+	}
+	document.getElementById('id_followKeyUpOutputFront').innerHTML = followText;
+	document.getElementById('id_followKeyUpOutputBack').innerHTML = followText;
+	return evt;
+} // END followKeyDown.
+
+// followMouseMove(evt)
+// Display mouse X and Y location.
+function followMouseMove(evt) {
+	if (!evt) { evt = window.event; }
+	//var canvas_TopLeft = elementLeftTop(eCanvasMapMove); // The top and left of the canvas.
+	if ( !window.followTarget.id || !window.followParent.id || window.followParent.id.indexOf('div_cardContainer') === -1 ) { return; }
+	followParentTL = getElementTopLeft(window.followParent);
+	mouseXY(evt);
+	var atX = mX - followParentTL.left + 2;
+	var atY = mY - followParentTL.top + 2;
+	followMouseText = '';
+	followMouseText += 'mouse X='+atX+' Y='+atY;
+	//followMouseText += 'followParentTL left='+followParentTL.left+' top='+followParentTL.top+'<br>';
+	//followMouseText += 'mX='+mX+' mY='+mY+'<br>';
+	var poWidth = window.followTarget.offsetWidth;
+	var poHeight = window.followTarget.offsetHeight;
+	//followMouseText += '<br>offset width='+poWidth+' height='+poHeight;
+	if ( atX < 0 || atX > 750 || atY < 0 || atY > 450 ) { return; }
+	document.getElementById('id_followMouseOutputFront').innerHTML = followMouseText;
+	document.getElementById('id_followMouseOutputBack').innerHTML = followMouseText;
+} // END followMouseMove.
+	
+// clog(name, obj, i)
+// Display object contents in the console.
+// name = The name to display in the log.
+//  obj = The object to display info about.
+//    i = The index of the object to display.
+//        If i is undefined only the first level indexes are displayed.
+//        If i is '' then all object levels are displayed.
+//        If i is an index of the object then that index is displayed.
+function clog(name, obj, i) {
+	var c;
+	var j;
+	var cn = name+': {';
+	var prefix = ' ';
+	if ( typeof i !== 'undefined' ) {
+		if ( i !== '' ) {
+			for ( j in obj[i] ) { if (!obj[i].hasOwnProperty(j)){continue;}
+				if ( typeof obj[i][j] !== 'number' ) { c = "'"; } else { c = ''; }
+				cn += prefix+j+':'+c+obj[i][j]+c;
+				prefix = ', ';
+			}
+		} else {
+			for ( j in obj ) { if (!obj.hasOwnProperty(j)){continue;}
+				if ( typeof obj[j] !== 'number' ) { c = "'"; } else { c = ''; }
+				cn += prefix+j+':'+c+obj[j]+c;
+				prefix = ', ';
+			}
+		}
+		cn += ' }';
+		console.log(cn);
+	} else {
+		for ( j in obj ) { if (!obj.hasOwnProperty(j)){continue;}
+			if ( typeof obj[j] !== 'number' ) { c = "'"; } else { c = ''; }
+			cn += prefix+c+j+c;
+			prefix = ', ';
+		}
+		cn += ' }';
+		console.info(cn);
+	}
+} // END clog.
+
+// rlog(name, obj, i)
+// Return object contents.
+// name = The name to display in the log.
+//  obj = The object to display info about.
+//    i = The index of the object to display.
+//        If i is undefined only the first level indexes are displayed.
+//        If i is '' then all object levels are displayed.
+//        If i is an index of the object then that index is displayed.
+function rlog(name, obj, i) {
+	var c;
+	var j;
+	var cn = name+': {';
+	var prefix = ' ';
+	if ( typeof i !== 'undefined' ) {
+		if ( i !== '' ) {
+			for ( j in obj[i] ) { if(!obj[i].hasOwnProperty(j)){continue;}
+				if ( typeof obj[i][j] !== 'number' ) { c = "'"; } else { c = ''; }
+				cn += prefix+j+':'+c+obj[i][j]+c;
+				prefix = ', ';
+			}
+		} else {
+			for ( j in obj ) { if (!obj.hasOwnProperty(j)){continue;}
+				if ( typeof obj[j] !== 'number' ) { c = "'"; } else { c = ''; }
+				cn += prefix+j+':'+c+obj[j]+c;
+				prefix = ', ';
+			}
+		}
+		cn += ' }';
+		return cn+"\n";
+		//console.log(cn);
+	} else {
+		for ( j in obj ) { if (!obj.hasOwnProperty(j)){continue;}
+			if ( typeof obj[j] !== 'number' ) { c = "'"; } else { c = ''; }
+			cn += prefix+c+j+c;
+			prefix = ', ';
+		}
+		cn += ' }';
+		return cn+"\n";
+		//console.info(cn);
+	}
+} // END rlog.
+
+/** /
+function getAllProperties(obj) {
+  var properties = '';
+  for (property in obj) {
+    properties += '\n' + property;
+  }
+  alert('Properties of object:' + properties);
+}
+/**/
+

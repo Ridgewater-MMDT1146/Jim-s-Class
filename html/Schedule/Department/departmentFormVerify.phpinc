@@ -1,0 +1,32 @@
+<?
+// departmentFormVerify.phpinc
+// Verify the department form.
+t_Begin(); // Begin TRACKing included file.
+unset($formError); // Begin with no errors.
+
+// Verify departmentId.
+f('departmentId'); $is_valid = is_valid('departmentId',$f['departmentId'],'departmentId','department',true);
+if ( $is_valid !== true ) { $formError['departmentId'] = $is_valid; } // ENTRY ERROR! The departmentId is not valid.
+
+// Verify departmentCode.
+f('departmentCode'); $is_valid = is_valid('departmentCode',$f['departmentCode'],'departmentCode','department');
+if ( $is_valid !== true ) { $formError['departmentCode'] = $is_valid; } // ENTRY ERROR! The departmentCode is not valid.
+
+// Verify departmentName.
+f('departmentName'); $is_valid = is_valid('departmentName',$f['departmentName'],'departmentName','department');
+if ( $is_valid !== true ) { $formError['departmentName'] = $is_valid; } // ENTRY ERROR! The departmentName is not valid.
+
+// Verify departmenttypeId.
+f('departmenttypeId'); $is_valid = is_valid('departmenttypeId',$f['departmenttypeId'],'departmenttypeId','department');
+if ( $is_valid !== true ) { $formError['departmenttypeId'] = $is_valid; } // ENTRY ERROR! The departmenttypeId is not valid.
+
+// Verify departmentNote.
+f('departmentNote'); $is_valid = is_valid('departmentNote',$f['departmentNote'],'departmentNote','department');
+if ( $is_valid !== true ) { $formError['departmentNote'] = $is_valid; } // ENTRY ERROR! The departmentNote is not valid.
+
+// Verify departmentInactive.
+f('departmentInactive'); $is_valid = is_valid('departmentInactive',$f['departmentInactive'],'departmentInactive','department');
+if ( $is_valid !== true ) { $formError['departmentInactive'] = $is_valid; } // ENTRY ERROR! The departmentInactive is not valid.
+
+t_End(); // End TRACKing included file.
+?>

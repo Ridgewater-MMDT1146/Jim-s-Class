@@ -1,0 +1,73 @@
+<?
+// parseProcess.phpinc
+// INSERT or UPDATE classes from array.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// Get weekdayIds.
+$query = "
+    SELECT weekdayId
+         , weekdayD
+      FROM `weekday`
+  ORDER BY weekdayD
+";
+d_Var('weekdayResult',$query,'q');
+$weekdayResult = query_do($query);
+$weekdayCount = $GLOBALS['_QUERY']['count'];
+if ( $weekdayCount ) 
+{
+  $weekdayIds = array();
+	query_seek($weekdayResult, 0);
+  while ($weekdayInfo = query_row($weekdayResult)) 
+  {
+    $weekdayIds[$weekdayInfo['weekdayD']] = $weekdayInfo['weekdayId'];
+  }
+} 
+
+else 
+{
+	programmingError("There are no weekdays!");
+}
+d_Var('$weekdayIds',$weekdayIds);
+
+$departmentId = array(); // $departmentId[departmentCode] = departmentId
+d_Var('$class',$class);
+d_Var('$department',$department);
+
+foreach ( $class as $thisClass ) 
+{
+	if ( !isset($departmentId[$thisClass['departmentCode']]) ) require('parseProcess_Get_departmentId.phpinc'); // Get departmentId.
+	require('parseProcess_Get_courseId.phpinc'); // Get courseId.
+	d_Var('$thisClass',$thisClass);
+	
+	// See if the class is already in the database.
+	$query = "
+			SELECT classId
+				FROM `class`
+			 WHERE YRTR = '".query_safe($thisClass['YRTR'])."'
+				 AND classQId = '".query_safe($thisClass['classQId'])."'
+	";
+	d_Var('classInfo',$query,'q');
+	$classInfo = query_info($query);
+	d_Var('$classInfo',$classInfo);
+	if ( $classInfo ) 
+	{ // Is the class already in the database.
+		// Yes, UPDATE class.
+		$thisClass['classId'] = $classInfo['classId'];
+		require('parseProcess_class_UPDATE.phpinc');
+		// DELETE any class meetings.
+		require('parseProcess_classmeeting_DELETE.phpinc');
+		// DELETE any class notes.
+		require('parseProcess_classnote_DELETE.phpinc');
+	} 
+	else 
+	{ // Is the class already in the database.
+		// No, INSERT class.
+		require('parseProcess_class_INSERT.phpinc');
+	} // Is the class already in the database.
+	
+	require('parseProcess_classmeeting.phpinc');
+}
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

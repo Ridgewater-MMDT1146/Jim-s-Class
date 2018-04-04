@@ -1,0 +1,73 @@
+<?
+// admin/_info/infoDatatype.phpinc
+// Populate fieldResult array.
+t_Begin(); // Begin TRACKing included file.
+$infoForm_Query_Debug = false;
+if ( !isset($infoForm_Query_Debug) ) $infoForm_Query_Debug = false;
+// Get the prefix.
+// Get an array of all tables.
+$allTables = array();
+$all_Tables = array();
+$tableQuery="SHOW TABLES FROM ".$_SESSION['DB'][$f['database']]['database'];
+$ShowTables_QueryField = 'Tables_in_'.$_SESSION['DB'][$f['database']]['database'];
+$tableResult = query_do($tableQuery,$f['database']);
+$tableCount = $GLOBALS['_QUERY']['count'];
+if ($tableCount) {
+  query_seek($tableResult, 0);
+  while ($tableInfo = query_row($tableResult)) {
+    if ( substr($tableInfo[$ShowTables_QueryField],0,1) != '_' ) {
+      $allTables[] = $tableInfo[$ShowTables_QueryField];
+    } else {
+      $all_Tables[] = $tableInfo[$ShowTables_QueryField];
+    }
+  }
+}
+$allTables = array_merge($allTables,$all_Tables);
+$allDataTypes = array();
+$allDataTypeTables = array();
+foreach ( $allTables as $tableName ) {
+  $fieldQuery="SHOW COLUMNS FROM `".$tableName."`";
+  $columnResult = query_do($fieldQuery,$f['database']);
+  $columnCount = $GLOBALS['_QUERY']['count'];
+  if ( $columnCount ) {
+    query_seek($columnResult, 0);
+    while ($columnInfo = query_row($columnResult)) {
+      if ( !in_array($columnInfo['Type'],$allDataTypes) ) array_push($allDataTypes,$columnInfo['Type']);
+			if ( !isset($allDataTypeTables[$columnInfo['Type']]) ) $allDataTypeTables[$columnInfo['Type']] = array();
+      if ( !in_array($tableName,$allDataTypeTables[$columnInfo['Type']]) ) $allDataTypeTables[$columnInfo['Type']][] = $tableName;
+    }
+  }
+}
+displayMessage('A list of all datatypes found in the '.$_SESSION['DB'][$f['database']]['database'].' database.');
+d_Var('$allDataTypeTables',$allDataTypeTables,'');
+?>
+<table>
+	<tr><td colspan="3"></td><th colspan="2" class="center">estimated</th><td></td></tr>
+  <tr><th>#</th><th class="left_info">datatype</th><th class="left_info">maxlength</th><th class="left_info">width</th><th class="left_info">height</th><th>found in table</th></tr>
+<?
+// Create an array so datatypes can be sorted by type and size correctly.
+$allDataTypesSorted = array();
+foreach ( $allDataTypes as $datatype ) {
+  $dt = info_Size($datatype);
+  $allDataTypesSorted[$dt['type'].twodigit($dt['maxlength'],10)] = $datatype;
+}
+ksort($allDataTypesSorted);
+$i = 0;
+foreach ( $allDataTypesSorted as $datatype ) {
+  $i++;
+  $dt = info_Size($datatype);
+?>
+  <tr><td class="right_info"><?=$i?></td><td><?=$datatype?></td><td><?=$dt['maxlength']?></td><td><?=$dt['width']?></td><td><?=$dt['height']?></td><td><?=array_to_list($allDataTypeTables[$datatype],' ')?></td></tr>
+<?
+}
+?>
+  <tr><td colspan="5">
+<?
+    d_Var('$allTables',$allTables,'lk');
+    d_Var('$allDataTypes',$allDataTypes,'lk');
+?>
+  </td></tr>
+</table>
+<?
+t_End(); // End TRACKing included file.
+?>

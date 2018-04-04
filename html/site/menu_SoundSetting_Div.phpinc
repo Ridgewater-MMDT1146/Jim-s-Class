@@ -1,0 +1,62 @@
+<?
+// site/menu_SoundSetting_Div.phpinc
+// Show the sound setting form elements.
+
+t_Begin(); // Begin TRACKing menu_SoundSetting_Div.
+if ( !isset($menu_SoundSetting_SaveClose) ) $menu_SoundSetting_SaveClose = true;
+?>
+<div id="menu_SoundSetting" class="hidden p">
+<table class="bdr">
+	<tr><th colspan="2">
+		<? if ( $menu_SoundSetting_SaveClose ) { ?><span style="float:left"><? button('Reset','Reset sound settings to defaults.',"SoundSave('Reset'); document.getElementById('menu_SoundSetting').style.display = 'none'",'','small'); ?></span><span style="float:right"><? button('Close','Close sound settings.',"document.getElementById('menu_SoundSetting').style.display = 'none'",'','small'); ?></span><? } ?>
+		Sound settings
+	</th></tr>
+	<tr><td class="right">Sound:</td><td>
+		<? if ( $menu_SoundSetting_SaveClose ) { ?><span style="float:right"><? button('Save','Save sound settings as defaults.',"SoundSave('Save'); document.getElementById('menu_SoundSetting').style.display = 'none'",'','small'); ?></span><? } ?>
+		<input type="radio" name="SoundMute" id="id_Sound_Mute_0" value="0"<? if ( $_SESSION['user']['Sound']['Mute'] == 0 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Mute_0">All on</label>
+		<input type="radio" name="SoundMute" id="id_Sound_Mute_1" value="1"<? if ( $_SESSION['user']['Sound']['Mute'] == 1 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Mute_1">Mute all</label>
+	</td></tr>
+	<tr><td class="right">Attention:</td><td>
+		<input type="radio" name="SoundAttention" id="id_Sound_Attention_1" value="1"<? if ( $_SESSION['user']['Sound']['Attention'] == 1 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Attention_1">Loud</label>
+		<input type="radio" name="SoundAttention" id="id_Sound_Attention_2" value="2"<? if ( $_SESSION['user']['Sound']['Attention'] == 2 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Attention_2">Medium</label>
+		<input type="radio" name="SoundAttention" id="id_Sound_Attention_3" value="3"<? if ( $_SESSION['user']['Sound']['Attention'] == 3 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Attention_3">Quiet</label>
+		<input type="radio" name="SoundAttention" id="id_Sound_Attention_0" value="0"<? if ( $_SESSION['user']['Sound']['Attention'] == 0 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Attention_0">Mute</label>
+	</td></tr>
+	<tr><td class="right">Available:</td><td>
+		<input type="radio" name="SoundAvailable" id="id_Sound_Available_1" value="1"<? if ( $_SESSION['user']['Sound']['Available'] == 1 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Available_1">Loud</label>
+		<input type="radio" name="SoundAvailable" id="id_Sound_Available_2" value="2"<? if ( $_SESSION['user']['Sound']['Available'] == 2 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Available_2">Medium</label>
+		<input type="radio" name="SoundAvailable" id="id_Sound_Available_3" value="3"<? if ( $_SESSION['user']['Sound']['Available'] == 3 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Available_3">Quiet</label>
+		<input type="radio" name="SoundAvailable" id="id_Sound_Available_0" value="0"<? if ( $_SESSION['user']['Sound']['Available'] == 0 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Available_0">Mute</label>
+	</td></tr>
+	<tr><td class="right">Error:</td><td>
+		<input type="radio" name="SoundError" id="id_Sound_Error_1" value="1"<? if ( $_SESSION['user']['Sound']['Error'] == 1 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Error_1">Loud</label>
+		<input type="radio" name="SoundError" id="id_Sound_Error_2" value="2"<? if ( $_SESSION['user']['Sound']['Error'] == 2 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Error_2">Medium</label>
+		<input type="radio" name="SoundError" id="id_Sound_Error_3" value="3"<? if ( $_SESSION['user']['Sound']['Error'] == 3 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Error_3">Quiet</label>
+		<input type="radio" name="SoundError" id="id_Sound_Error_0" value="0"<? if ( $_SESSION['user']['Sound']['Error'] == 0 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Error_0">Mute</label>
+	</td></tr>
+	<tr><td class="right">Notice:</td><td>
+		<input type="radio" name="SoundNotice" id="id_Sound_Notice_1" value="1"<? if ( $_SESSION['user']['Sound']['Notice'] == 1 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Notice_1">Loud</label>
+		<input type="radio" name="SoundNotice" id="id_Sound_Notice_2" value="2"<? if ( $_SESSION['user']['Sound']['Notice'] == 2 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Notice_2">Medium</label>
+		<input type="radio" name="SoundNotice" id="id_Sound_Notice_3" value="3"<? if ( $_SESSION['user']['Sound']['Notice'] == 3 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Notice_3">Quiet</label>
+		<input type="radio" name="SoundNotice" id="id_Sound_Notice_0" value="0"<? if ( $_SESSION['user']['Sound']['Notice'] == 0 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Notice_0">Mute</label>
+	</td></tr>
+	<tr><td class="right">Ping:</td><td>
+		<input type="radio" name="SoundPing" id="id_Sound_Ping_1" value="1"<? if ( $_SESSION['user']['Sound']['Ping'] == 1 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Ping_1">Loud</label>
+		<input type="radio" name="SoundPing" id="id_Sound_Ping_2" value="2"<? if ( $_SESSION['user']['Sound']['Ping'] == 2 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Ping_2">Medium</label>
+		<input type="radio" name="SoundPing" id="id_Sound_Ping_3" value="3"<? if ( $_SESSION['user']['Sound']['Ping'] == 3 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Ping_3">Quiet</label>
+		<input type="radio" name="SoundPing" id="id_Sound_Ping_0" value="0"<? if ( $_SESSION['user']['Sound']['Ping'] == 0 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Ping_0">Mute</label>
+	</td></tr>
+	<tr><td class="right">Warning:</td><td>
+		<input type="radio" name="SoundWarning" id="id_Sound_Warning_1" value="1"<? if ( $_SESSION['user']['Sound']['Warning'] == 1 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Warning_1">Loud</label>
+		<input type="radio" name="SoundWarning" id="id_Sound_Warning_2" value="2"<? if ( $_SESSION['user']['Sound']['Warning'] == 2 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Warning_2">Medium</label>
+		<input type="radio" name="SoundWarning" id="id_Sound_Warning_3" value="3"<? if ( $_SESSION['user']['Sound']['Warning'] == 3 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Warning_3">Quiet</label>
+		<input type="radio" name="SoundWarning" id="id_Sound_Warning_0" value="0"<? if ( $_SESSION['user']['Sound']['Warning'] == 0 ) { ?> checked <? } ?> onChange="SoundSet(this);"><label for="id_Sound_Warning_0">Mute</label>
+	</td></tr>
+</table>
+</div>
+<span id="PlaySound"><!-- Needed for SoundPlay() to play sound --></span>
+<div id="menu_SoundSetting_Return" class="hidden">menu_SoundSetting_Return</div>
+<?
+
+t_End(false, __FILE__, __LINE__); // End TRACKing menu_SoundSetting_Div.
+?>

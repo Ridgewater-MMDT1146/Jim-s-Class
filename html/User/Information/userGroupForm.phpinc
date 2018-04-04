@@ -1,0 +1,133 @@
+<?
+// admin/user/userGroupForm.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+// Get the userId for this user.
+
+if ($_SESSION['user']['userId']) {
+  // $_SESSION['user']['userId'] set. This is an edit form. Load form_user data from database.
+  $query = "
+  SELECT userId
+    FROM user
+    WHERE userId = ".$_SESSION['user']['userId']."
+  ";
+  $userResult = query_do($query);
+  $userCount = $GLOBALS['_QUERY']['count'];
+  if ($userCount) {
+    $userInfo = query_row($userResult);
+    $_SESSION['user']['userId'] = $userInfo['userId'];
+  } else {
+    // There was no record for $_SESSION['user']['userId']. This is an error.
+?>
+    <span class="bold error">ERROR!. No record for $_SESSION['user']['userId']=<?=$_SESSION['user']['userId']?> found.</span><br>
+    <span class="bold error">Please contact the site administrator<? if (isset($_SESSION['APP']['ADMIN']['email'])) { echo ' at '.$_SESSION['APP']['ADMIN']['email']; } else { echo '.'; } ?>.</span><br>
+<?  
+  }
+}
+
+// Get groups the user is in.
+$query = "
+    SELECT groupId,
+           groupName,
+           groupDescription
+      FROM `group`
+     WHERE groupId IN (
+      SELECT groupId
+        FROM user_group
+       WHERE userId = ".$_SESSION['user']['userId']."
+       )
+  ORDER BY groupName
+";
+$userInGroupResult = query_do($query);
+$userInGroupCount = $GLOBALS['_QUERY']['count'];
+#if ($userInGroupCount) { #d_Var('$userInGroupResult',$userInGroupResult); } else { echo "No groups<br>\n"; }
+
+// Get groups the user is not in.
+$query = "
+    SELECT groupId,
+           groupName,
+           groupDescription
+      FROM `group`
+";
+if ($userInGroupCount) {
+$query .= "
+     WHERE groupId NOT IN (
+      SELECT groupId
+        FROM user_group
+       WHERE userId = ".$_SESSION['user']['userId']."
+       )
+";
+}
+$query .= "
+  ORDER BY groupName
+";
+$userNotInGroupResult = query_do($query);
+$userNotInGroupCount = $GLOBALS['_QUERY']['count'];
+#if ($userNotInGroupCount) { #d_Var('$userNotInGroupResult',$userNotInGroupResult); } else { echo "No groups<br>\n"; }
+
+?>
+<div id=usergroupdiv style="float:left">
+<fieldset><legend><?=userName($_SESSION['user']['userId'])?>'s groups</legend>
+<form name="form_usergroup" id="form_usergroup" action="<?=php_self()?>" method="post">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="form" value="form_usergroup">
+<input type="hidden" name="userId" id="userId" value="<?=htmlSafe($_SESSION['user']['userId'])?>">
+<table>
+  <tr>
+      <td style="text-align:center;"> <!-- Groups the user is in -->
+<select name="inGroup[]" multiple="multiple" size="5">
+<?
+if ($userInGroupCount) {
+  query_seek($userInGroupResult, 0);
+  while ($user_groupInfo = query_row($userInGroupResult)) {
+?>
+  <option value="<?=$user_groupInfo['groupId']?>"<? if ( $_SESSION['user']['userId'] == 1 && $user_groupInfo['groupId'] == 1 ) { ?> class="disabled"<? } ?> title="<?=$user_groupInfo['groupDescription']?>"<? if ( $_SESSION['user']['userId'] == 1 && $user_groupInfo['groupId'] == 1 ) { ?> onClick="alert('The Admin user cannot be removed from the Admin group'); this.selected=false;"<? } ?>><?=$user_groupInfo['groupName']?></option>
+<?
+  }
+}
+?>
+</select>
+<br>
+<input type="submit" name="task" id="task" value="Remove from group">
+        </td>
+      <td style="text-align:center;"> <!-- Groups the user is NOT in -->
+<select name="notGroup[]" multiple="multiple" size="5">
+<?
+if ($userNotInGroupCount) {
+  query_seek($userNotInGroupResult, 0);
+  while ($user_groupInfo = query_row($userNotInGroupResult)) {
+?>
+  <option value="<?=$user_groupInfo['groupId']?>" title="<?=$user_groupInfo['groupDescription']?>"><?=$user_groupInfo['groupName']?></option>
+<?
+  }
+}
+?>
+</select>
+<br>
+<input type="submit" name="task" id="task" value="Add to group">
+        </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align:center;">
+<?
+if ($f['form'] == 'form_usergroup') {
+?>
+    <input type="submit" name="task" value="Done">
+<?
+} else {
+?>
+    <input type="submit" name="task" value="Cancel">
+<?
+}
+?>
+        </td>
+    </tr>
+</table>
+
+</form>
+</fieldset>
+</div><!-- id=usergroupdiv -->
+<?
+t_End(); // End TRACKing included file.
+?>

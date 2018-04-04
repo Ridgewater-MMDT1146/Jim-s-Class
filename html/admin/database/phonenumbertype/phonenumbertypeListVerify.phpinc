@@ -1,0 +1,83 @@
+<?
+// admin/database/phonenumbertypeListVerify.phpinc
+// Display list of phonenumbertypes.
+
+t_Begin(); // Begin TRACKing included file.
+
+// Verify the phonenumbertype form.
+unset($formError); // Begin with no errors.
+
+// Get form data.
+$f['phonenumbertype'] = array();
+// Get Add data.
+$f['phonenumbertype'][0] = array();
+// Get Add phonenumbertypeName.
+formValue('phonenumbertype'); if ( !$f['phonenumbertype'] ) $f['phonenumbertype'][0]['phonenumbertypeName'] = '';
+// Get Add phonenumbertypeDescription.
+formValue('phonenumbertype'); if ( !$f['phonenumbertype'] ) $f['phonenumbertype'][0]['phonenumbertypeDescription'] = '';
+// Get Add phonenumbertypeInactive.
+formValue('phonenumbertype'); if ( !$f['phonenumbertype'] ) $f['phonenumbertype'][0]['phonenumbertypeInactive'] = 0;
+// Get phonenumbertypeIds.
+$query = "
+    SELECT phonenumbertypeId
+         , phonenumbertypeName
+         , phonenumbertypeDescription
+         , phonenumbertypeInactive
+      FROM `phonenumbertype`
+  ORDER BY phonenumbertypeName
+";
+$phonenumbertypeResult = query_do($query);
+$phonenumbertypeCount = $GLOBALS['_QUERY']['count'];
+// Get form data for each phonenumbertype.
+if ( $phonenumbertypeCount ) {
+  query_seek($phonenumbertypeResult, 0);
+  while ($phonenumbertypeInfo = query_row($phonenumbertypeResult)) {
+    // Loop through each phonenumbertype and verify data.
+    $phonenumbertypeId = $phonenumbertypeInfo['phonenumbertypeId'];
+    $f['phonenumbertype'][$phonenumbertypeId] = array();
+    // Get phonenumbertypeName.
+    formValue('phonenumbertype'); if ( !$f['phonenumbertype'] ) $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName'] = '';
+    // Get phonenumbertypeDescription.
+    formValue('phonenumbertype'); if ( !$f['phonenumbertype'] ) $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeDescription'] = '';
+    // Get phonenumbertypeInactive.
+    formValue('phonenumbertype'); if ( !$f['phonenumbertype'] ) $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive'] = 0;
+  }
+}
+
+foreach ( $f['phonenumbertype'] as $phonenumbertypeId => $temp ) {
+  #d_Var('$phonenumbertypeId',$phonenumbertypeId);
+  #d_Var('$f['phonenumbertype'][$phonenumbertypeId]',$f['phonenumbertype'][$phonenumbertypeId]);
+  // Verify phonenumbertypeName.
+  if ( !$f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName'] ) {
+    // ENTRY ERROR! The phonenumbertypeName is blank.
+    $formError[$phonenumbertypeId]['phonenumbertypeName'] = 'The Name cannot be blank. Please enter a Name (6 characters or less, all letters).';
+  } elseif ( strlen($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName']) > 6 ) {
+    // ENTRY ERROR! The phonenumbertypeName is too long.
+    $formError[$phonenumbertypeId]['phonenumbertypeName'] = 'The Name is too long. Please shorten the Name to 6 characters or less.';
+  } elseif ( !ctype_alpha($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName']) && $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName'] != '???' ) {
+    // ENTRY ERROR! The phonenumbertypeName is not alpha.
+    $formError[$phonenumbertypeId]['phonenumbertypeName'] = 'The Name does not consist of all letters. Please enter a Name that consists of all letters.';
+  }
+  // Verify phonenumbertypeDescription.
+  if ( !$f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeDescription'] ) {
+    // ENTRY ERROR! The phonenumbertypeName is blank.
+    $formError[$phonenumbertypeId]['phonenumbertypeDescription'] = 'The Description cannot be blank. Please enter a Description (128 characters or less, all letters).';
+  } elseif ( strlen($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeDescription']) > 128 ) {
+    // ENTRY ERROR! The phonenumbertypeName is too long.
+    $formError[$phonenumbertypeId]['phonenumbertypeDescription'] = 'The Description is too long. Please shorten the Description to Six characters or less.';
+  }
+  // Verify phonenumbertypeInactive.
+  if ( $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive'] != 0 && $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive'] != 1 ) {
+    // ENTRY ERROR! The phonenumbertypeInactive is an illegal value. This can only be a programming error or a form attack.
+    programmingError('The Inactive value ('.$f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive'].') for phonenumbertypeId '.$phonenumbertypeId.' is not 0 or 1.');
+  }
+}
+// Are there errors but both the $f['phonenumbertype'][0]['phonenumbertypeName'] and $f['phonenumbertype'][0]['phonenumbertypeDescription'] are blank.
+if ( isset($formError) && $f['phonenumbertype'][0]['phonenumbertypeName'] == '' && $f['phonenumbertype'][0]['phonenumbertypeDescription'] == '' ) {
+  unset($formError[0]); // Clear up the $f['phonenumbertype'][0] Add errors.
+  unset($f['phonenumbertype'][0]); // Remove the $f['phonenumbertype'][0] array.
+  if ( !count($formError) ) unset($formError); // There were no other errors so unset($formError)
+}
+
+t_End(); // End TRACKing included file.
+?>

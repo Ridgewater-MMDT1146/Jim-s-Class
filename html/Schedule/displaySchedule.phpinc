@@ -1,0 +1,194 @@
+<?
+// Schedule/displaySchedule.phpinc
+// Display the schedule.
+
+t_Begin(); // Begin TRACKing displaySchedule.phpinc.
+
+sectionHeader();
+
+// Get imported or added sessions.
+$query = "
+    SELECT DISTINCT
+           YRTR
+      FROM `class`
+  ORDER BY YRTR
+";
+d_Var('classYRTRResult',$query,'q');
+$classYRTRResult = query_do($query);
+$classYRTRCount = $GLOBALS['_QUERY']['count'];
+d_Var('$classYRTRResult',$classYRTRResult);
+$YRTRlist = query_to_list_quoted($classYRTRResult); if ( $YRTRlist == '' ) $YRTRlist = "'0'";
+d_Var('$YRTRlist',$YRTRlist);
+
+$query = "
+    SELECT sessionId
+         , YRTR
+         , sessionName
+         , sessionDescription
+      FROM `session`
+		 WHERE YRTR IN ( ".$YRTRlist." )
+  ORDER BY YRTR DESC
+";
+d_Var('sessionResult',$query,'q');
+$sessionResult = query_do($query);
+$sessionCount = $GLOBALS['_QUERY']['count'];
+d_Var('$sessionResult',$sessionResult);
+
+// Import classes from a session.
+?>
+
+<form name="form_name" id="display_form" action="<?=php_self()?>" method="post">
+  <input type="hidden" name="form" value="form_name">
+  <input type="hidden" name="uuid" value="<?=uuid()?>">
+<?
+#d_Var("\$_SESSION['user']",$_SESSION['user'],'d');
+
+// Display the schedule.
+$f['scheduleId'] = $_SESSION['user']['scheduleId'];
+d_V('scheduleId');
+d_Var('$scheduleclassCount',$scheduleclassCount,'');
+d_Var('$scheduleclassResult',$scheduleclassResult,'');
+
+// Display schedule table.
+switch ( $_SESSION['user']['calendar_dayview'] ) {
+	case 'Full week':
+		$daystart = 'Sun';
+		$dayend = 'Sat';
+		break;
+	case '':
+	case 'Work week':
+		$daystart = 'Mon';
+		$dayend = 'Fri';
+		break;
+}
+//$daystart = 'Sun'; // ALL
+//$dayend = 'Sat'; // ALL
+
+$query = "
+    SELECT weekdayNumber
+      FROM `weekday`
+     WHERE weekdayDay = '".query_safe($daystart)."'
+";
+d_Var('weekdayStartInfo',$query,'q');
+$weekdayStartInfo = query_info($query);
+d_Var('$weekdayStartInfo',$weekdayStartInfo);
+$query = "
+    SELECT weekdayNumber
+      FROM `weekday`
+     WHERE weekdayDay = '".query_safe($dayend)."'
+";
+d_Var('weekdayEndInfo',$query,'q');
+$weekdayEndInfo = query_info($query);
+d_Var('$weekdayEndInfo',$weekdayEndInfo);
+
+// Get weekdays we are to use.
+$query = "
+    SELECT weekdayId
+         , weekdayNumber
+         , weekdayD
+         , weekdayDay
+         , weekdayWeekday
+      FROM `weekday`"; /** / ALL
+     WHERE weekdayNumber >= ".$weekdayStartInfo['weekdayNumber']."
+       AND weekdayNumber <= ".$weekdayEndInfo['weekdayNumber']." /**/ // ALL
+$query .= "
+  ORDER BY weekdayNumber
+";
+d_Var('weekdayResult',$query,'q');
+$weekdayResult = query_do($query);
+$weekdayCount = $GLOBALS['_QUERY']['count'];
+d_Var('$weekdayResult',$weekdayResult);
+
+// BEGIN schedule table.
+// Table header.
+?>
+<div id="filtercontainer"></div>
+<div id="div_ScheduleFunctionsContainer"></div>
+<div id="schedulecontainer" class="Print hidden">
+	<div class="scheduleTable"><?
+		// Output calendar header.
+		?>
+		<div class="scheduleRow"><div class="scheduleTime scheduleHead">Time</div><?
+query_seek($weekdayResult, 0);
+while ($weekdayInfo = query_row($weekdayResult)) {
+	//
+	//$weekdayEndInfo['weekdayNumber']
+	if ( $weekdayInfo['weekdayNumber'] < $weekdayStartInfo['weekdayNumber']
+			|| $weekdayInfo['weekdayNumber'] > $weekdayEndInfo['weekdayNumber']
+			) {
+		$classAdd = ' '.'hiddenx'; // Hide days not shown in head.
+	} else {
+		$classAdd = '';
+	}
+	?><div id="<?=$weekdayInfo['weekdayD']?>head" class="scheduleHead<?=$classAdd?>"><?=$weekdayInfo['weekdayWeekday']?></div><?//scheduleCell 
+}
+?></div><?
+#d_Var("\$_SESSION['user']['calendar_timebegin']",$_SESSION['user']['calendar_timebegin'],'d');
+// Output scheduleTime and scheduleCell divs.
+for ( $time=0; $time<=1440; $time+=15 ) { // Loop thru all time increments.
+	$displayTime = valid_time((int)($time/60).':'.($time%60),'USA');
+	$mTime = str_replace(array('am','pm',':'),'',$time);
+	$classAddTimeincrement = '';
+	if ( ( ( $mTime / 15 ) != (int)( $mTime / 15 ) )
+		 	|| $mTime < $_SESSION['user']['calendar_timebegin'] * 60
+		 	|| $mTime > $_SESSION['user']['calendar_timeend'] * 60
+		 ) {
+		$classAddTimeincrement = ' '.'hiddeny'; // Hide times not shown.
+	}
+?> 
+		<div class="scheduleRow"><div id="_<?=$mTime?>" class="scheduleTime<?=$classAddTimeincrement?>"><?=$displayTime?></div><?
+	query_seek($weekdayResult, 0);
+	while ($weekdayInfo = query_row($weekdayResult)) {
+		$classAddWeekday = '';
+		if ( !$classAddTimeincrement ) {
+			if ( $weekdayInfo['weekdayNumber'] < $weekdayStartInfo['weekdayNumber']
+					|| $weekdayInfo['weekdayNumber'] > $weekdayEndInfo['weekdayNumber']
+					) {
+				$classAddWeekday = ' '.'hiddenz';
+			}
+		}
+		$tdId = $weekdayInfo['weekdayD'].$mTime;
+		?><div id="<?=$tdId?>" class="scheduleCell<?=$classAddTimeincrement?><?=$classAddWeekday?>"><?=$tdId?></div><?
+	}
+	$classAdd = '';
+?></div><?
+} // Loop thru all time increments.
+?>
+
+	</div><!-- scheduleTable -->
+</div><!-- schedulecontainer -->
+<?
+// Create the table used to determine schedule cell width.
+?>
+<table id="tbl_scheduleTable" class="scheduleTable"><tr><td class="calendarTime right">&nbsp;</td><?
+query_seek($weekdayResult, 0);
+while ($weekdayInfo = query_row($weekdayResult)) {
+		$classAddWeekday = '';
+		if ( true ) {
+			if ( $weekdayInfo['weekdayNumber'] < $weekdayStartInfo['weekdayNumber']
+					|| $weekdayInfo['weekdayNumber'] > $weekdayEndInfo['weekdayNumber']
+					) {
+				$classAddWeekday = ' '.'hidden';
+			}
+		}
+	?><th class="calendarCell<?=$classAddWeekday?>" title="<?=$weekdayInfo['weekdayD']?> <?=$weekdayInfo['weekdayNumber']?>" >&nbsp;</th><?
+}
+?></tr></table>
+<?
+// END schedule table.
+
+require('Schedule/displayScheduleClassDivs.phpinc');
+
+?>
+</form>
+
+<?
+sectionFooter();
+
+?>
+<script type="text/javascript">
+</script>
+<?
+
+t_End(); // End TRACKing displaySchedule.phpinc.
+?>

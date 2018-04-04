@@ -1,0 +1,592 @@
+<?
+// Schedule/js_write_Schedule.phpinc
+// Set js variables needed for schedule management.
+
+echo "
+// BEGIN FILE ".basename(__File__)." ".currentDateTime()."
+/** / // BEGIN comments.";
+t_Begin(); // Begin TRACKing js_write_Schedule.phpinc.
+
+$jsText = "";
+$jsText .= "
+console.warn('".basename(__File__)."');";
+
+// BEGIN Get schedule information.
+$query = "
+    SELECT scheduleId
+         , departmentId
+         , sessionId
+         , scheduleName
+      FROM `schedule`
+     WHERE scheduleId = ".$_SESSION['user']['scheduleId']."
+";
+d_Var('scheduleInfo',$query,'q');
+$scheduleInfo = query_info($query);
+d_Var('$scheduleInfo',$scheduleInfo);
+$jsText .= "
+
+// BEGIN schedule information.
+var CurrentSchedule = { scheduleId:".$_SESSION['user']['scheduleId'].", departmentId:".$scheduleInfo['departmentId'].", sessionId:".$scheduleInfo['sessionId'].', scheduleName:"'.$scheduleInfo['scheduleName'].'" };';
+// END Get schedule information.
+
+
+$jsText .= "
+
+// BEGIN Campus, Building, and Room variables.
+var CollegeCampus = [];";
+$query = "
+    SELECT campusId
+         , campusCode
+         , campusName
+      FROM `campus`
+  ORDER BY campusName
+";
+d_Var('campusResult',$query,'q');
+$campusResult = query_do($query);
+$campusCount = $GLOBALS['_QUERY']['count'];
+d_Var('$campusResult',$campusResult);
+if ( $campusCount ) { // Were campuses found?
+	// CollegeCampus[] = { campusId:campusId, Name:campusName };
+	query_seek($campusResult, 0); $i=0;
+	while ($campusInfo = query_row($campusResult)) { // Loop thru campuses.
+		$jsText .= "
+    CollegeCampus[".$i."] = { campusId:".$campusInfo['campusId'].", Name:'".$campusInfo['campusName']."' };"; $i++;
+	}
+}
+
+$jsText .= "
+var CollegeBuilding = []";
+query_seek($campusResult, 0); $i=0;
+while ($campusInfo = query_row($campusResult)) { // Loop thru campuses.
+	$query = "
+			SELECT buildingId
+					 , campusId
+					 , buildingCode
+					 , buildingName
+				FROM `building`
+			 WHERE campusId = ".$campusInfo['campusId']."
+		ORDER BY buildingCode
+	";
+	d_Var('buildingResult',$query,'q');
+	$buildingResult = query_do($query);
+	$buildingCount = $GLOBALS['_QUERY']['count'];
+	d_Var('$buildingResult',$buildingResult);
+	if ( $buildingCount ) { // Were buildings found on this campus?
+		// CollegeBuilding[] = { buildingId:buildingId, campusId:campusId, Code:buildingCode };
+		query_seek($buildingResult, 0);
+		while ($buildingInfo = query_row($buildingResult)) { // Loop thru buildings.
+			if ( $i < 10 ) { $sp = ' '; } else { $sp = ''; }
+			$jsText .= "
+    CollegeBuilding[".$i."] ".$sp."= { buildingId:".$buildingInfo['buildingId'].", campusId:".$buildingInfo['campusId'].", Code:'".$buildingInfo['buildingCode']."' };"; $i++;
+		} // Loop thru buildings.
+	}
+} // Loop thru campuses.
+
+$jsText .= "
+var CollegeRoom = [];";
+query_seek($campusResult, 0); $i=0;
+while ($campusInfo = query_row($campusResult)) { // Loop thru campuses.
+	$query = "
+			SELECT buildingId
+					 , campusId
+					 , buildingCode
+					 , buildingName
+				FROM `building`
+			 WHERE campusId = ".$campusInfo['campusId']."
+		ORDER BY buildingCode
+	";
+	d_Var('buildingResult',$query,'q');
+	$buildingResult = query_do($query);
+	$buildingCount = $GLOBALS['_QUERY']['count'];
+	d_Var('$buildingResult',$buildingResult);
+	if ( $buildingCount ) { // Were buildings found on this campus?
+		// CollegeBuilding[] = { buildingId:buildingId, campusId:campusId, Code:buildingCode };
+		query_seek($buildingResult, 0);
+		while ($buildingInfo = query_row($buildingResult)) { // Loop thru building.
+			$query = "
+					SELECT roomId
+							 , buildingId
+							 , roomNumber
+						FROM `room`
+					 WHERE buildingId = ".$buildingInfo['buildingId']."
+				ORDER BY IF ( roomNumber REGEXP ('^[0-9]') ,10000 + roomNumber,roomNumber), roomNumber
+			";
+			d_Var('roomResult',$query,'q');
+			$roomResult = query_do($query);
+			$roomCount = $GLOBALS['_QUERY']['count'];
+			d_Var('$roomResult',$roomResult);
+			if ( $roomCount ) { // Were rooms found in this building?
+				query_seek($roomResult, 0);
+				// CollegeRoom[] = { roomId:roomId buildingId:buildingId, Number:roomNumber };
+				while ($roomInfo = query_row($roomResult)) { // Loop thru rooms.
+					if ( $i < 10 ) { $sp = ' '; } else { $sp = ''; } if ( $i < 100 ) $sp .= ' ';
+					$jsText .= "
+    CollegeRoom[".$i."] ".$sp."= { roomId:".$roomInfo['roomId'].", buildingId:".$roomInfo['buildingId'].", Number:'".$roomInfo['roomNumber']."' };"; $i++;
+				} // Loop thru rooms.
+			} // Were rooms found in this building?
+		} // Loop thru building.
+	} // Were buildings found on this campus?
+} // Loop thru campuses.
+
+// Instructors.
+$jsText .= "
+
+var ScheduleInstructor = []; // Instructor Ids and names.";
+$query = "
+    SELECT user.userId
+         , userFirstname
+         , userMiddlename
+         , userLastname
+         , userNickname
+				 , CONCAT(IFNULL(userNickname,userFirstname),IF (ISNULL(userMiddlename),'',CONCAT(' ',userMiddlename)),IF (ISNULL(userLastname),'',CONCAT(' ',userLastname))) AS instructorName
+      FROM `user`
+			JOIN `user_department` ON user_department.userId = user.userId
+     WHERE userInactive = 0
+       AND user_department.departmentId = ".$scheduleInfo['departmentId']."
+  ORDER BY instructorName
+";
+#d_Var('instructorResult',$query,'dq');
+$instructorResult = query_do($query);
+$instructorCount = $GLOBALS['_QUERY']['count'];
+#d_Var('$instructorResult',$instructorResult,'d');
+if ( !$instructorCount ) programmingError('No instructors found.');
+// Store instructorIds.
+query_seek($instructorResult, 0);
+$instructorIds = array();
+$instructorIndex = 0;
+while ($thisInstructor = query_row($instructorResult)) {
+	$jsText .= "
+    ScheduleInstructor[".$instructorIndex."] = { instructorId:".$thisInstructor['userId'].", Name:'".$thisInstructor['instructorName']."' };";
+	$instructorIndex++;
+}
+
+// Get schedule info.
+$query = "
+				SELECT departmentId
+						 , sessionId
+						 , scheduleName
+					FROM `schedule`
+				 WHERE scheduleId = ".$_SESSION['user']['scheduleId']."
+		";
+d_Var('scheduleInfo',$query,'q');
+$scheduleInfo = query_info($query);
+d_Var('$scheduleInfo',$scheduleInfo);
+
+// ************** ADD credentials as array of {courseId:nnn, year:yy } ************
+// Get courses.
+$query = "
+SELECT courseId
+		 , departmentCode
+		 , courseNumber
+		 , courseTitle
+		 , courseCredits
+		 , courseCreditsMax
+FROM `course`
+JOIN department ON department.departmentId = course.departmentId
+WHERE department.departmentId = ".$scheduleInfo['departmentId']."
+ORDER BY departmentCode, courseNumber
+";
+d_Var('courseIdResult',$query,'q');
+$courseIdResult = query_do($query);
+$courseIdCount = $_QUERY['count'];
+d_Var('$courseIdResult',$courseIdResult);
+
+// Courses as an object.
+$Courses = [];
+$jsText .= "
+
+var Course = {}";
+if ( $courseIdCount ) {
+	query_seek($courseIdResult, 0);
+	while ($courseIdInfo = query_row($courseIdResult)) {
+		if ( !$courseIdInfo['courseCreditsMax'] ) $courseIdInfo['courseCreditsMax'] = 0;
+		$Courses[$courseIdInfo['courseId']] = $courseIdInfo['departmentCode'].$courseIdInfo['courseNumber'];
+		$jsText .= '
+    Course["'.$courseIdInfo['courseId'].'"] = { Id:"'.$courseIdInfo['courseId'].'", Dept:"'.$courseIdInfo['departmentCode'].'", Number:"'.$courseIdInfo['courseNumber'].'", Title:"'.$courseIdInfo['courseTitle'].'", Cr:'.(int)$courseIdInfo['courseCredits'].', CrMax:'.(int)$courseIdInfo['courseCreditsMax'].', credentials:[ ';
+		// Get credentialIds and courseYears.
+		$query = "
+				SELECT credentialId
+						 , courseYear
+					FROM `credential_course`
+				 WHERE courseId = ".$courseIdInfo['courseId']."
+		";
+		d_Var('credential_courseResult',$query,'q');
+		$credential_courseResult = query_do($query);
+		$credential_courseCount = $GLOBALS['_QUERY']['count'];
+		d_Var('$credential_courseResult',$credential_courseResult);
+		if ( $credential_courseCount ) {
+			query_seek($credential_courseResult, 0);
+			$prefix = '';
+			//$credentialIndex = 0;
+			while ($credential_courseInfo = query_row($credential_courseResult)) {
+				$jsText .= $prefix.'{Id:'.$credential_courseInfo['credentialId'].', Yr:'.$credential_courseInfo['courseYear'].'}';
+				$prefix = ', ';
+				//$credentialIndex++;
+			}
+		}
+	$jsText .= ' ] };';
+	}
+}
+
+// CourseIds.
+$jsText .= "
+
+var CourseIds = [ ";
+if ( $courseIdCount ) {
+	query_seek($courseIdResult, 0);
+	$prefix = '';
+	while ($courseIdInfo = query_row($courseIdResult)) {
+		$optionText = $courseIdInfo['courseId'];
+		$jsText .= $prefix.'"'.$optionText.'"';
+		$prefix = ', ';
+	}
+}
+$jsText .= " ];";
+
+require('getScheduleClasses.phpinc');
+//$ScheduleClassCourses = [];
+$jsText .= "
+
+var ScheduleClass = {};";
+if ( $scheduleclassCount ) {
+  query_seek($scheduleclassResult, 0);
+  while ($scheduleclassInfo = query_row($scheduleclassResult)) {
+		$ScheduleClassCourses[$scheduleclassInfo['scheduleclassId']] = $Courses[$scheduleclassInfo['courseId']];
+    if ( $scheduleclassInfo['scheduleclassId'] < 10 ) { $sp = ' '; } else { $sp = ''; }
+		$jsText .= "
+    ScheduleClass[".$scheduleclassInfo['scheduleclassId']."] ".$sp.'= { Course:"'.$Courses[$scheduleclassInfo['courseId']].'", courseId:"'.$scheduleclassInfo['courseId'].'", Section:"'.$scheduleclassInfo['scheduleclassSection'].'" };';
+  }
+}
+//d_Var('$ScheduleClassCourses',$ScheduleClassCourses,'d+/');
+$jsText .= "
+
+var ClassMeeting = {};";
+if ( $scheduleclassCount ) { // Are there schedule classes?
+  query_seek($scheduleclassResult, 0);
+  while ($scheduleclassInfo = query_row($scheduleclassResult)) { // Loop thru schedule classes.
+		// Get meetings
+		$query = "
+				SELECT scheduleclassmeetingId
+						 , scheduleclassmeetingStartDate
+						 , scheduleclassmeetingEndDate
+						 , scheduleclassmeetingBeginTime
+						 , scheduleclassmeetingEndTime
+						 , scheduleclassmeetingOnCampus
+					FROM `scheduleclassmeeting`
+				 WHERE scheduleclassId = ".$scheduleclassInfo['scheduleclassId']."
+		";
+		d_Var('scheduleclassmeetingResult',$query,'q');
+		$scheduleclassmeetingResult = query_do($query);
+		$scheduleclassmeetingCount = $GLOBALS['_QUERY']['count'];
+		d_Var('$scheduleclassmeetingResult',$scheduleclassmeetingResult);
+		if ( $scheduleclassmeetingCount ) { // Are there class meetings?
+			if ( $scheduleclassInfo['scheduleclassId'] < 10 ) { $sp = ' '; } else { $sp = ''; }
+			$jsText .= "
+    ClassMeeting[".$scheduleclassInfo['scheduleclassId']."] ".$sp."   = [];";
+				query_seek($scheduleclassmeetingResult, 0);
+				while ($meetingInfo = query_row($scheduleclassmeetingResult)) { // Loop thru class meetings.
+					// Get meeting rooms.
+					$query = "
+							SELECT scheduleclassmeetingId
+									 , room.roomId
+									 , buildingCode
+									 , roomNumber
+								FROM `scheduleclassmeetingroom`
+								JOIN `room` ON room.roomId = scheduleclassmeetingroom.roomId
+								JOIN `building` ON building.buildingId = room.buildingId
+							 WHERE scheduleclassmeetingId = ".$meetingInfo['scheduleclassmeetingId']."
+						ORDER BY buildingCode, 10000 + roomNumber
+					";
+					d_Var('scheduleclassmeetingroomResult',$query,'q');
+					$scheduleclassmeetingroomResult = query_do($query);
+					$scheduleclassmeetingroomCount = $GLOBALS['_QUERY']['count'];
+					d_Var('$scheduleclassmeetingroomResult',$scheduleclassmeetingroomResult);
+					$meetingInfo['rooms'] = array();
+					if ( $scheduleclassmeetingroomCount ) {
+						query_seek($scheduleclassmeetingroomResult, 0);
+						while ($scheduleclassmeetingroomInfo = query_row($scheduleclassmeetingroomResult)) {
+							$meetingInfo['rooms'][$scheduleclassmeetingroomInfo['roomId']]['buildingCode'] = str_replace('MAINHU','',$scheduleclassmeetingroomInfo['buildingCode']);
+							$meetingInfo['rooms'][$scheduleclassmeetingroomInfo['roomId']]['roomNumber'] = $scheduleclassmeetingroomInfo['roomNumber'];
+						}
+					}
+					#d_Var("\$meetingInfo['rooms']",$meetingInfo['rooms'],'d');
+					$meetingInfo['roomList'] = '';
+					foreach ( $meetingInfo['rooms'] as $roomId => $room ) {
+						$meetingInfo['roomList'] = listAppend($meetingInfo['roomList'],$room['buildingCode'].$room['roomNumber']);
+					}
+					#d_Var("\$meetingInfo['roomList']",$meetingInfo['roomList'],'d');
+					// Get meeting days.
+					$query = "
+							SELECT weekdayD
+								FROM `scheduleclassmeetingweekday`
+								JOIN `weekday` ON weekday.weekdayId = scheduleclassmeetingweekday.weekdayId
+							 WHERE scheduleclassmeetingId = ".$meetingInfo['scheduleclassmeetingId']."
+						ORDER BY weekday.weekdayId
+					";
+					d_Var('scheduleclassmeetingweekdayResult',$query,'q');
+					$weekdayResult = query_do($query);
+					$weekdayCount = $GLOBALS['_QUERY']['count'];
+					d_Var('$weekdayResult',$weekdayResult);
+					$weekdays = '';
+					$prefix = '';
+					if ( $weekdayCount ) { // Are there meeting days?
+						query_seek($weekdayResult, 0);
+						while ($weekdayInfo = query_row($weekdayResult)) { // Loop thru  meeting days.
+							$weekdays .= $prefix."'".$weekdayInfo['weekdayD']."'";
+							$prefix = ',';
+						} // Loop thru  meeting days.
+					} // Are there meeting days?
+
+					// Get instructors.
+					$query = "
+							SELECT userId
+								FROM `scheduleclassmeetinginstructor`
+							 WHERE scheduleclassmeetingId = ".$meetingInfo['scheduleclassmeetingId']."
+					";
+					d_Var('scheduleclassmeetinginstructorResult',$query,'q');
+					$scheduleclassmeetinginstructorResult = query_do($query);
+					$scheduleclassmeetinginstructorCount = $GLOBALS['_QUERY']['count'];
+					d_Var('scheduleclassmeetinginstructorResult',$scheduleclassmeetinginstructorResult);
+					$instructors = '';
+					$prefix = '';
+					if ( $scheduleclassmeetinginstructorCount ) { // Are there $instructors?
+						query_seek($scheduleclassmeetinginstructorResult, 0); $i=0;
+						while ($instructoryInfo = query_row($scheduleclassmeetinginstructorResult)) { // Loop thru  meeting days.
+							$instructors .= $prefix."'".$instructoryInfo['userId']."'";
+							$prefix = ',';
+						} // Loop thru  meeting days.
+					} // Are there meeting days?
+					if ( $scheduleclassInfo['scheduleclassId'] < 10 ) { $sp = ' '; } else { $sp = ''; }
+					$tdMinute = explode(':',$meetingInfo['scheduleclassmeetingBeginTime']);
+					$tdMinute = $tdMinute[0] * 60 + $tdMinute[1];
+					//$tdMinute = substr($meetingInfo['scheduleclassmeetingBeginTime'],0,2) * 60;// 01234567
+					//$tdMinute += substr($meetingInfo['scheduleclassmeetingBeginTime'],3,2); //	  15:00:00
+					$tdMinute -= (int)( ( $_SESSION['user']['calendar_timebegin'] * 60  ) / $_SESSION['user']['calendar_timeincrement'] ) * $_SESSION['user']['calendar_timeincrement'];
+					$tdMinute = (int)$tdMinute;
+					//$tdMinute = $meetingInfo['scheduleclassmeetingBeginTime'];
+					
+					$course = $ScheduleClassCourses[$scheduleclassInfo['scheduleclassId']];
+					$jsText .= "
+    ClassMeeting[".$scheduleclassInfo['scheduleclassId']."][".$i."] ".$sp."= { scmId:'".$meetingInfo['scheduleclassmeetingId']."', sDate:'".$meetingInfo['scheduleclassmeetingStartDate']."', eDate:'".$meetingInfo['scheduleclassmeetingEndDate']."', bTime:'".$meetingInfo['scheduleclassmeetingBeginTime']."', eTime:'".$meetingInfo['scheduleclassmeetingEndTime']."', onCampus:'".$meetingInfo['scheduleclassmeetingOnCampus']."', rooms:[";
+					$prefix = '';
+					foreach ( $meetingInfo['rooms'] as $roomId => $room ) {
+						$jsText .= $prefix."'".$room['buildingCode'].$room['roomNumber']."'";
+						$prefix = ',';
+					}
+					$jsText .= "], days:[".$weekdays."], instructors:[".$instructors."], tdMinute:".$tdMinute." };";
+				} // Loop thru class meetings.
+		} // Are there class meetings?
+	} // Loop thru schedule classes.
+} // Are there schedule classes?
+
+$jsText .= "
+
+var ClassMeeting_ScheduleClass = {};";
+if ( $scheduleclassCount ) { // Are there schedule classes?
+  query_seek($scheduleclassResult, 0);
+  while ($scheduleclassInfo = query_row($scheduleclassResult)) { // Loop thru schedule classes.
+		// Get meetings
+		$query = "
+				SELECT scheduleclassmeetingId
+						 , scheduleclassmeetingStartDate
+						 , scheduleclassmeetingEndDate
+						 , scheduleclassmeetingBeginTime
+						 , scheduleclassmeetingEndTime
+						 , scheduleclassmeetingOnCampus
+					FROM `scheduleclassmeeting`
+				 WHERE scheduleclassId = ".$scheduleclassInfo['scheduleclassId']."
+		";
+		d_Var('scheduleclassmeetingResult',$query,'q');
+		$scheduleclassmeetingResult = query_do($query);
+		$scheduleclassmeetingCount = $GLOBALS['_QUERY']['count'];
+		d_Var('$scheduleclassmeetingResult',$scheduleclassmeetingResult);
+		if ( $scheduleclassmeetingCount ) { // Are there class meetings?
+			if ( $scheduleclassInfo['scheduleclassId'] < 10 ) { $sp = ' '; } else { $sp = ''; }
+				query_seek($scheduleclassmeetingResult, 0);
+				while ($meetingInfo = query_row($scheduleclassmeetingResult)) { // Loop thru class meetings.
+					// Get meeting rooms.
+					$query = "
+							SELECT scheduleclassmeetingId
+									 , room.roomId
+									 , buildingCode
+									 , roomNumber
+								FROM `scheduleclassmeetingroom`
+								JOIN `room` ON room.roomId = scheduleclassmeetingroom.roomId
+								JOIN `building` ON building.buildingId = room.buildingId
+							 WHERE scheduleclassmeetingId = ".$meetingInfo['scheduleclassmeetingId']."
+						ORDER BY buildingCode, 10000 + roomNumber
+					";
+					d_Var('scheduleclassmeetingroomResult',$query,'q');
+					$scheduleclassmeetingroomResult = query_do($query);
+					$scheduleclassmeetingroomCount = $GLOBALS['_QUERY']['count'];
+					d_Var('$scheduleclassmeetingroomResult',$scheduleclassmeetingroomResult);
+					$meetingInfo['rooms'] = array();
+					if ( $scheduleclassmeetingroomCount ) {
+						query_seek($scheduleclassmeetingroomResult, 0);
+						while ($scheduleclassmeetingroomInfo = query_row($scheduleclassmeetingroomResult)) {
+							$meetingInfo['rooms'][$scheduleclassmeetingroomInfo['roomId']]['buildingCode'] = str_replace('MAINHU','',$scheduleclassmeetingroomInfo['buildingCode']);
+							$meetingInfo['rooms'][$scheduleclassmeetingroomInfo['roomId']]['roomNumber'] = $scheduleclassmeetingroomInfo['roomNumber'];
+						}
+					}
+					#d_Var("\$meetingInfo['rooms']",$meetingInfo['rooms'],'d');
+					$meetingInfo['roomList'] = '';
+					foreach ( $meetingInfo['rooms'] as $roomId => $room ) {
+						$meetingInfo['roomList'] = listAppend($meetingInfo['roomList'],$room['buildingCode'].$room['roomNumber']);
+					}
+					#d_Var("\$meetingInfo['roomList']",$meetingInfo['roomList'],'d');
+					// Get meeting days.
+					$query = "
+							SELECT weekdayD
+								FROM `scheduleclassmeetingweekday`
+								JOIN `weekday` ON weekday.weekdayId = scheduleclassmeetingweekday.weekdayId
+							 WHERE scheduleclassmeetingId = ".$meetingInfo['scheduleclassmeetingId']."
+						ORDER BY weekday.weekdayId
+					";
+					d_Var('scheduleclassmeetingweekdayResult',$query,'q');
+					$weekdayResult = query_do($query);
+					$weekdayCount = $GLOBALS['_QUERY']['count'];
+					d_Var('$weekdayResult',$weekdayResult);
+					$weekdays = '';
+					$prefix = '';
+					if ( $weekdayCount ) { // Are there meeting days?
+						query_seek($weekdayResult, 0);
+						while ($weekdayInfo = query_row($weekdayResult)) { // Loop thru  meeting days.
+							$weekdays .= $prefix."'".$weekdayInfo['weekdayD']."'";
+							$prefix = ',';
+						} // Loop thru  meeting days.
+					} // Are there meeting days?
+
+					// Get instructors.
+					$query = "
+							SELECT userId
+								FROM `scheduleclassmeetinginstructor`
+							 WHERE scheduleclassmeetingId = ".$meetingInfo['scheduleclassmeetingId']."
+					";
+					d_Var('scheduleclassmeetinginstructorResult',$query,'q');
+					$scheduleclassmeetinginstructorResult = query_do($query);
+					$scheduleclassmeetinginstructorCount = $GLOBALS['_QUERY']['count'];
+					d_Var('scheduleclassmeetinginstructorResult',$scheduleclassmeetinginstructorResult);
+					$instructors = '';
+					$prefix = '';
+					if ( $scheduleclassmeetinginstructorCount ) { // Are there $instructors?
+						query_seek($scheduleclassmeetinginstructorResult, 0); $i=0;
+						while ($instructoryInfo = query_row($scheduleclassmeetinginstructorResult)) { // Loop thru  meeting days.
+							$instructors .= $prefix."'".$instructoryInfo['userId']."'";
+							$prefix = ',';
+						} // Loop thru  meeting days.
+					} // Are there meeting days?
+					if ( $scheduleclassInfo['scheduleclassId'] < 10 ) { $sp = ' '; } else { $sp = ''; }
+					$tdMinute = explode(':',$meetingInfo['scheduleclassmeetingBeginTime']);
+					//$tdMinute = $tdMinute[0] * 60 + $tdMinute[1];
+					$tdMinute = ( (int)( ( $tdMinute[0] * 60 + $tdMinute[1] - $_SESSION['user']['calendar_timebegin'] * 60  ) / $_SESSION['user']['calendar_timeincrement'] ) ) * $_SESSION['user']['calendar_timeincrement'];
+					$course = $ScheduleClassCourses[$scheduleclassInfo['scheduleclassId']];
+					$jsText .= "
+    ClassMeeting_ScheduleClass[".$meetingInfo['scheduleclassmeetingId']."] ".$sp."= ".$scheduleclassInfo['scheduleclassId'].';';
+				} // Loop thru class meetings.
+		} // Are there class meetings?
+	} // Loop thru schedule classes.
+} // Are there schedule classes?
+
+
+
+
+$jsText .= "
+
+// Calendar settings.";
+if ( $_SESSION['user']['calendar_dayview'] == 'Work week' ) {
+	$jsText .= "
+var ScheduleViewDays = 'MTWHF';";
+} else {
+	$jsText .= "
+var ScheduleViewDays = 'UMTWHFS';";
+}
+if ( !$_SESSION['user']['calendar_showconflicts'] ) $_SESSION['user']['calendar_showconflicts'] = 0;
+$jsText .= "
+var ScheduleDayView = '". $_SESSION['user']['calendar_dayview']."';
+var ScheduleIncrementHeight = ".$_SESSION['user']['calendar_incrementheight'].";
+var ScheduleHeightMultiplier = ".$_SESSION['user']['calendar_incrementheight']/$_SESSION['user']['calendar_timeincrement'].";
+var ScheduleTimeBegin = ".(int)$_SESSION['user']['calendar_timebegin'].";
+var ScheduleTimeEnd = ".(int)$_SESSION['user']['calendar_timeend'].";
+var ScheduleTimeIncrement = ".$_SESSION['user']['calendar_timeincrement'].";
+var ScheduleShowConflicts = ".$_SESSION['user']['calendar_showconflicts'].";";
+
+$jsText .= "
+
+// Semester date settings: Full, 1st half, and 2nd half dates.";
+$query = "
+    SELECT sessionStart
+         , sessionEnd
+      FROM `session`
+     WHERE sessionId = ".$_SESSION['user']['sessionId']."
+";
+d_Var('sessionInfo',$query,'q');
+$sessionInfo = query_info($query);
+d_Var('$sessionInfo',$sessionInfo);
+	
+if ( $sessionInfo ) {
+	$semesterFullStart = $sessionInfo['sessionStart'];
+	$semesterFullEnd = $sessionInfo['sessionEnd'];
+	$semester1stStart = $sessionInfo['sessionStart'];
+	$semester1stEnd = date('Y-m-d',strtotime($sessionInfo['sessionStart'] . " + 53 days"));
+	$semester2ndStart = date('Y-m-d',strtotime($sessionInfo['sessionEnd'] . " - 60 days"));
+	//$semester2ndEnd = date('Y-m-d',strtotime($sessionInfo['sessionEnd'] . " - 7 days")); // Exclude finals week.
+	$semester2ndEnd = $sessionInfo['sessionEnd']; // Include finals week.
+} else {
+	$semesterFullStart = '';
+	$semesterFullEnd = '';
+	$semester1stStart = '';
+	$semester1stEnd = '';
+	$semester2ndStart = '';
+	$semester2ndEnd = '';
+}
+$jsText .= "
+var SemesterFullStart = '".$semesterFullStart."';
+var SemesterFullEnd   = '".$semesterFullEnd."';
+var Semester1stStart  = '".$semester1stStart."';
+var Semester1stEnd    = '".$semester1stEnd."';
+var Semester2ndStart  = '".$semester2ndStart."';
+var Semester2ndEnd    = '".$semester2ndEnd."';";
+
+// Get weekdays.
+$query = "
+    SELECT weekdayId
+         , weekdayNumber
+         , weekdayD
+         , weekdayDay
+         , weekdayWeekday
+      FROM `weekday`
+  ORDER BY weekdayNumber
+";
+d_Var('weekdayResult',$query,'q');
+$weekdayResult = query_do($query);
+$weekdayCount = $GLOBALS['_QUERY']['count'];
+d_Var('$weekdayResult',$weekdayResult);
+if ( $weekdayCount ) {
+	$jsText .= "
+
+// Weekdays.
+var Weekdays = {};";
+  query_seek($weekdayResult, 0);
+  while ($weekdayInfo = query_row($weekdayResult)) {
+	$jsText .= "
+    Weekdays[".$weekdayInfo['weekdayId']."] = { weekdayD:'".$weekdayInfo['weekdayD']."', weekdayWeekday:'".$weekdayInfo['weekdayWeekday']."' };";   
+  }
+}
+
+
+$jsText .= "
+";
+
+echo "
+/**/  // END comments.
+";
+
+echo $jsText; // Write out the script.
+
+echo "
+
+// END FILE ".basename(__File__)."
+";
+
+t_End(); // End TRACKing js_write_Schedule.phpinc.
+?>

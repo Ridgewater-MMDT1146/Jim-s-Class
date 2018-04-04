@@ -1,0 +1,37 @@
+<?
+// Schedule/verifySchedule.phpinc
+// purpose_of_verifySchedule.
+
+t_Begin(); // Begin TRACKing verifySchedule.phpinc.
+
+$formError = array(); // Clear form errors.
+
+f('scheduleId');
+d_V('scheduleId');
+d_V('departmentId');
+d_V('sessionId');
+d_V('scheduleName');
+if ( !$f['scheduleId'] ) { 
+	// This should be an Add schedule.
+	
+	// Verify departmentId.
+	f('departmentId'); $is_valid = is_valid('departmentId',$f['departmentId'],'departmentId','schedule');
+	if ( $is_valid !== true ) { $formError['departmentId'] = 'A department must be selected.'; } // ENTRY ERROR! The departmentId is not valid.
+	
+	// Verify sessionId.
+	f('sessionId'); $is_valid = is_valid('sessionId',$f['sessionId'],'sessionId','schedule');
+	if ( $is_valid !== true ) { $formError['sessionId'] = 'A session must be selected.'; } // ENTRY ERROR! The sessionId is not valid.
+	
+	// Verify scheduleName.
+	f('scheduleName'); $is_valid = is_valid('scheduleName',$f['scheduleName'],'scheduleName','schedule');
+	if ( $is_valid !== true ) { $formError['scheduleName'] = $is_valid; } // ENTRY ERROR! The scheduleName is not valid.
+	if ( !$f['scheduleName'] ) $formError['scheduleName'] = 'The schedule name cannot be blank.';
+	
+}
+d_V('departmentId');
+d_V('sessionId');
+d_V('scheduleName');
+d_Var('$formError',$formError,'d');
+
+t_End(); // End TRACKing verifySchedule.phpinc.
+?>

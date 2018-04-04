@@ -1,0 +1,80 @@
+<?
+// courseFormVerify.phpinc
+// Verify the course form.
+t_Begin(); // Begin TRACKing included file.
+unset($formError); // Begin with no errors.
+
+// Verify courseId.
+f('courseId'); $is_valid = is_valid('courseId',$f['courseId'],'courseId','course',true);
+if ( $is_valid !== true ) { $formError['courseId'] = $is_valid; } // ENTRY ERROR! The courseId is not valid.
+
+// Verify userId.
+f('userId'); $is_valid = is_valid('userId',$f['userId'],'userId','course');
+if ( $is_valid !== true ) { $formError['userId'] = $is_valid; } // ENTRY ERROR! The userId is not valid.
+
+// Verify YRTR.
+f('YRTR'); $is_valid = is_valid('YRTR',$f['YRTR'],'YRTR','course');
+if ( $is_valid !== true ) { $formError['YRTR'] = $is_valid; } // ENTRY ERROR! The YRTR is not valid.
+
+// Verify departmentId.
+f('departmentId'); $is_valid = is_valid('departmentId',$f['departmentId'],'departmentId','course');
+if ( $is_valid !== true ) { $formError['departmentId'] = $is_valid; } // ENTRY ERROR! The departmentId is not valid.
+
+// Verify courseNumber.
+f('courseNumber'); $is_valid = is_valid('courseNumber',$f['courseNumber'],'courseNumber','course');
+if ( $is_valid !== true ) { $formError['courseNumber'] = $is_valid; } // ENTRY ERROR! The courseNumber is not valid.
+
+// Verify courseTitle.
+f('courseTitle'); $is_valid = is_valid('courseTitle',$f['courseTitle'],'courseTitle','course');
+if ( $is_valid !== true ) { $formError['courseTitle'] = $is_valid; } // ENTRY ERROR! The courseTitle is not valid.
+
+// Verify courseShortTitle.
+f('courseShortTitle'); $is_valid = is_valid('courseShortTitle',$f['courseShortTitle'],'courseShortTitle','course');
+if ( $is_valid !== true ) { $formError['courseShortTitle'] = $is_valid; } // ENTRY ERROR! The courseShortTitle is not valid.
+
+// Verify courseCredits.
+f('courseCredits'); $is_valid = is_valid('courseCredits',$f['courseCredits'],'courseCredits','course');
+if ( $is_valid !== true ) { $formError['courseCredits'] = $is_valid; } // ENTRY ERROR! The courseCredits is not valid.
+
+// Verify courseCreditsMax.
+f('courseCreditsMax'); $is_valid = is_valid('courseCreditsMax',$f['courseCreditsMax'],'courseCreditsMax','course');
+if ( $is_valid !== true ) { $formError['courseCreditsMax'] = $is_valid; } // ENTRY ERROR! The courseCreditsMax is not valid.
+
+// Verify courseLecture.
+f('courseLecture'); $is_valid = is_valid('courseLecture',$f['courseLecture'],'courseLecture','course');
+if ( $is_valid !== true ) { $formError['courseLecture'] = $is_valid; } // ENTRY ERROR! The courseLecture is not valid.
+
+// Verify courseLab.
+f('courseLab'); $is_valid = is_valid('courseLab',$f['courseLab'],'courseLab','course');
+if ( $is_valid !== true ) { $formError['courseLab'] = $is_valid; } // ENTRY ERROR! The courseLab is not valid.
+
+// Verify courseOther.
+f('courseOther'); $is_valid = is_valid('courseOther',$f['courseOther'],'courseOther','course');
+if ( $is_valid !== true ) { $formError['courseOther'] = $is_valid; } // ENTRY ERROR! The courseOther is not valid.
+
+// Verify courseDescription.
+f('courseDescription'); $is_valid = is_valid('courseDescription',$f['courseDescription'],'courseDescription','course');
+if ( $is_valid !== true ) { $formError['courseDescription'] = $is_valid; } // ENTRY ERROR! The courseDescription is not valid.
+
+// Verify coursePrerequisite.
+f('coursePrerequisite'); $is_valid = is_valid('coursePrerequisite',$f['coursePrerequisite'],'coursePrerequisite','course');
+if ( $is_valid !== true ) { $formError['coursePrerequisite'] = $is_valid; } // ENTRY ERROR! The coursePrerequisite is not valid.
+
+// Verify courseCorequisite.
+f('courseCorequisite'); $is_valid = is_valid('courseCorequisite',$f['courseCorequisite'],'courseCorequisite','course');
+if ( $is_valid !== true ) { $formError['courseCorequisite'] = $is_valid; } // ENTRY ERROR! The courseCorequisite is not valid.
+
+// Verify courseinstrtypeId.
+f('courseinstrtypeId'); $is_valid = is_valid('courseinstrtypeId',$f['courseinstrtypeId'],'courseinstrtypeId','course');
+if ( $is_valid !== true ) { $formError['courseinstrtypeId'] = $is_valid; } // ENTRY ERROR! The courseinstrtypeId is not valid.
+
+// Verify courseMax.
+f('courseMax'); $is_valid = is_valid('courseMax',$f['courseMax'],'courseMax','course');
+if ( $is_valid !== true ) { $formError['courseMax'] = $is_valid; } // ENTRY ERROR! The courseMax is not valid.
+
+// Verify courseInactive.
+f('courseInactive'); $is_valid = is_valid('courseInactive',$f['courseInactive'],'courseInactive','course');
+if ( $is_valid !== true ) { $formError['courseInactive'] = $is_valid; } // ENTRY ERROR! The courseInactive is not valid.
+
+t_End(); // End TRACKing included file.
+?>

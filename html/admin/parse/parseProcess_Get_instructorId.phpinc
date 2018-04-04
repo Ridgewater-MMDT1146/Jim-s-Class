@@ -1,0 +1,86 @@
+<?
+// parseProcess_Get_instructorId.phpinc
+// Get instructorId.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+$query = "
+    SELECT userId
+      FROM `userdata`
+     WHERE INSTRUCTOR = '".query_safe($instructorName)."'
+";
+d_Var('instructorInfo',$query,'q');
+$instructorInfo = query_info($query);
+d_Var('$instructorInfo',$instructorInfo);
+if ( !$instructorInfo ) {
+	// INSERT instructor into user table.
+	$query = "
+		INSERT INTO `user` (
+				userFirstname
+			, userLastname
+			, AddedOn
+			, AddedBy
+		) VALUES (
+				'".query_safe($instructorFirstname)."'
+			, '".query_safe($instructorLastname)."'
+			, '".currentDateTime()."'
+			, ".$_SESSION['user']['trueId']."
+		)
+	";
+	d_Var('instructorINSERT',$query,'q');
+	$instructorINSERT = query_do($query);
+	d_Var('$instructorINSERT',$instructorINSERT,'l');
+	$instructorId = $GLOBALS['_QUERY']['insertId'];
+	// INSERT instructorName into userdata table.
+	$query = "
+		INSERT INTO `userdata` (
+				userId
+			, INSTRUCTOR
+		) VALUES (
+				".$instructorId."
+			, '".query_safe($instructorName)."'
+		)
+	";
+	d_Var('userdataINSERT',$query,'q');
+	$userdataINSERT = query_do($query);
+	d_Var('$userdataINSERT',$userdataINSERT,'l');
+	// BEGIN INSERT instructor into user_userpermission table with Instructor permission.
+	if ( !isset($userpermissionId) ) {
+		// Get $userpermissionId.
+		$query = "
+				SELECT userpermissionId
+					FROM `userpermission`
+				 WHERE userpermissionName = '".query_safe('Instructor')."'
+		";
+		d_Var('userpermissionInfo',$query,'q');
+		$userpermissionInfo = query_info($query);
+		d_Var('$userpermissionInfo',$userpermissionInfo);
+		if ( $userpermissionInfo ) {
+			$userpermissionId = $userpermissionInfo['userpermissionId'];
+		} else {
+			$userpermissionId = NULL;
+		}
+	}
+	if ( $userpermissionId ) {
+		// INSERT instructor into user_userpermission table with Instructor permission.
+		$query = "
+			INSERT INTO `user_userpermission` (
+					userId
+				, userpermissionId
+			) VALUES (
+					".$instructorId."
+				, ".$userpermissionId."
+			)
+		";
+		d_Var('user_userpermissionINSERT',$query,'q');
+		$user_userpermissionINSERT = query_do($query);
+		d_Var('$user_userpermissionINSERT',$user_userpermissionINSERT,'l');
+	}
+	// END INSERT instructor into user_userpermission table with Instructor permission.
+} else {
+	$instructorId = $instructorInfo['userId'];
+}
+d_Var('$instructorId',$instructorId,'');
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

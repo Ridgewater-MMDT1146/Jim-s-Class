@@ -1,0 +1,250 @@
+<?
+// admin/_info/form/infoForm_Form_AddEditForm_FieldSettings.phpinc
+// Display the field settings form.
+// Setup formFieldUsage.
+t_Begin(); // Begin TRACKing included file.
+d_Var('$fieldArray',$fieldArray);
+$formFieldUsage = array('button','checkbox','default','file','hidden','image','password','radio','select','skip','text','textarea');
+if ( !isset($f['field_settings_value']) ) $f['field_settings_value'] = 1;
+?>
+<a name="field_settings_name"></a>
+<input type="hidden" name="field_settings_value" id="field_settings_value_id" value="<?=$f['field_settings_value']?>">
+<table><tr><td><fieldset><legend><a href="#field_settings" name="field_settings" onClick="return info_Set(this);"><div id="field_settings_status" class="inline"><? if ( !$f['field_settings_value']) { ?>+<? } else { ?>-<? } ?></div> <?=basename($f['filenameBase'])?>Form form field settings</a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'field_settings_name');"></legend>
+<div id="field_settings_show" class="<? if ( !$f['field_settings_value']) { ?>d_s_h <? } ?>d_s_l">
+<table>
+  <tr class="bold_info small_info"><td>field</td><td>type</td><td>label</td><td>class</td><td>value<br>src</td><td>table<br>width</td><td>options<br>height<br>maxlength</td><td>onclick</td></tr>
+<?
+foreach ($fieldArray as $fieldName => $fieldValue) {
+	d_Var('$fieldName',$fieldName,'/');
+	d_Var('$fieldValue',$fieldValue);
+	d_Var("\$fieldArray[".$fieldName."]",$fieldArray[$fieldName]);
+?>
+  <tr>
+    <td class="grayline_info right_info <?=$fieldValue['class']?>"><?=$fieldName?></td> <!-- field -->
+    <td class="grayline_info">
+      <select class="" name="<?=$fieldName?>_type" id="<?=$fieldName?>_type">
+<?
+  for ($i = 0; $i < count($formFieldUsage); $i++) {
+    //if ($fieldValue['type'] != $formFieldUsage[$i]) {
+    if ($fieldArray[$fieldName]['type'] != $formFieldUsage[$i]) {
+      $selected = '';
+    } else {
+      $selected = ' selected';
+    }
+?>
+        <option value="<?=$formFieldUsage[$i]?>"<?=$selected?>><?=$formFieldUsage[$i]?></option>
+<?
+  }
+?>
+      </select>
+    </td> <!-- type -->
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_label" class="right_info" value="<?=htmlSafe($fieldArray[$fieldName]['label'])?>"></td> <!-- label -->
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_class" class="" value="<?=htmlSafe($fieldArray[$fieldName]['class'])?>"></td> <!-- class -->
+<?
+  $fieldArray[$fieldName]['label'] = str_replace("_"," ",$fieldArray[$fieldName]['label']);
+	d_Var("\$fieldValue['type']",$fieldValue['type']);
+	//d_Var("\$fieldInfo[$fieldName]['type']",$fieldInfo[$fieldName]['type']);
+  switch ($fieldValue['type']) {
+  //switch ($fieldInfo[$fieldName]['type']) {
+    case '':
+    case NULL:
+    default:
+    break;
+    // button
+    case 'button':
+      if ($fieldArray[$fieldName]['value'] == '') { $fieldArray[$fieldName]['value'] = $fieldName; }
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_value" class="" value="<?=htmlSafe($fieldArray[$fieldName]['value'])?>"></td> <!-- value src -->
+    <td class="grayline_info"></td> <!-- table width -->
+    <td class="grayline_info"></td> <!-- options height maxlength -->
+<?
+    break;
+    // checkbox
+    // radio
+    // select
+    case 'checkbox':
+    case 'radio':
+    case 'select':
+      if ( $fieldArray[$fieldName]['fieldtable'] == '' ) {
+        // Not using a fieldtable.
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_value" class="" value="<?=htmlSafe($fieldArray[$fieldName]['value'])?>"></td> <!-- value src -->
+<?
+      } else {
+        // Use fieldtable.
+?>
+    <td class="grayline_info">
+<?
+      if ( in_array($fieldArray[$fieldName]['fieldtable'],$allTables) ) {
+        $fieldQuery="SHOW COLUMNS FROM `".$fieldArray[$fieldName]['fieldtable']."`";
+        $tableFieldResult = query_do($fieldQuery,$GLOBALS['f']['database']);
+        $fieldCount = $GLOBALS['_QUERY']['count'];
+        if ($fieldCount) {
+?>
+      <select class="<?=$fieldArray[$fieldName]['class']?>" name="<?=$fieldName?>_fieldvalue" id="id_<?=$fieldName?>_fieldvalue">
+<?
+          query_seek($tableFieldResult, 0);
+          while ($row = query_row($tableFieldResult)) {
+            if ($fieldArray[$fieldName]['value'] != $row['Field']) {
+              $selected = '';
+            } else {
+              $selected = ' selected';
+            }
+?>
+        <option value="<?=$row['Field']?>"<?=$selected?>><?=$row['Field']?></option>
+<?
+          }
+?>
+      </select>
+<?
+        } else {
+?>
+          <?=$fieldArray[$fieldName]['fieldtable']?> has no fields.
+<?
+        }
+      } else {
+?>
+          <?=$fieldArray[$fieldName]['fieldtable']?> is not a table.
+<?
+      }
+?>
+    </td> <!-- value src -->
+<?
+      }
+?>
+    <td class="grayline_info">
+      <select class="<?=$fieldArray[$fieldName]['class']?>" name="<?=$fieldName?>_fieldtable" id="<?=$fieldName?>_fieldtable">
+        <option value=""></option>
+<?
+        query_seek($tableResult, 0);
+        while ($row = query_row($tableResult)) {
+          if ($fieldArray[$fieldName]['fieldtable'] != $row[$ShowTables_QueryField]) {
+            $selected = '';
+          } else {
+            $selected = ' selected';
+          }
+?>
+        <option value="<?=$row[$ShowTables_QueryField]?>"<?=$selected?>><?=$row[$ShowTables_QueryField]?></option>
+<?
+        }
+?>
+      </select>
+    </td><!-- table width -->
+<?
+      if ( $fieldArray[$fieldName]['fieldtable'] == '' ) {
+        // Not using a fieldtable.
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_options" class="" value="<?=htmlSafe($fieldArray[$fieldName]['options'])?>"></td>
+<?
+      } else {
+        // Use fieldtable.
+?>
+    <td class="grayline_info">
+<?
+      if ( in_array($fieldArray[$fieldName]['fieldtable'],$allTables) ) {
+        $fieldQuery="SHOW COLUMNS FROM `".$fieldArray[$fieldName]['fieldtable']."`";
+        $tableFieldResult = query_do($fieldQuery,$GLOBALS['f']['database']);
+        $fieldCount = $GLOBALS['_QUERY']['count'];
+        if ($fieldCount) {
+?>
+      <select class="<?=$fieldArray[$fieldName]['class']?>" name="<?=$fieldName?>_fieldoptions" id="id_<?=$fieldName?>_fieldoptions">
+<?
+          query_seek($tableFieldResult, 0);
+          while ($row = query_row($tableFieldResult)) {
+            #print_r($row);
+            if ($fieldArray[$fieldName]['options'] != $row['Field']) {
+              $selected = '';
+            } else {
+              $selected = ' selected';
+            }
+?>
+        <option value="<?=$row['Field']?>"<?=$selected?>><?=$row['Field']?></option>
+<?
+          }
+?>
+      </select>
+<?
+        } else {
+?>
+          <?=$fieldArray[$fieldName]['fieldtable']?> has no fields.
+<?
+        }
+      } else {
+?>
+          <?=$fieldArray[$fieldName]['fieldtable']?> is not a table.
+<?
+      }
+?>
+    </td><!-- options height maxlength -->
+<?
+      }
+    break;
+    // default
+    // hidden
+    case 'default':
+    case 'hidden':
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_value" class="" value="<?=htmlSafe($fieldArray[$fieldName]['value'])?>"></td>
+    <td class="grayline_info"></td> <!-- table width -->
+    <td class="grayline_info"></td> <!-- options height maxlength -->
+<?
+    break;
+
+    // file
+    case 'file':
+?>
+    <td class="grayline_info"></td> <!-- value src -->
+    <td class="grayline_info"></td> <!-- table width -->
+    <td class="grayline_info"></td> <!-- options height maxlength -->
+<?
+    break;
+    // image
+    case 'image':
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_src" class="" value="<?=stripslashes($fieldArray[$fieldName]['src'])?>"></td>
+    <td class="grayline_info"></td>
+    <td class="grayline_info"></td>
+<?
+    break;
+    // password
+    case 'password':
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_value" class="" value="<?=htmlSafe($fieldArray[$fieldName]['value'])?>"></td> <!-- value src -->
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_width" class="" value="<?=htmlSafe($fieldArray[$fieldName]['width'])?>"></td> <!-- table width -->
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_maxlength" class="" value="<?=htmlSafe($fieldArray[$fieldName]['maxlength'])?>"></td> <!-- options height maxlength -->
+<?
+    break;
+    // text
+    // textarea
+    case 'text':
+    case 'textarea':
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_value" class="" value="<?=htmlSafe($fieldArray[$fieldName]['value'])?>"></td> <!-- value src -->
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_width" class="" value="<?=htmlSafe($fieldArray[$fieldName]['width'])?>"></td> <!-- table width -->
+<?
+      if ($fieldValue['type'] == 'text') {
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_maxlength" class="" value="<?=htmlSafe($fieldArray[$fieldName]['maxlength'])?>"></td> <!-- options height maxlength -->
+<?
+      } else {
+?>
+
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_height" class="" value="<?=htmlSafe($fieldArray[$fieldName]['height'])?>"></td> <!-- options height maxlength -->
+<?
+      }
+    break;
+    //skip
+    break;
+  }
+?>
+    <td class="grayline_info"><input type="text" name="<?=$fieldName?>_onclick" class="" value="<?=stripslashes($fieldArray[$fieldName]['onclick'])?>"></td> <!-- onclick -->
+  </tr>
+<?
+}
+?>
+</table>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

@@ -1,0 +1,12 @@
+<?
+// admin/page/pageDelete.phpinc
+
+formValue('pageId');
+$query = "
+    DELETE
+      FROM `page`
+     WHERE pageId = ".$f['pageId']."
+";
+#d_Var('$query',$query,'q');
+$pageDelete = query_do($query);
+?>

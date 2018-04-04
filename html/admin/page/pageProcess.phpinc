@@ -1,0 +1,34 @@
+<?
+// admin/page/pageProcess.phpinc
+
+// Modify the pageURL to remove site and add index.php if needed.
+
+$f['pageURL'] = $new_pageURL;
+if ($f['pageId']) {
+  // UPDATE the page.
+  $query = "
+    UPDATE `page`
+       SET
+         pageURL = '".$f['pageURL']."',
+         pageDescription = '".$f['pageDescription']."'
+     WHERE pageId = ".$f['pageId']."
+  ";
+  $pageUpdate = query_do($query);
+} else {
+  // INSERT the page.
+  $query = "
+    INSERT
+      INTO `page` (
+      pageURL,
+      pageDescription
+    ) VALUES (
+     '".$f['pageURL']."',
+     '".$f['pageDescription']."'
+    )
+  ";
+  $pageInsert = query_do($query);
+  $f['pageId'] = $GLOBALS['_QUERY']['insertId'];
+  $f['form'] = '';
+}
+
+?>

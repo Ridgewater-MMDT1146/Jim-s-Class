@@ -1,0 +1,27 @@
+<?
+// admin/menu.phpinc
+// Display the admin menu.
+t_Begin(); // Begin TRACKing included file.
+$menuLoaded = true;
+
+// Database
+menuItem('Database','/admin/database/','Database utilities');
+?>|<?
+
+// Group
+menuItem('Group','/admin/group/','Group management');
+?>|<?
+
+// User
+menuItem('User','/admin/user/','User management');
+?>|<?
+
+// info
+menuItem('info','/admin/_info/','info utilities');
+?>|<?
+
+// work
+menuItem('work','/site/_work/','Work and test files');
+
+t_End(); // End TRACKing included file.
+?>

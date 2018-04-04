@@ -1,0 +1,44 @@
+<?
+// BEGIN Process classmeeting Instructors.
+#d_Var("\$thisClassmeeting['INSTRUCTOR']",$thisClassmeeting['INSTRUCTOR'],'d');
+$instructors = explode('|',$thisClassmeeting['INSTRUCTOR']);
+foreach ( $instructors as $instructorName ) { // Loop thru instructors.
+	$instructorNameExplode = explode(',',$instructorName);
+	$instructorLastname = $instructorNameExplode[0];
+	if ( isset($instructorNameExplode[1]) ) {
+		// Get first name.
+		$instructorFirstname = trim($instructorNameExplode[1]);
+	} else {
+		// The lastname is actually a first name.
+		$instructorFirstname = $instructorLastname;
+		$instructorLastname = '';
+	}
+	if ( ( $instructorLastname != '' || $instructorFirstname != 'Staff' ) && ( $instructorLastname != 'Staff' || $instructorFirstname != 'N' ) && ( $instructorLastname != 'Staff' || $instructorFirstname != 'Ridgewater' ) ) { // Is this Staff?
+		if ( !isset($instructor[$instructorFirstname.$instructorLastname]) ) { // Do we not know the instructorId for this instructor?
+			// No we do not know, so get instructor Id.
+			require('parseProcess_Get_instructorId.phpinc');
+			$instructor[$instructorFirstname.$instructorLastname] = $instructorId; // Store in array so we do not have to SELECT again for this instructor.
+			d_Var('The instructorId for '.$instructorFirstname.' '.$instructorLastname, $instructorId,'');
+		} else { // Do we not know the instructorId for this instructor?
+			// Yes.
+			$instructorId = $instructor[$instructorFirstname.$instructorLastname];
+		} // Do we not know the instructorId for this instructor?
+		// INSERT classmeetinginstructor.
+		#d_Var('$thisClassmeeting',$thisClassmeeting,'d');
+		#d_Var('$instructorId',$instructorId,'d');
+		$query = "
+			INSERT INTO `classmeetinginstructor` (
+					classmeetingId
+				, userId
+			) VALUES (
+					".$thisClassmeeting['classmeetingId']."
+				, ".$instructorId."
+			)
+		";
+		d_Var('classmeetinginstructorINSERT',$query,'q');
+		$classmeetinginstructorINSERT = query_do($query);
+		d_Var('$classmeetinginstructorINSERT',$classmeetinginstructorINSERT,'l');
+	} // Is this Staff?
+} // Loop thru instructors.
+
+?>

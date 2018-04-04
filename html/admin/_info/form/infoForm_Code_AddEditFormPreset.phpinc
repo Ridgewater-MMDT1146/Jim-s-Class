@@ -1,0 +1,96 @@
+<?
+// admin/_info/form/infoForm_Code_AddEditFormPreset.phpinc
+// Create FormPreset code.
+t_Begin(); // Begin TRACKing included file.
+$codeOutput = '';
+// Add page begin code.
+$codeOutput .= "
+<?
+// ".$f['filenameBase']."FormPreset.phpinc
+// Get original data and preset the ".basename($f['filenameBase'])." form.
+t_Begin(); // Begin TRACKing included file.";
+// Add primary key get value code.
+if ( count($tablePrimaryKey) ) {
+  $IdTable = substr($tablePrimaryKey[0],0,strlen($tablePrimaryKey[0])-2);
+$codeOutput .= "
+// Ensure primary key";
+if ( count($tablePrimaryKey) > 1 ) { $codeOutput .= "s are"; } else { $codeOutput .= " is"; }
+$codeOutput .= " set.";
+  foreach ( $tablePrimaryKey as $PrimaryKey ) {
+    $codeOutput .= '
+if ( !isset($f'."['".$PrimaryKey."']".') ) { formValue(\''.$PrimaryKey.'\'); if ( !$f'."['".$PrimaryKey."']".' ) $f'."['".$PrimaryKey."']".' = 0; }';
+  }
+  $codeOutput .= '';
+} else {
+  $IdTable = $f['table'];
+}
+// Add get original value code.
+$indent = '';
+$arrayName = 'o';
+$codeOutput .= '
+// Get original '.$IdTable.' data.';
+  $PrimaryKeyList = '';
+  $PrimaryKeyAndList = '';
+  $PrimaryKeyPrefix = '';
+  if ( count($tablePrimaryKey) == 1 ) { $PrimaryKeyIs = 'is'; } else { $PrimaryKeyIs = 'are'; }
+  foreach ( $tablePrimaryKey as $PrimaryKey ) {
+    $PrimaryKeyAndList = listAppend($PrimaryKeyAndList,$PrimaryKeyPrefix.'$f'."['".$PrimaryKey."']",'');
+    $PrimaryKeyPrefix = ' && ';
+    $PrimaryKeyList = listAppend($PrimaryKeyList,'$f'."['".$PrimaryKey."']");
+  }
+  $codeOutput .= '
+if ( '.$PrimaryKeyAndList.' ) {
+  // '.listAnd($PrimaryKeyList).' '.$PrimaryKeyIs.' set. Load original data from database.';
+  include('admin/_info/form/infoForm_Code_AddEditFormPreset_Data.phpinc');
+$codeOutput .= '
+} else {
+  // '.listOr($PrimaryKeyList).' '.$PrimaryKeyIs.' 0. This is an add form. Set form_'.$IdTable.' data to default values.';
+  include('admin/_info/form/infoForm_Code_AddEditFormPreset_Default.phpinc');
+$codeOutput .= '
+}';
+// Add form preset code.
+$indent = '  ';
+$arrayName = 'f';
+$codeOutput .= '
+// Preset '.$IdTable.' form data.
+if ( $f[\'form\'] != \'form_'.$IdTable.'\' ) {
+  // form_'.$IdTable.' not called by itself. Preload data for form.';
+  $PrimaryKeyList = '';
+  $PrimaryKeyAndList = '';
+  $PrimaryKeyPrefix = '';
+  if ( count($tablePrimaryKey) == 1 ) { $PrimaryKeyIs = 'is'; } else { $PrimaryKeyIs = 'are'; }
+  foreach ( $tablePrimaryKey as $PrimaryKey ) {
+    $PrimaryKeyAndList = listAppend($PrimaryKeyAndList,$PrimaryKeyPrefix.'$f'."['".$PrimaryKey."']",'');
+    $PrimaryKeyPrefix = ' && ';
+    $PrimaryKeyList = listAppend($PrimaryKeyList,'$f'."['".$PrimaryKey."']");
+  }
+  $codeOutput .= '
+  if ( '.$PrimaryKeyAndList.' ) {
+    // '.listAnd($PrimaryKeyList).' '.$PrimaryKeyIs.' set. This is an edit form. Load form_'.$IdTable.' data from database.
+    /** / // Remove this section if original data is obtained above.';
+  include('admin/_info/form/infoForm_Code_AddEditFormPreset_Data.phpinc');
+$codeOutput .= '
+  } else {
+    // '.listOr($PrimaryKeyList).' '.$PrimaryKeyIs.' 0. This is an add form. Set form_'.$IdTable.' data to default values.';
+  include('admin/_info/form/infoForm_Code_AddEditFormPreset_Default.phpinc');
+$codeOutput .= '
+  }
+}';
+// Add page end code.
+$codeOutput .= "
+t_End(); // End TRACKing included file.
+?>
+";
+// form_preset_code.
+if ( !isset($f['form_preset_code_value']) ) $f['form_preset_code_value'] = 0;
+?>
+<a name="form_preset_code_name"></a>
+<input type="hidden" name="form_preset_code_value" id="form_preset_code_value_id" value="<?=$f['form_preset_code_value']?>">
+<table><tr><td><fieldset><legend><a href="#form_preset_code_name" name="form_preset_code" onClick="return info_Set(this);"><div id="form_preset_code_status" class="inline"><? if ( !$f['form_preset_code_value']) { ?>+<? } else { ?>-<? } ?></div> <?=$f['filenameBase']?>FormPreset code <span class="small_info">(using <?=$f['displayFormUsing']?>)</span></a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'form_preset_code_name');"></legend>
+<div id="form_preset_code_show" class="<? if ( !$f['form_preset_code_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=htmlSafe(trim($codeOutput))."\n"?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

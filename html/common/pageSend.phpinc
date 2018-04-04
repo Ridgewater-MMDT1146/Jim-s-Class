@@ -1,0 +1,13 @@
+<?
+// common/pageSend.phpinc
+// Cleanup memory and send page.
+// Set $_SESSION['pageFooterNoExit'] = false to stop page send.
+if ( !isset($_SESSION['DEBUG']['lockSite']) || !$_SESSION['DEBUG']['lockSite'] ) unset($_SESSION['TRACK']); // Cleanup $_SESSION['TRACK'].
+unset($_SESSION['previouslocation']); // Cleanup $_SESSION['previouslocation'].
+unset($GLOBALS['_DEBUG']['set']); // Cleanup $GLOBALS['_DEBUG']['set'].
+if ( !isset($_SESSION['pageFooterNoExit']) || $_SESSION['pageFooterNoExit'] === false ) { // Is pageFooterNoExit unset or false?
+	// pageFooterNoExit unset or false. Send page.
+  ob_end_flush();
+  exit;
+} // Is pageFooterNoExit unset or false?
+?>

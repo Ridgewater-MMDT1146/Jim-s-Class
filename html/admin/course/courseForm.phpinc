@@ -1,0 +1,121 @@
+<?
+// admin/course/courseForm.phpinc
+// Display the course Add/Edit form.
+t_Begin(); // Begin TRACKing included file.
+include('courseFormPreset.phpinc');
+?>
+<table><tr><td><fieldset><legend><? if ( $f['courseId'] ) { ?>Edit<? } else { ?>Add<? } ?> Course</legend>
+<form name="form_course" id="id_form_course" action="<?=php_self()?>" method="post">
+<input type="hidden" name="form" value="form_course">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="courseId" id="id_courseId" value="<?=htmlSafe($f['courseId'])?>">
+<input type="hidden" name="userId" id="id_userId" value="<?=htmlSafe($_SESSION['user']['trueId'])?>">
+<?
+$displayDepartmentFilter = false;
+require('admin/course/departmentFilter.phpinc'); // Setup and display the department filter.
+?>
+<table>
+<? if ( isset($formError['YRTR']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['YRTR']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">YRTR</td>
+    <td><input type="text" class="" name="YRTR" id="id_YRTR" value="<?=htmlSafe($f['YRTR'])?>" maxlength="5" style="width:3.48em;"></td>
+  </tr>
+<? if ( isset($formError['departmentId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['departmentId']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Department</td>
+    <td>
+<?
+      $departmentIdQuery = 'SELECT departmentId,departmentCode FROM `department`';
+			if ( $departmentIds != '0' ) {
+				$departmentIdQuery .= ' WHERE departmentId in ( '.$departmentIds.' )';
+			}
+			$departmentIdQuery .= ' ORDER BY departmentCode';
+      $departmentIdResult = query_do($departmentIdQuery);
+      $departmentIdCount = $GLOBALS['_QUERY']['count'];
+?>
+      <select class="" name="departmentId" id="id_departmentId">
+        <option value=""></option>
+<?
+      query_seek($departmentIdResult, 0);
+      while ($departmentIdInfo = query_row($departmentIdResult)) {
+				if ( $departmentIdCount == 1 ) $f['departmentId'] = $departmentIdInfo['departmentId'];
+?>
+        <option value="<?=$departmentIdInfo['departmentId']?>"<? if ( $f['departmentId'] == $departmentIdInfo['departmentId'] ) { ?> selected<? } ?>><?=htmlSafe($departmentIdInfo['departmentCode'])?></option>
+<?
+      }
+?>
+      </select>
+    </td>
+  </tr>
+<? if ( isset($formError['courseNumber']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseNumber']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Number</td>
+    <td><input type="text" class="" name="courseNumber" id="id_courseNumber" value="<?=htmlSafe($f['courseNumber'])?>" maxlength="8" style="width:4.82em;"></td>
+  </tr>
+<? if ( isset($formError['courseTitle']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseTitle']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Title</td>
+    <td><input type="text" class="" name="courseTitle" id="id_courseTitle" value="<?=htmlSafe($f['courseTitle'])?>" maxlength="75" style="width:21.65em;"></td>
+  </tr>
+<? if ( isset($formError['courseCredits']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseCredits']?></td></tr>
+<? } ?>
+<? if ( !$f['courseCredits'] ) $f['courseCredits'] = ''; ?>
+  <tr>
+    <td class="label">Credits</td>
+    <td><input type="text" class="" name="courseCredits" id="id_courseCredits" value="<?=htmlSafe(str_replace('.00','',$f['courseCredits']))?>" maxlength="6" style="width:3.94em;"></td>
+  </tr>
+<? if ( isset($formError['courseCreditsMax']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseCreditsMax']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">CreditsMax</td>
+    <td><input type="text" class="" name="courseCreditsMax" id="id_courseCreditsMax" value="<?=htmlSafe(str_replace('.00','',$f['courseCreditsMax']))?>" maxlength="6" style="width:3.94em;"></td>
+  </tr>
+<? if ( isset($formError['courseInactive']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseInactive']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Inactive</td>
+    <td>
+      <input type="radio" class="" name="courseInactive" id="id_courseInactive_0" value="0"<? if ( $f['courseInactive'] == 0) { ?> checked<? } ?>>No
+      <input type="radio" class="" name="courseInactive" id="id_courseInactive_1" value="1"<? if ( $f['courseInactive'] == 1) { ?> checked<? } ?>>Yes</td>
+  </tr>
+  <tr>
+    <td class="center" colspan="2">
+<?
+      if ( $f['courseId'] ) {
+?>
+      <input type="submit" name="task" value="Update course">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Add course">
+<?
+      }
+      if ( $f['form'] != 'form_course' || isset($formError) || isset($f['postId']) ) {
+?>
+      <input type="submit" name="task" value="Cancel">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Done">
+<?
+      }
+?>
+    </td>
+  </tr>
+</table>
+</form>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

@@ -1,0 +1,166 @@
+<?
+// admin/_info/infoReorder.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+if ($f['form'] != 'form_reorder') {
+  // Build field information from database.
+  $fieldQuery="SHOW COLUMNS FROM `".$f['table']."`";
+  $fieldResult = query_do($fieldQuery,$f['database']);
+  $f['fieldCount'] = $GLOBALS['_QUERY']['count'];
+  $fieldPosition = 0;
+  $fieldNames = array();
+  $fieldTypes = array();
+  #d_V('fieldCount');
+  while ($row = query_row($fieldResult)) {
+    $fieldPosition++;
+    $fieldNames[$fieldPosition] = $row['Field'];
+    $fieldTypes[$fieldPosition] = $row['Type'];
+  }
+} else {
+  formValue('fieldCount');
+  #d_V('fieldCount');
+  for ($i=1; $i<=$f['fieldCount']; $i++) {
+    formValue('','FieldName_'.$i,$fieldNames[$i]);
+    formValue('','FieldType_'.$i,$fieldTypes[$i]);
+  }
+  if ($f['task'] == "ReorderSet") {
+    formValue('direction');
+    formValue('position');
+    if ($f['direction'] == 'up') {
+      $t_fieldName = $fieldNames[$f['position']];
+      $t_fieldType = $fieldTypes[$f['position']];
+      $fieldNames[$f['position']] = $fieldNames[$f['position']-1];
+      $fieldTypes[$f['position']] = $fieldTypes[$f['position']-1];
+      $fieldNames[$f['position']-1] = $t_fieldName;
+      $fieldTypes[$f['position']-1] = $t_fieldType;
+    }
+    if ($f['direction'] == 'dn') {
+      $t_fieldName = $fieldNames[$f['position']];
+      $t_fieldType = $fieldTypes[$f['position']];
+      $fieldNames[$f['position']] = $fieldNames[$f['position']+1];
+      $fieldTypes[$f['position']] = $fieldTypes[$f['position']+1];
+      $fieldNames[$f['position']+1] = $t_fieldName;
+      $fieldTypes[$f['position']+1] = $t_fieldType;
+    }
+    }
+  if ($f['task'] == 'Perform Reoder') {
+    #d_Var('$fieldNames',$fieldNames);
+    $change = true;
+    set_time_limit(3);
+    while ($change) {
+      $fieldQuery="SHOW COLUMNS FROM `".$f['table']."`";
+      $fieldResult = query_do($fieldQuery,$f['database']);
+      #printQuery('$fieldResult',$fieldResult);
+      $change = false;
+      $fieldPosition=0;
+      $previousField = false;
+      query_seek($fieldResult, 0);
+      while ($fieldInfo = query_row($fieldResult)) {
+        $fieldPosition++;
+        #echo "<br>";
+        /**/
+        if (!$change) {
+          #d_Var("\$fieldArray['Field']",$fieldArray['Field']);
+          #d_Var('$fieldNames[$fieldPosition]',$fieldNames[$fieldPosition]);
+          #d_Var('$previousField',$previousField);
+          if ($fieldArray['Field'] != $fieldNames[$fieldPosition]) {
+          #echo "Not equal"."<br>\n";
+            if (!$change != false) {
+              #echo "Test";
+              $change = true;
+              #echo $change;
+              // Perform ALTER.
+              $query = "
+              ALTER TABLE `".$f['table']."`
+              CHANGE COLUMN ".$f['table'].'.'.$fieldArray['Field']." ".$f['table'].'.'.$fieldArray['Field']." ".$fieldArray['Type']."
+              AFTER ".$fieldNames[$fieldPosition]."
+              ";
+              #$qeury = trim($qeury);
+              #d_Var('$qeury',$qeury);
+              $fieldReorder = query_do($query,$f['database']);
+              #headerLocation($HTTP."/",""task=sql&sql=".$query);
+              #$fieldQuery="SHOW COLUMNS FROM `".$f['table']."`";
+              #$fieldResult = query_do($fieldQuery,$f['database']);
+              #printQuery('$fieldResult',$fieldResult);
+            } else {
+              echo "No reorder has taken place.";
+              ob_end_flush(); exit;
+            }// if ($previousField !== false) {
+          }// if ($classInfo['Field'] != $fieldNames[$fieldPosition]) {
+        }// if (!$change) {
+        /**/
+        #$previousField = $fieldNames[$fieldPosition];
+      }// while ($classInfo = query_row($classResult)) {
+    }// while ($change) {
+  }// if ($f['task'] == 'Perform Reoder') {
+}
+
+
+#d_Var('$fieldNames',$fieldNames);
+#d_Var('$fieldTypes',$fieldTypes);
+#ob_end_flush(); exit;
+
+#d_V('fieldCount');
+if ($f['fieldCount']) {
+?>
+<form name="form_reorder" action="<?=php_self()?>" method="get" class="inline">
+<input type="hidden" name="form" value="form_reorder">
+<input type="hidden" name="table" id="table" value="<?=$f['table']?>">
+<input type="hidden" name="task" id="task" value="ReorderSet">
+<input type="hidden" name="direction" id="direction" value="">
+<input type="hidden" name="position" id="position" value="">
+<table><tr><td>
+  <table><tr><td><fieldset><legend>Reoder fields</legend>
+  <table border="0">
+  <tr class="bottom_info"><td colspan="2">Reoder</td><td class="bold_info">Field</td><td class="bold_info">Type</td></tr>
+<?
+$index = 0;
+while ($index < count($fieldTypes)) {
+  $index++;
+?>
+    <tr>
+      <td>
+      <input type="hidden" name="FieldName_<?=$index?>" value="<?=$fieldNames[$index]?>">
+      <input type="hidden" name="FieldType_<?=$index?>" value="<?=$fieldTypes[$index]?>">
+<?
+if ($index > 2) {
+?>
+      <input type="button" name="Reoder" value="Up" onClick="document.form_reorder.direction.value='up'; document.form_reorder.position.value='<?=$index?>'; document.form_reorder.submit();">
+<?
+}
+?>
+      </td><td>
+<?
+if ($index <count($fieldTypes) && $index != 1) {
+?>
+      <input type="button" name="Reoder" value="Down" onClick="document.form_reorder.direction.value='dn'; document.form_reorder.position.value='<?=$index?>'; document.form_reorder.submit();">
+<?
+}
+?>
+      </td>
+      <td class="right_info"><?=$fieldNames[$index]?></td>
+      <td class="right_info"><?=$fieldTypes[$index]?></td>
+    </tr>
+   
+<?
+}
+?>
+<tr>
+   <td colspan="4" class="center"><input type="submit" value="Perform Reoder" name="task" id="task"></td>
+</tr>
+<input type="hidden" name="fieldCount" value="<?=$f['fieldCount']?>">
+</table>
+  </fieldset></td></tr></table>
+</form>
+<?
+// END Get the list of fields in the query.
+
+} else {
+  // The query did not return rows.
+  // Get the values from the tables in the query.
+?>
+    <br>Query has no results.
+<?
+}
+t_End(); // End TRACKing included file.
+?>

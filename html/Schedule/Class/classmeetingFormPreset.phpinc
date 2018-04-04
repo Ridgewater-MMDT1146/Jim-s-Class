@@ -1,0 +1,87 @@
+<?
+// classmeetingFormPreset.phpinc
+// Get original data and preset the classmeeting form.
+t_Begin(); // Begin TRACKing included file.
+// Ensure primary key is set.
+if ( !isset($f['classmeetingId']) ) { formValue('classmeetingId'); if ( !$f['classmeetingId'] ) $f['classmeetingId'] = 0; }
+// Get original classmeeting data.
+if ( $f['classmeetingId'] ) {
+  // $f['classmeetingId'] is set. Load original data from database.
+  $query = "
+    SELECT * FROM `classmeeting`
+     WHERE classmeetingId = ".$f['classmeetingId']."
+  ";
+  $classmeetingResult = query_do($query,'scheduler');
+  $classmeetingCount = $GLOBALS['_QUERY']['count'];
+  if ( $classmeetingCount == 1 ) {
+    // Load original data from record.
+    query_seek($classmeetingResult, 0);
+    $classmeetingInfo = mysql_fetch_assoc($classmeetingResult);
+    $o['classId'] = $classmeetingInfo['classId'];
+    $o['classmeetingStartDate'] = $classmeetingInfo['classmeetingStartDate'];
+    $o['classmeetingEndDate'] = $classmeetingInfo['classmeetingEndDate'];
+    $o['weekdayId'] = $classmeetingInfo['weekdayId'];
+    $o['classmeetingBeginTime'] = $classmeetingInfo['classmeetingBeginTime'];
+    $o['classmeetingEndTime'] = $classmeetingInfo['classmeetingEndTime'];
+    $o['roomId'] = $classmeetingInfo['roomId'];
+    $o['userId'] = $classmeetingInfo['userId'];
+  } else {
+    // The record count was not 1. This is an error.
+    programmingError('Record count ('.$classmeetingCount.') for classmeetingId='.$f['classmeetingId'].' was not 1.');
+  }
+} else {
+  // $f['classmeetingId'] is 0. This is an add form. Set form_classmeeting data to default values.
+  $f['classmeetingId'] = 0;
+  $f['classId'] = 0;
+  if ( !isset($o['classmeetingStartDate']) ) $o['classmeetingStartDate'] = NULL;
+  if ( !isset($o['classmeetingEndDate']) ) $o['classmeetingEndDate'] = NULL;
+  if ( !isset($o['weekdayId']) ) $o['weekdayId'] = NULL;
+  if ( !isset($o['classmeetingBeginTime']) ) $o['classmeetingBeginTime'] = NULL;
+  if ( !isset($o['classmeetingEndTime']) ) $o['classmeetingEndTime'] = NULL;
+  if ( !isset($o['roomId']) ) $o['roomId'] = NULL;
+  if ( !isset($o['userId']) ) $o['userId'] = NULL;
+}
+// Preset classmeeting form data.
+if ( $f['form'] != 'form_classmeeting' ) {
+  // form_classmeeting not called by itself. Preload data for form.
+  if ( $f['classmeetingId'] ) {
+    // $f['classmeetingId'] is set. This is an edit form. Load form_classmeeting data from database.
+    /** / // Remove this section if original data is obtained above.
+    $query = "
+      SELECT * FROM `classmeeting`
+       WHERE classmeetingId = ".$f['classmeetingId']."
+    ";
+    $classmeetingResult = query_do($query,'scheduler');
+    $classmeetingCount = $GLOBALS['_QUERY']['count'];
+    /**/ // Remove this section if original data is obtained above.
+    if ( $classmeetingCount == 1 ) {
+      // Load original data from record.
+      query_seek($classmeetingResult, 0);
+      $classmeetingInfo = mysql_fetch_assoc($classmeetingResult);
+      $f['classId'] = $classmeetingInfo['classId'];
+      $f['classmeetingStartDate'] = $classmeetingInfo['classmeetingStartDate'];
+      $f['classmeetingEndDate'] = $classmeetingInfo['classmeetingEndDate'];
+      $f['weekdayId'] = $classmeetingInfo['weekdayId'];
+      $f['classmeetingBeginTime'] = $classmeetingInfo['classmeetingBeginTime'];
+      $f['classmeetingEndTime'] = $classmeetingInfo['classmeetingEndTime'];
+      $f['roomId'] = $classmeetingInfo['roomId'];
+      $f['userId'] = $classmeetingInfo['userId'];
+    } else {
+      // The record count was not 1. This is an error.
+      programmingError('Record count ('.$classmeetingCount.') for classmeetingId='.$f['classmeetingId'].' was not 1.');
+  }
+  } else {
+    // $f['classmeetingId'] is 0. This is an add form. Set form_classmeeting data to default values.
+    $f['classmeetingId'] = 0;
+    $f['classId'] = 0;
+    if ( !isset($f['classmeetingStartDate']) ) $f['classmeetingStartDate'] = NULL;
+    if ( !isset($f['classmeetingEndDate']) ) $f['classmeetingEndDate'] = NULL;
+    if ( !isset($f['weekdayId']) ) $f['weekdayId'] = NULL;
+    if ( !isset($f['classmeetingBeginTime']) ) $f['classmeetingBeginTime'] = NULL;
+    if ( !isset($f['classmeetingEndTime']) ) $f['classmeetingEndTime'] = NULL;
+    if ( !isset($f['roomId']) ) $f['roomId'] = NULL;
+    if ( !isset($f['userId']) ) $f['userId'] = NULL;
+  }
+}
+t_End(); // End TRACKing included file.
+?>

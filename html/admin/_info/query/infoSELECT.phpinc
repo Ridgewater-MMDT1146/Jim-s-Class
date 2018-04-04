@@ -1,0 +1,71 @@
+<?
+// infoSELECT.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+// Get table info.
+include('admin/_info/query/infoTableFields.phpinc'); // Get table field info.
+$indent = '';
+$query = '';
+$querytable = '';
+// Begin query.
+if ( !isset($indent) ) { $indent = ''; }
+$query .= $indent.'$query = "'.in().$indent."    SELECT ";
+$querytable .= $indent.'$query = "'.in().$indent."    SELECT ";
+// Add fields.
+$prefix = '';
+query_seek($fieldResult, 0);
+while ($row = query_row($fieldResult)) {
+  $query .= $prefix.$row['Field'].in();
+  $querytable .= $prefix.$f['table'].'.'.$row['Field'].in();
+  $prefix = $indent."         , ";
+}
+// Add FROM.
+$query .= $indent."      FROM `".$f['table'].'`'.in();
+$querytable .= $indent."      FROM `".$f['table'].'`'.in();
+// Add WHERE.
+include('infoWHERE.phpinc');
+// Add ORDER BY.
+$query .= $indent."  ORDER BY ".$orderBy.in();
+$querytable .= $indent."  ORDER BY ".$f['table'].'.'.$orderBy.in();
+// Finish query.
+$query .= $indent."\";".in();
+$querytable .= $indent."\";".in();
+// Add query_do.
+$queryend = '';
+if ( $GLOBALS['debuggingAvailable'] ) $queryend .= $indent."d_Var('".$f['table']."Result',\$query,'q');"."\n";
+$queryend .= $indent."\$".$f['table']."Result = query_do(\$query);".in();
+$queryend .= $indent."\$".$f['table']."Count = \$GLOBALS['_QUERY']['count'];".in();
+if ( $GLOBALS['debuggingAvailable'] ) $queryend .= $indent."d_Var('$".$f['table']."Result',\$".$f['table']."Result);"."\n";
+// Add !Count lines.
+$indexFieldList = '';
+foreach ( $indexField as $thisField ) {
+	$indexFieldList = listAppend($indexFieldList,$thisField." ('.\$".$thisField.".')");
+}
+$indexFieldList - listAnd($indexFieldList);
+$queryend .= $indent."#if ( \$".$f['table']."Count != 1 ) programmingError('The ".$indexFieldList." did not return one record. '.\$".$f['table']."Count.' returned.');".in();
+$queryend .= $indent."#if ( !\$".$f['table']."Count ) programmingError('The ".$indexFieldList." did not return any records.');".in();
+// Add Count lines.
+$queryend .= $indent."if ( \$".$f['table']."Count ) {".in();
+$queryend .= $indent."  query_seek(\$".$f['table']."Result, 0);".in();
+$queryend .= $indent."  while (\$".$f['table']."Info = query_row(\$".$f['table']."Result)) {".in();
+$queryend .= $indent."    ".in();
+$queryend .= $indent."  }".in();
+$queryend .= $indent."}".in();
+// Add query_info lines.
+if ( $GLOBALS['debuggingAvailable'] ) $queryend .= $indent."#d_Var('".$f['table']."Info',\$query,'q');"."\n";
+$queryend .= $indent."#\$".$f['table']."Info = query_info(\$query);".in();
+if ( $GLOBALS['debuggingAvailable'] ) $queryend .= $indent."#d_Var('$".$f['table']."Info',\$".$f['table']."Info);"."\n";
+// Finish query.
+$query .= $queryend;
+$querytable .= $queryend;
+?>
+<table><tr><td><fieldset><legend><?=$f['database']?> <?=$f['table']?> SELECT without table name</legend>
+<form><textarea class="code_info" name="SELECT" wrap="off"><?=htmlSafe($query)?></textarea></form>
+</fieldset></td></tr></table>
+<? d_Var('$indexField',$indexField,'d'); ?>
+<table><tr><td><fieldset><legend><?=$f['database']?> <?=$f['table']?> SELECT with table name</legend>
+<form><textarea class="code_info" name="SELECTtable" wrap="off"><?=htmlSafe($querytable)?></textarea></form>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

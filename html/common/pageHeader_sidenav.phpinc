@@ -1,0 +1,34 @@
+<?
+// common/pageHeader_sidenav.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing pageHeader_topnav.phpinc.
+#d_Line('','/');
+
+//  Load side nav (Loads first nav.phpinc found starting in the current directory and working up to the root directory).
+$currentDirectory = dirname($_SERVER['SCRIPT_FILENAME']);
+d_Var('$currentDirectory',$currentDirectory);
+d_Var("\$_SESSION['ROOT']['directory']",$_SESSION['ROOT']['directory']);
+$nav_not_found = true;
+?>
+<nav id="sidenav">
+<?
+while ( $nav_not_found ) {
+	if (file_exists($currentDirectory."/nav_side.phpinc")) {
+		d_Line("$currentDirectory/nav_side.phpinc found.",'a');
+		$nav_not_found = false;
+		require($currentDirectory."/nav_side.phpinc");
+	} else {
+		d_Line("$currentDirectory/nav_side.phpinc not found.",'e');
+		if ( $currentDirectory == $_SESSION['ROOT']['directory'] ) $nav_not_found = false; // Quit looking there is no sidenav.
+		d_Var('strrpos',strrpos($currentDirectory,'/'));
+		$currentDirectory = substr($currentDirectory,0,strrpos($currentDirectory,'/'));
+		d_Var('$currentDirectory',$currentDirectory);
+	}
+}
+?>
+</nav>
+<?
+
+t_End(); // End TRACKing pageHeader_topnav.phpinc.
+?>

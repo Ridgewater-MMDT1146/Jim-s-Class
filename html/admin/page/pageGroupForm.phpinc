@@ -1,0 +1,107 @@
+<?
+// admin/page/pageGroupForm.phpinc
+
+  // Get groups the page is in.
+$query = "
+    SELECT userpermissionId,
+           userpermissionName,
+           groupDescription
+      FROM `userpermission`
+     WHERE userpermissionId IN (
+      SELECT userpermissionId
+        FROM group_page
+       WHERE pageId = ".$f['pageId']."
+       )
+  ORDER BY userpermissionName
+";
+$pageInGroupResult = query_do($query);
+$pageInGroupCount = $GLOBALS['_QUERY']['count'];
+#if ($pageInGroupCount) { #d_Var('$pageInGroupResult',$pageInGroupResult); } else { echo "No groups<br>\n"; }
+
+// Get groups the page is not in.
+$query = "
+    SELECT userpermissionId,
+           userpermissionName,
+           groupDescription
+      FROM `userpermission`
+";
+if ($pageInGroupCount) {
+$query .= "
+     WHERE userpermissionId NOT IN (
+      SELECT userpermissionId
+        FROM group_page
+       WHERE pageId = ".$f['pageId']."
+       )
+";
+}
+$query .= "
+  ORDER BY userpermissionName
+";
+$pageNotInGroupResult = query_do($query);
+$pageNotInGroupCount = $GLOBALS['_QUERY']['count'];
+#if ($pageNotInGroupCount) { #d_Var('$pageNotInGroupResult',$pageNotInGroupResult); } else { echo "No groups<br>\n"; }
+
+?>
+<div id="pagegroupdiv">
+<fieldset><legend>Page authorized groups</legend>
+<form name="form_pagegroup" id="form_pagegroup" action="<?=php_self()?>" method="post" enctype="multipart/form-data">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="form" value="form_pagegroup">
+<input type="hidden" name="pageId" id="pageId" value="<?=htmlSafe($f['pageId'])?>">
+<table>
+  <tr>
+      <td style="text-align:center;"> <!-- Groups the page is in -->
+<select name="inGroup[]" multiple="multiple" size="5">
+<?
+if ($pageInGroupCount) {
+  query_seek($pageInGroupResult, 0);
+  while ($group_pageInfo = query_row($pageInGroupResult)) {
+?>
+  <option value="<?=$group_pageInfo['userpermissionId']?>" title="<?=$group_pageInfo['groupDescription']?>"><?=$group_pageInfo['userpermissionName']?></option>
+<?
+  }
+}
+?>
+</select>
+<br>
+<input type="submit" name="task" id="task" value="Remove from group">
+        </td>
+      <td style="text-align:center;"> <!-- Groups the page is NOT in -->
+<select name="notGroup[]" multiple="multiple" size="5">
+<?
+if ($pageNotInGroupCount) {
+  query_seek($pageNotInGroupResult, 0);
+  while ($group_pageInfo = query_row($pageNotInGroupResult)) {
+?>
+  <option value="<?=$group_pageInfo['userpermissionId']?>" title="<?=$group_pageInfo['groupDescription']?>"><?=$group_pageInfo['userpermissionName']?></option>
+<?
+  }
+}
+?>
+</select>
+<br>
+<input type="submit" name="task" id="task" value="Add to group">
+        </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align:center;">
+<?
+if ($f['form'] == 'form_pagegroup') {
+?>
+    <input type="submit" name="task" value="Done">
+<?
+} else {
+?>
+    <input type="submit" name="task" value="Cancel">
+<?
+}
+?>
+        </td>
+    </tr>
+</table>
+
+</form>
+</fieldset>
+</div><!-- id=pagegroupdiv -->
+<?
+?>

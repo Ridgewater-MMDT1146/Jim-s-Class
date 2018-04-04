@@ -1,0 +1,23 @@
+<?
+// common/postdata/pageCall.phpinc
+// Contains the pageCall function.
+
+#t_Begin(); // Begin TRACKing included file.
+
+// pageCall($callPage, $callData, $callTask, $callQuery)
+// Stores callData as postdata for the called page, and calls the requested page.
+// Call this function to jump to a page and preload variable data.
+//  $callPage = The page to call.
+//  $callData = An associative array of variable name/value pairs that will be loaded when the page is called.
+//  $callTask = The $f['task'] value to use when returning from the page.
+// $callQuery = The URL query string to append to the URL.
+function pageCall($callPage, $callData, $callTask="", $callQuery="") {
+  t_FuncBegin();
+  $backtrace = debug_backtrace(); // Get caller information.
+  pageSaveData($callPage,$callData,$callTask,$callQuery,$backtrace);
+  headerLocation($callPage);
+  t_FuncEnd();
+}
+
+#t_End(); // End TRACKing included file.
+?>

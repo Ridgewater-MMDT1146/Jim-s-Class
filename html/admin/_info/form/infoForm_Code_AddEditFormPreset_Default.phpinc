@@ -1,0 +1,31 @@
+<?
+// infoForm_Code_AddEditFormPreset_Default.phpinc
+// Create the form value load from database code.
+t_Begin(); // Begin TRACKing included file.
+foreach ($fieldArray as $fieldName => $fieldValue) {
+  #d_Var($fieldName.'['.$fieldName.']',$fieldArray[$fieldName]);
+  //if ( $fieldValue['type'] != 'skip' && !in_array($fieldName,$tablePrimaryKey) && substr($fieldName,strlen($fieldName)-2,2) != 'On' && substr($fieldName,strlen($fieldName)-2,2) != 'By' ) {
+  if ( $fieldValue['type'] != 'skip' ) {
+    if ($fieldArray[$fieldName]['Null'] == 'YES') {
+      // Field can be null
+      $codeOutput .= '
+'.$indent.'  if ( !isset($'.$arrayName.'[\''.$fieldName.'\']) ) $'.$arrayName.'[\''.$fieldName.'\'] = NULL;';
+    } else if ($fieldArray[$fieldName]['qc'][0] != '".') {
+      // Field is alpha.
+      $codeOutput .= '
+'.$indent.'  if ( !isset($'.$arrayName.'[\''.$fieldName.'\']) ) $'.$arrayName.'[\''.$fieldName.'\'] = \''.$fieldArray[$fieldName]['Default'].'\';';
+    } else {
+      // Field is numeric.
+      if ( $fieldArray[$fieldName]['Default'] !== false ) {
+        $defaultValue = $fieldArray[$fieldName]['Default'];
+        if ( $defaultValue == '' ) $defaultValue = 0;
+      } else {
+        $defaultValue = 0;
+      }
+      $codeOutput .= '
+'.$indent.'  $f[\''.$fieldName.'\'] = '.$defaultValue.';';
+    }
+  }
+}
+t_End(); // End TRACKing included file.
+?>

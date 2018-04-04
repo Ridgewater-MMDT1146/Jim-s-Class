@@ -1,0 +1,24 @@
+<?
+// infoDELETE.phpinc
+// Display the DELETE query.
+t_Begin(); // Begin TRACKing included file.
+include('admin/_info/query/infoTableFields.phpinc'); // Get table field info.
+$indent = '';
+$query = '';
+// Begin DELETE query.
+if ( !isset($indent) ) { $indent = ''; }
+$query .= $indent."\$query = \"
+".$indent."    DELETE FROM `".$f['table']."`\n";
+// Add WHERE.
+include('admin/_info/query/infoWHERE.phpinc');
+$query .= $indent."\";"."\n";
+if ( $GLOBALS['debuggingAvailable'] ) $query .= $indent."d_Var('".$f['table']."DELETE',\$query,'q');"."\n";
+$query .= $indent."\$".$f['table']."DELETE = query_do(\$query);"."\n";
+if ( $GLOBALS['debuggingAvailable'] ) $query .= $indent."d_Var('$".$f['table']."DELETE',\$".$f['table']."DELETE,'l');"."\n";
+?>
+<table><tr><td><fieldset><legend><?=$f['database']?> <?=$f['table']?> DELETE</legend>
+<form><textarea class="code_info" name="DELETE" wrap="off"><?=$query?></textarea></form>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

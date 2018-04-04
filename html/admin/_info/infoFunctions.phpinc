@@ -1,0 +1,325 @@
+<?
+// admin/_info/infoFunctions.phpinc
+t_Begin(); // Begin TRACKing included file.
+
+// ic()
+// Returns p__ if previous field was conditional.
+//         n__ if previous field was not conditional.
+//         x__ if unknown.
+//         _c_ if current field is conditional.
+//         _n_ if current field is not conditional.
+//         _x_ if unknown.
+//         __n if previous field was numeric.
+//         __a if previous field was non numeric.
+function ic($backtrace = false) {
+  if ( !$backtrace ) $backtrace = debug_backtrace();
+  $ic = '';
+  if ( isset($GLOBALS['conditionalPrevious']) ) {
+    // Previous field condition set.
+    if ( $GLOBALS['conditionalPrevious'] ) {
+      // Previous field was a conditional field.
+      $ic .= 'p';
+    } else {
+      // Previous was not a conditional field.
+      $ic .= 'n';
+    }
+  } else {
+    // Previous field condition was not set.
+    $ic .= 'x';
+  }
+  if ( isset($GLOBALS['conditionalCurrent'] ) ) {
+    // This field condition set.
+    if ( $GLOBALS['conditionalCurrent'] ) {
+      // This is a conditional field.
+      $ic .= 'c';
+    } else {
+      // This is not a conditional field.
+      $ic .= 'n';
+    }
+  } else {
+    // This field condition is not set.
+    $ic .= 'x';
+  }
+  #d_Var("\$GLOBALS['qcPrevious']",$GLOBALS['qcPrevious'],'',$backtrace);
+  if ( isset($GLOBALS['qcPrevious'][1]) ) {
+    // Previous numeric condition set.
+    if ( $GLOBALS['qcPrevious'][1] == '."' ) {
+      // Previous field was numeric.
+      $ic .= 'n';
+    } else {
+      // Previous was not numeric.
+      $ic .= 'a';
+    }
+  } else {
+    // Previous field condition was not set.
+    $ic .= 'x';
+  }
+  return $ic;
+}
+
+// il()
+// Returns line debugging information. Line number encased in ++;
+function il() {
+  if ( isset($GLOBALS['DEBUG_info']) && $GLOBALS['DEBUG_info'] ) {
+    $backtrace = debug_backtrace();
+    $DEBUGInfo = ' +'.$backtrace['0']['line'].ic($backtrace).'+';
+  } else {
+    $DEBUGInfo = '';
+  }
+  return $DEBUGInfo;
+}
+
+// in()
+// Returns line debugging information. Line number encased in ==. Always appends a newline.
+function in() {
+  if ( isset($GLOBALS['DEBUG_info']) && $GLOBALS['DEBUG_info'] ) {
+    $backtrace = debug_backtrace();
+    $DEBUGInfo = ' ='.$backtrace['0']['line'].ic($backtrace).'=';
+  } else {
+    $DEBUGInfo = '';
+  }
+  return $DEBUGInfo."\n";
+}
+
+// is()
+// Returns line debugging information. Line number encased in --;
+function is() {
+  if ( isset($GLOBALS['DEBUG_info']) && $GLOBALS['DEBUG_info'] ) {
+    $backtrace = debug_backtrace();
+    $DEBUGInfo = ' -'.$backtrace['0']['line'].ic($backtrace).'-';
+  } else {
+    $DEBUGInfo = '';
+  }
+  return $DEBUGInfo;
+}
+
+// iqc()
+// Returns line debugging information. qc + line number encased in ~~;
+function iqc() {
+  if ( isset($GLOBALS['DEBUG_info']) && $GLOBALS['DEBUG_info'] ) {
+    $backtrace = debug_backtrace();
+    $DEBUGInfo = ' ~'.$GLOBALS['qc'][0].'|'.$GLOBALS['qc'][1].$backtrace['0']['line'].ic($backtrace).'~';
+  } else {
+    $DEBUGInfo = '';
+  }
+  return $DEBUGInfo;
+}
+
+// iqcp()
+// Returns line debugging information. qcPrevious + line number encased in __;
+function iqcp() {
+  if ( isset($GLOBALS['DEBUG_info']) && $GLOBALS['DEBUG_info'] ) {
+    $backtrace = debug_backtrace();
+    $DEBUGInfo = ' _'.$GLOBALS['qcPrevious'][0].'|'.$GLOBALS['qcPrevious'][1].$backtrace['0']['line'].ic($backtrace).'_';
+  } else {
+    $DEBUGInfo = '';
+  }
+  return $DEBUGInfo;
+}
+
+// info_Div($visText,$fullText,$uuidDiv)
+// Display a show/hide div.
+function info_Div($visText,$fullText) {
+	$uuidDiv = uuid();
+?>
+<div id="<?=$uuidDiv?>_HIDE" class="d_s_il d_s_l"><a href="javascript: divShowInline('<?=$uuidDiv?>_SHOW'); divHide('<?=$uuidDiv?>_HIDE');"><?=$visText?> ...</a></div><div id="<?=$uuidDiv?>_SHOW" class="d_s_h d_s_l"><a href="javascript: divShowInline('<?=$uuidDiv?>_HIDE'); divHide('<?=$uuidDiv?>_SHOW');">Collapse -</a><br><?=$fullText?></div>
+<?
+}
+
+// info_fieldQC($fieldType)
+// Returns the field quote chars.
+// If numeric returns qc[0] = ". qc[1] = ."
+//       Else returns qc[0] = ".query_safe( qc[1] = )."'
+function info_fieldQC($fieldType) {
+  $isAlpha = array('binary', 'blob', 'char', 'date', 'enum', 'set', 'text', 'time', 'year'); // Array of non numeric fields.
+  $qc = array('".','."'); // For numeric field.
+  for ($i = 0; $i < count($isAlpha); $i++) {
+    if (strlen(stristr($fieldType,$isAlpha[$i]))) $qc = array("'\".query_safe(",").\"'"); // For non numeric field.
+  }
+  return $qc;
+}
+
+// info_htmlWrap$field,$value)
+// Returns field or value in a <?=htmlSafe()? > wrapper.
+// $field = The field to encode. This is used unless $value begins with a $ then value is used.
+// $value = The value to encode. This is only used if $value begins with a $ otherwise field is used.
+function info_htmlWrap($field,$value='') {
+  // Does $field begin with a $?
+  if (substr($value,0,1) == '$') {
+    // $field begins with a $. Return $field in the <?=htmlSafe()? > wrapper.
+    $info_QuoteWrap = '<?=htmlSafe('.$value.')?>';
+  } else {
+    // $field does not begins with a $. Return $field in the <?=htmlSafe($f''])? > wrapper.
+    $info_QuoteWrap = '<?=htmlSafe($f[\''.$field.'\'])?>';
+  }
+  return $info_QuoteWrap;
+}
+
+// info_SelectField($tableName,$fieldName)
+// Return an array from $fieldName list in $tableName table.
+function info_SelectField($tableName,$fieldName) {
+  $query = 'SELECT '.$fieldName.' FROM `'.$tableName.'`';
+  d_Var('$query',$query,'q');
+	$fieldResult = query_do($query,$GLOBALS['f']['database']);
+  $fieldCount = $GLOBALS['_QUERY']['count'];
+  $info_SelectField = array();
+  $index = 0;
+  if ($fieldCount) {
+    query_seek($fieldResult, 0);
+    while ($fieldInfo = query_row($fieldResult)) {
+      $info_SelectField[$index] = $fieldInfo[$fieldName];
+      $index++;
+    }
+  }
+  #d_Var('$info_SelectField',$info_SelectField);
+  return $info_SelectField;
+}
+
+// info_Size($datatype)
+// Returns and array containing 'maxlength', 'width', and 'height' from the field $datatype.
+//      'type' = the base datatype.
+// 'maxlength' = the true size of the field.
+//     'width' = is a calculated em size.
+//    'height' = a set size by field $datatype. Only returned for possible textarea fields.
+function info_Size($datatype) {
+  // Break the type into type and size.
+  $ts = explode('(',$datatype); // Split at (.
+  $type = $ts[0]; // The first part is the type.
+  if ( isset($ts[1]) ) {
+    $size = explode(')',$ts[1]); // Split at ) to remove other info.
+    if ( strpos($size[0],',') === false ) { // Look for decimal number type.
+      $size = $size[0]; // No, set $size to number found.
+    } else {
+      $size = explode(',',$size[0]); $size = $size[0]+1; // Yes aet $size to first number + 1 (allow for decimal point).
+    }
+  } else {
+    switch ($type) {
+      default:
+      case 'bigint':
+      case 'binary':
+      case 'bit':
+      case 'char':
+      case 'decimal':
+      case 'double':
+      case 'enum':
+      case 'float':
+      case 'int':
+      case 'mediumint':
+      case 'set':
+      case 'smallint':
+      case 'tinyint':
+      case 'varbinary':
+      case 'varchar':
+        $size = NULL;
+      break;
+      case 'blob':
+      case 'text':
+        $size = 65535;
+      break;
+      case 'date':
+        $size = 10;
+      break;
+      case 'datetime':
+        $size = 24;
+      break;
+      case 'longblob':
+      case 'longtext':
+        $size = 4294967295;
+      break;
+      case 'mediumblob':
+      case 'mediumtext':
+        $size = 16777215;
+      break;
+      case 'time':
+        $size = 13;
+      break;
+      case 'timestamp':
+        $size = 14;
+      break;
+      case 'tinyblob':
+      case 'tinytext':
+        $size = 255;
+      break;
+      case 'year':
+        $size = 4;
+      break;
+    }
+  }
+  $info_Size = array();
+  $info_Size['type'] = $type;
+  if ( !isset($size) ) d_Var('$datatype',$datatype);
+  $info_Size['maxlength'] = $size;
+  if ( $size <= 255 ) {
+    $info_Size['width'] = max( array( 1, min( array( ((int)($size*75))/100, ((int)($size*25+sqrt($size)*100))/100, ((int)(sqrt($size)*250)/100 ) ) ) ) ).'em';
+    $info_Size['height'] = false;
+  } else {
+    $info_Size['width'] = '35em';
+    switch ($size) {
+      case 255:
+      $info_Size['height'] = '2em';
+    break;
+      default:
+      case 65535:
+      $info_Size['height'] = '6em';
+    break;
+      case 16777215:
+      $info_Size['height'] = '16em';
+    break;
+      case 4294967295:
+      $info_Size['height'] = '32em';
+    break;
+    }
+  }
+  return $info_Size;
+}
+
+// info_userBy($field)
+// If  ...By field returns $_SESSION['user']['trueId'].
+// If userId field returns $_SESSION['user']['userId'].
+//            Else returns $f['$field.].
+function info_userBy($field) {
+  if ( $field == 'userId' ) {
+    return "\$_SESSION['user']['userId']";
+  } elseif ( substr($field,strlen($field)-2,2) == "By" ) {
+    return "\$_SESSION['user']['trueId']";
+  } else {
+    return "\$f['".$field."']";
+  }
+}
+
+// info_fDiffBegin()
+// Save $f in $o so differences can be found.
+function info_fDiffBegin() {
+  $GLOBALS['o'] = $GLOBALS['f'];
+}
+
+// info_fDiffEnd()
+// Display $f changes.
+function info_fDiffEnd() {
+  if ( isset($GLOBALS['o']) ) {
+    $firstLineFlag = 'a';
+    foreach ( $GLOBALS['f'] as $key => $value ) {
+      #d_Var("\$f['".$key."']",$value);
+      /**/
+      if ( !isset($GLOBALS['o'][$key]) ) {
+        // $f is new.
+        if ( !is_numeric($key) ) {
+          d_Var("\$f['$key'] is new ",$value,$firstLineFlag);
+        } else {
+          d_Var("\$f[$key] is new ",$value,$firstLineFlag);
+        }
+      } elseif ( $value != $GLOBALS['o'][$key] ) {
+        // $f has changed.
+        d_Line("\$f[$key] changed from ".d__var_value($GLOBALS['o'][$key]).' to '.d__var_value($value),$firstLineFlag);
+      }
+      $firstLineFlag = 'af';
+      /**/
+    }
+  } else {
+    displayMessage('info_fDiffBegin() not called before info_fDiffEnd().','error');
+  }
+  // = $GLOBALS['f'];
+}
+
+t_End(); // End TRACKing included file.
+?>

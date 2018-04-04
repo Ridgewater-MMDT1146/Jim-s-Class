@@ -1,0 +1,119 @@
+<?
+// Schedule/nav_side.phpinc
+// Schedule nav.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// include_filename_content_goes_here.
+?>
+<ul class="nav nav_sidebar">
+	<li><a href="" role="button" class="btn btn-xs" onClick="return ScheduleClass_OpenAdd(<?=$_SESSION['user']['scheduleId']?>,<?=$_SESSION['user']['departmentId']?>);" onMouseOver="ttShow('Add a class to the schedule.');" onMouseOut="ttHide();">Add class</a></li>
+	<li><a href="" role="button" class="btn btn-xs" onClick="return false;" onClick="return ScheduleFilters();" onMouseOver="ttShow('Apply filters to the schedule.');" onMouseOut="ttHide();">Filters <span id="spn_Filters" class="fa fa-caret-square-o-right"></span></a></li>
+	<li><a href="" role="button" id="a_Schedule" class="btn btn-xs" onClick="return SidenavToggle('Schedule sub');" onMouseOver="ttShow('Open schedule sub menu.');" onMouseOut="ttHide();">Schedule <span id="spn_Schedule" class="fa fa-caret-square-o-down"></span></a>
+		<ul class="nav nav_subbar_1">
+			<li class="Schedule sub" id="li_ScheduleEdit"><a href="" role="button" onClick="return ScheduleViewSettings();" onMouseOver="ttShow('Edit the schedule view settings.');" onMouseOut="ttHide();">Edit view <span id="spn_Edit" class="fa fa-caret-square-o-right"></span></a></li>
+			<li class="Schedule sub" id="li_ScheduleChange"><a href="" role="button" onClick="return ScheduleChange();" onMouseOver="ttShow('Change or create schedule.');" onMouseOut="ttHide();">Change</a></li>
+			<li class="Schedule sub" id="li_ScheduleImportClasses"><a href="" role="button" onClick="return ScheduleImportClasses();" onMouseOver="ttShow('Import classes into schedule.');" onMouseOut="ttHide();">Import classes</a></li>
+		</ul>
+	</li>
+	<li><a href="" role="button" id="a_Highlight" class="btn btn-xs" onClick="return SidenavToggle('Highlight sub');" onMouseOver="ttShow('Open highlight sub menu.');" onMouseOut="ttHide();">Highlight <span id="spn_Highlight" class="fa fa-caret-square-o-down"></span></a>
+		<ul class="nav nav_subbar_1">
+			<li class="Highlight sub" id="li_HighlightNone">
+				<label for="id_HighlightNone"><input type="radio" name="HighlightView" id="id_HighlightNone" onClick="ScheduleShowConflicts = '0'; DisplaySchedule();"<? if ( $_SESSION['user']['calendar_showconflicts'] === '0' ) { ?> checked<? } ?>>None</label>
+			</li>
+			<li class="Highlight sub" id="li_HighlightConflict">
+				<label for="id_HighlightConflict"><input type="radio" name="HighlightView" id="id_HighlightConflict" onClick="ScheduleShowConflicts = '1'; DisplaySchedule();"<? if ( $_SESSION['user']['calendar_showconflicts'] == '1' ) { ?> checked<? } ?>>Conflict</label>
+			</li>
+			<li class="Highlight sub" id="li_HighlightCredential">
+				<label for="id_HighlightCredential"><input type="radio" name="HighlightView" id="id_HighlightCredential" onClick="ScheduleShowConflicts = 'Credential'; DisplaySchedule();"<? if ( $_SESSION['user']['calendar_showconflicts'] == 'Credential' ) { ?> checked<? } ?>>Credential</label>
+			</li>
+			<li class="Highlight sub" id="li_HighlightInstructor">
+				<label for="id_HighlightInstructor"><input type="radio" name="HighlightView" id="id_HighlightInstructor" onClick="ScheduleShowConflicts = 'Instructor'; DisplaySchedule();"<? if ( $_SESSION['user']['calendar_showconflicts'] == 'Instructor' ) { ?> checked<? } ?>>Instructor</label>
+			</li>
+			<li class="Highlight sub" id="li_HighlightRoom">
+				<label for="id_HighlightRoom"><input type="radio" name="HighlightView" id="id_HighlightRoom" onClick="ScheduleShowConflicts = 'Room'; DisplaySchedule();"<? if ( $_SESSION['user']['calendar_showconflicts'] == 'Room' ) { ?> checked<? } ?>>Room</label>
+			</li>
+		<!-- Add l1 subs for the other views that set ScheduleShowConflicts to a value and calls DisplaySchedule(); -->
+		</ul>
+	</li>
+	<!--
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule/Building" role="button" class="btn btn-xs">Building</a></li>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule/Class" role="button" class="btn btn-xs">Class</a></li>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule/Course" role="button" class="btn btn-xs">Course</a></li>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule/Department" role="button" class="btn btn-xs">Department</a></li>
+	-->
+</ul>
+<div id="div_CalendarKey">
+<br>
+<b>Calendar Key:</b>
+<br>
+<br>
+<div>&nbsp;<span class="online">ON</span> = Online class</div>
+<div><span class="offcampus">OFF</span> = Off campus class</div>
+<?
+#d_Var("\$_SESSION['user']['calendar_showconflicts']",$_SESSION['user']['calendar_showconflicts'],'d');
+#if ( $_SESSION['user']['calendar_showconflicts'] ) {
+?>
+<br>
+<div id="divHighlightNone">
+<h3>Highlight None</h3>
+</div>
+<div id="divHighlightConflict">
+<h3>Highlight Conflicts</h3>
+<b>Credential:</b> Text:
+<div class="class_Div class_Credential_Conflict">Red = conflict</div>
+<div class="class_Div class_Credential_None">Orange = none</div>
+<br>
+<b>Instructor:</b> Background:
+<div class="class_Div class_Instructor_Conflict">Red = conflict</div>
+<div class="class_Div class_Instructor_None">Orange = none</div>
+<div class="class_Div class_Instructor_Multiple">Yellow = multiple</div>
+<br>
+<b>Room:</b> Border:
+<div class="class_Div class_Room_Conflict">Red = conflict</div>
+<div class="class_Div class_Room_None">Orange = none, on campus</div>
+<div class="class_Div class_Room_Multiple">Yellow = multiple</div>
+</div>
+<div id="divHighlightCredential">
+<h3>Highlight Credentials</h3>
+</div>
+<div id="divHighlightInstructor">
+<h3>Highlight Instructors</h3>
+</div>
+<div id="divHighlightRoom">
+<h3>Highlight Rooms</h3>
+</div>
+    <div> <h4>Credential optional color</h4>
+        <p class="l_height">Ferrari Red</p>
+        <p class="">Electric crimson</p>
+        <p class=""> Tomato</p>
+        <p class="">Orioles orange</p>
+        <p class="">Orange </p>
+        <p class="">Fulvous</p>
+        <p class="">Citrine</p>
+        <p class="">Maize</p>
+        <p class="">Yellow</p>
+        <p class="">Chartreuse</p>
+        <p class="">Lime</p>
+        <p class="">Kelly green</p>
+        <p class="">Celeste</p>
+        <p class="">Electric blue</p>
+        <p class=""> Cyan</p>
+        <p class="">Heliotrope</p>
+        <p class="">Bright ube</p>
+        <p class="">Brilliant lavender</p>
+        <p class="">Purple pizzazz</p>
+        <p class="">Magenta </p>
+        <p class="">Deep pink</p>
+        <p class="">number 22</p>
+        <p class="">number 23</p>
+    </div>
+
+
+<?
+#}
+?>
+</div><!-- div_CalendarKey -->
+<?
+t_End(); // End TRACKing include_filename.phpinc.
+?>

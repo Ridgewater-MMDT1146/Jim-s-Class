@@ -1,0 +1,62 @@
+<?
+// classmeetingFormProcess.phpinc
+// Process the classmeeting form.
+t_Begin(); // Begin TRACKing included file.
+if ( $f['uuid'] != $_SESSION['uuid'] ) {
+  // Not a page reload.
+  if ( $f['classmeetingId'] ) {
+    // UPDATE classmeeting.
+    $query = "
+        UPDATE `classmeeting`
+           SET classId = ".$f['classId']."
+             , classmeetingStartDate = '".query_safe($f['classmeetingStartDate'])."'
+             , classmeetingEndDate = '".query_safe($f['classmeetingEndDate'])."'
+             , weekdayId = ".$f['weekdayId']."
+             , classmeetingBeginTime = '".query_safe($f['classmeetingBeginTime'])."'
+             , classmeetingEndTime = '".query_safe($f['classmeetingEndTime'])."'
+             , roomId = ".$f['roomId']."
+             , userId = ".$_SESSION['user']['userId']."
+         WHERE classmeetingId = ".$f['classmeetingId']."
+    ";
+    d_Var('classmeetingUPDATE',$query,'q');
+    $classmeetingUPDATE = query_do($query);
+    d_Var('$classmeetingUPDATE',$classmeetingUPDATE,'l');
+    displayMessage('Classmeeting '.$f['classmeetingStartDate'].' updated.');
+  } else {
+    // INSERT classmeeting.
+    $query = "
+      INSERT INTO `classmeeting` (           AND
+          classId
+        , classmeetingStartDate
+        , classmeetingEndDate
+        , weekdayId
+        , classmeetingBeginTime
+        , classmeetingEndTime
+        , roomId
+        , userId
+      ) VALUES (
+          ".$f['classId']."
+        , '".query_safe($f['classmeetingStartDate'])."'
+        , '".query_safe($f['classmeetingEndDate'])."'
+        , ".$f['weekdayId']."
+        , '".query_safe($f['classmeetingBeginTime'])."'
+        , '".query_safe($f['classmeetingEndTime'])."'
+        , ".$f['roomId']."
+        , ".$_SESSION['user']['userId']."
+      )
+    ";
+    d_Var('classmeetingINSERT',$query,'q');
+    $classmeetingINSERT = query_do($query);
+    d_Var('$classmeetingINSERT',$classmeetingINSERT,'l');
+    $f['classmeetingId'] = mysql_insert_id();
+    d_Var("\$f['classmeetingId']",$f['classmeetingId']);
+    displayMessage('Classmeeting '.$f['classmeetingStartDate'].' added.');
+  }
+  // Remember that the form was processed.
+  $_SESSION['uuid'] = $f['uuid'];
+} else {
+  // Page was reloaded.
+  displayMessage('Page reloaded.','warn');
+}
+t_End(); // End TRACKing included file.
+?>

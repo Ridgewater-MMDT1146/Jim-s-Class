@@ -1,0 +1,71 @@
+<?
+// admin/course/departmentFilter.phpinc
+// Setup and display the department filter.
+
+t_Begin(); // Begin TRACKing departmentFilter.phpinc.
+
+// Setup $filter_department.
+$departmentFilter = array();
+$departmentIds = '';
+$query = "
+    SELECT departmentId
+         , departmentCode
+         , departmentName
+      FROM `department`
+     WHERE departmentInactive = 0
+  ORDER BY departmentCode
+";
+d_Var('departmentResult',$query,'q');
+$departmentResult = query_do($query);
+$departmentCount = $GLOBALS['_QUERY']['count'];
+d_Var('$departmentResult',$departmentResult);
+if ( $departmentCount ) {
+  query_seek($departmentResult, 0);
+  while ($departmentInfo = query_row($departmentResult)) {
+		if ( f('filter_department_'.$departmentInfo['departmentId']) ) {
+			$departmentFilter[$departmentInfo['departmentId']] = 1;
+			$departmentIds = listAppend($departmentIds,$departmentInfo['departmentId']);
+		}
+  }
+}
+d_Var('$departmentFilter',$departmentFilter,'');
+if ( !$departmentIds ) $departmentIds = '0';
+if ( !isset($displayDepartmentFilter) || $displayDepartmentFilter ) { // Should the department filter be displayed?
+	// Yes, Display the department filter.
+	if ( $departmentCount ) {
+?>
+<fieldset><legend>Department filter</legend>
+<?
+		query_seek($departmentResult, 0);
+		while ($departmentInfo = query_row($departmentResult)) {
+?>
+	<span class="nowrap" onMouseOver="ttShow(<?=ttSafe(trim($departmentInfo['departmentName']))?>);" onMouseOut="ttHide();"><input type="checkbox" name="filter_department_<?=$departmentInfo['departmentId']?>" id="id_department_<?=$departmentInfo['departmentId']?>" value="1"<? if ( isset($departmentFilter[$departmentInfo['departmentId']]) ) { ?> checked<? } ?>><label for="id_department_<?=$departmentInfo['departmentId']?>"><?=$departmentInfo['departmentCode']?></label></span>
+<?
+		}
+	}
+?>
+<br>
+<?
+button('Apply department filter','Only show courses for the selected departments.');
+?>
+</fieldset>
+<?
+} else { // Should the department filter be displayed?
+	// No, Only add checked department filters.
+	if ( $departmentCount ) {
+?>
+<fieldset><legend>Department filter</legend>
+<?
+		query_seek($departmentResult, 0);
+		while ($departmentInfo = query_row($departmentResult)) {
+			if ( isset($departmentFilter[$departmentInfo['departmentId']]) ) {
+?>
+	<input type="hidden" name="filter_department_<?=$departmentInfo['departmentId']?>" value="1">
+<?
+			}
+		}
+	}
+} // Should the department filter be displayed?
+
+t_End(); // End TRACKing departmentFilter.phpinc.
+?>

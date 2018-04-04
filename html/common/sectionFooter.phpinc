@@ -1,0 +1,13 @@
+<?
+// common/sectionFooter.phpinc
+t_Begin(); // Begin TRACKing included file.
+if ( !isset($GLOBALS['sectionHeaderCount']) ) $GLOBALS['sectionHeaderCount'] = 0;
+if ( !isset($GLOBALS['sectionFooterCount']) ) $GLOBALS['sectionFooterCount'] = 1;
+while ( $GLOBALS['sectionFooterCount'] <= $GLOBALS['sectionHeaderCount'] ) {
+?>
+</td></tr></table></div><!-- sectionId_<?=$GLOBALS['sectionFooterCount']?> -->
+<?
+	$GLOBALS['sectionFooterCount']++;
+}
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

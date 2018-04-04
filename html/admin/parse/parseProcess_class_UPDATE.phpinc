@@ -1,0 +1,26 @@
+<?
+// parseProcess_class_UPDATE.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing parseProcess_class_UPDATE.phpinc.
+
+d_Var('$thisClass',$thisClass,'');
+
+$query = "
+    UPDATE `class`
+       SET YRTR = '".query_safe($thisClass['YRTR'])."'
+         , classQId = '".query_safe($thisClass['classQId'])."'
+         , courseId = ".$thisClass['courseId']."
+         , classSection = '".query_safe($thisClass['classSection'])."'
+         , classEnr = ".$thisClass['classEnr']."
+         , classMax = ".$thisClass['classMax']."
+         , classStartDate = '".query_safe(valid_date($thisClass['classStartDate']))."'
+         , classEndDate = '".query_safe(valid_date($thisClass['classEndDate']))."'
+     WHERE classId = ".$thisClass['classId']."
+";
+d_Var('classUPDATE',$query,'q');
+$classUPDATE = query_do($query);
+d_Var('$classUPDATE',$classUPDATE,'l');
+
+t_End(); // End TRACKing parseProcess_class_UPDATE.phpinc.
+?>

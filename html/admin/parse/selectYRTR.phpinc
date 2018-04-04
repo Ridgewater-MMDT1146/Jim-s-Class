@@ -1,0 +1,48 @@
+<?
+// selectYRTR.phpinc
+// Select the YRTR to parse.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+sectionHeader('');
+
+?>
+<form name="form_name" action="<?=php_self()?>" method="post">
+  <input type="hidden" name="form" value="form_name">
+  <input type="hidden" name="uuid" value="<?=uuid()?>">
+	<label for="YRTR">Year/term to parse:</label>
+	<select name="YRTRParse">
+		<option value=""></option>
+		<?
+		foreach ( $YRTR_files as $YRTR => $files ) {
+			// Get session info.
+			$query = "
+					SELECT sessionName
+			      FROM `session`
+					 WHERE YRTR = '".query_safe($YRTR)."'
+			";
+			#d_Var('sessionInfo',$query,'q');
+			$sessionInfo = query_info($query);
+			#d_Var('$sessionInfo',$sessionInfo);
+			if ( isset($sessionInfo['sessionName']) ) {
+				$optionText = $sessionInfo['sessionName'].' ('.$YRTR.') ('.count($files).' files)';
+				$sessionName = $sessionInfo['sessionName'];
+			} else {
+				$optionText = $YRTR;
+				$sessionName = $YRTR;
+			}
+			
+		?>
+		<option value="<?=$YRTR?>|<?=$sessionName?>"><?=$optionText?></option>
+		<?
+		}
+		?>
+	</select>
+	<input type="submit" name="task" value="Parse">
+	
+</form>
+<?
+sectionFooter();
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

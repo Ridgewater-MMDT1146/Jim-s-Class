@@ -1,0 +1,42 @@
+<?
+// admin/group/groupProcess.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+if ($f['userpermissionId']) {
+  // UPDATE the userpermission.
+  $f['ModifiedOn'] = currentDateTime();
+  $query = "
+    UPDATE `userpermission`
+       SET
+         userpermissionName = '".$f['userpermissionName']."',
+         groupDescription = '".$f['groupDescription']."',
+         ModifiedOn = '".query_safe($f['ModifiedOn'])."',
+         modifiedBy = ".$_SESSION['user']['trueId']."
+     WHERE userpermissionId = ".$f['userpermissionId']."
+  ";
+  $groupUpdate = query_do($query);
+} else {
+  // INSERT the userpermission.
+  $f['AddedOn'] = currentDateTime();
+  $query = "
+    INSERT
+      INTO `userpermission` (
+      userpermissionName,
+      groupDescription,
+      AddedOn,
+      AddedBy
+    ) VALUES (
+     '".$f['userpermissionName']."',
+     '".$f['groupDescription']."',
+     '".query_safe($f['AddedOn'])."',
+      ".$_SESSION['user']['trueId']."
+    )
+  ";
+  $groupInsert = query_do($query);
+  $f['userpermissionId'] = $GLOBALS['_QUERY']['insertId'];
+  $f['form'] = '';
+}
+
+t_End(); // End TRACKing included file.
+?>

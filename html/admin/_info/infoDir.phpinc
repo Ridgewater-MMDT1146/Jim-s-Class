@@ -1,0 +1,135 @@
+<?
+// admin/_info/dir.php
+$f['table']= '';
+$driveDir = explode(":",str_replace("\\","/",$ROOT));
+$baseDir = $driveDir[1]."/";
+#$baseDir = "/";
+// Set variables.
+// Array of extensions to include.
+// Use false to include files with no extension.
+$includeFilter = array('bmp','gif','jpeg','jpg','png','xbm','xpm');
+//$includeFilter = array();
+// Array of extensions to exclude.
+// Use false to exclude files with no extension.
+// Set $includeFilter to an empty array to allow all except $excludeFilter extensions.
+$excludeFilter = array('phpinc',false);
+formValue('dir');
+formValue('dirCurrent');
+formValue('image');
+
+if ($f['image'] != "") {
+?>
+<br>
+<img src="../../info/_info/images/thumb.php?image=<?=$f['image']?>&dirCurrent=<?=$f['dirCurrent']?>">
+<a href="../../_info/thumb.php?image=<?=$f['image']?>&dirCurrent=<?=$f['dirCurrent']?>">Thumbnail for <?=$f['image']?></a>
+<?
+}
+
+
+if ($f['dirCurrent'] == '') { $f['dirCurrent'] = $baseDir; }
+if ($f['dir'] != '') {
+  if ($f['dir'] != '..') {
+    $f['dirCurrent'] .= $f['dir']."/";
+  } else {
+    $dirArray = explode('/',$f['dirCurrent']);
+    $temp = array_pop($dirArray);
+    $temp = array_pop($dirArray);
+    $f['dirCurrent'] = '';
+    foreach ($dirArray as $thisDir) {
+      $f['dirCurrent'] .= $thisDir."/";
+    }
+    //$f['dirCurrent'] = $f['dirCurrent'];
+  }
+}
+$dirArray = array();
+$fileArray = array();
+if ($handle = opendir($f['dirCurrent'])) {
+  while (false !== ($file = readdir($handle))) {
+    if (filetype($f['dirCurrent'].$file) == 'dir') {
+      if ($file != '.' && ($file != ".." || $f['dirCurrent'] != $baseDir) && substr($file,0,1) != "_") {
+        $dirArray[] = $file;
+      }
+    } else {
+      if (strstr($file,".")) {
+        $ext = array_pop(explode('.',$file));
+      } else {
+        $ext = false;
+      }
+      if ((count($includeFilter) == 0 || in_array($ext,$includeFilter)) && !in_array($ext,$excludeFilter)) {
+        $fileArray[] = $file;
+      }
+    }
+  }
+  closedir($handle);
+?>
+<table class="dir_info">
+<tr><td colspan="3" class="titleSmallBlack">/<?=str_replace($baseDir,"",$f['dirCurrent'])?></td></tr>
+<?
+  $i = 0;
+  foreach ($dirArray as $dir) {
+    $i++;
+?>
+  <tr>
+    <td class="right">
+    <form name="form_Browse_<?=$i?>" action="<?=php_self()?>?task=infoDir" method="post" class="inline">
+      <input type="hidden" name="dirCurrent" value="<?=$f['dirCurrent']?>">
+      <input type="hidden" name="dir" value="<?=$dir?>">
+<?
+  if ($dir != '..') {
+?>
+      <input type="submit" name="task" value="Browse" class="smaller_info">
+<?
+  } else {
+?>
+      <input type="submit" name="task" value="Up" class="smaller_info">
+<?
+  }
+?>
+    </form>
+    </td>
+    <td><img src="images/folder.jpg" alt="folder"></td>
+    <td><?=$dir?></td>
+  </tr>
+<?
+  }
+  $i = 0;
+  foreach ($fileArray as $image) {
+    $i++;
+?>
+  <tr>
+    <td class="right">
+    <form name="form_Select_<?=$i?>" action="<?=php_self()?>" method="post" class="inline">
+      <input type="hidden" name="dirCurrent" value="<?=$f['dirCurrent']?>">
+      <input type="hidden" name="image" value="<?=$image?>">
+      <input type="submit" name="task" value="Select" class="smaller_info">
+    </form>
+    </td>
+    <td><img src="images/image.jpg" alt="image"></td>
+    <td class="titleSmall"><?=$image?></td>
+  </tr>
+<?
+  }
+?>
+<tr><th colspan="3">Local</th></tr>
+  <tr>
+    <th colspan="3">
+    <form name="form_Cancel_<?=$i?>" action="<?=php_self()?>" method="post" class="inline">
+      <input type="hidden" name="task" value="Upload">
+      <input type="file" name="image" class="smaller_info">
+    </form>
+    </th>
+  </tr>
+  <tr>
+    <th colspan="3">
+    <form name="form_Cancel_<?=$i?>" action="<?=php_self()?>" method="post" class="inline">
+      <input type="submit" name="task" value="Cancel" class="smaller_info">
+    </form>
+    </th>
+  </tr>
+</table>
+<?
+} else {
+  echo "No files found in ".$f['dirCurrent'].".<br>\n";
+}
+#pageFooter();
+?>

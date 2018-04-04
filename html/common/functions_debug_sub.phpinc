@@ -1,0 +1,598 @@
+<?
+// common/functions_debug_sub.phpinc
+// Contains the sub-debug functions called by common/functions_debug.phpinc.
+
+// DEBUG functions do not as yet exist.
+// Setup @_DEBUG']['track'] for functions.phpinc.
+$backtrace = debug_backtrace();
+// push functions_debug.
+#array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false)); // Push the caller code.
+#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].' in '.basename(__FILE__).':'.__LINE__."<br>\n";
+// push functions_debug_sub.
+// Push code on stack.
+$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false);
+array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+
+#array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false)); // Push the caller code.
+#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.basename(__FILE__).':'.__LINE__.' as t_Begin() does not exist'."<br>\n";
+d_ad_begin(__FILE__,__LINE__); // Begin functions_debug_sub.phpinc call.
+
+if ( $GLOBALS['TRACK'] && $GLOBALS['debuggingAvailable'] ) { // Start this file TRACKing. Use this code when the function t_Begin is unavailable.
+  // Start file <li>.
+  $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent()."<li>";
+  // TRACK file begin.
+	$backtrace = debug_backtrace();
+
+	// Display filename, line, show/hide divs, filepath, and included by.
+	$_SESSION['TRACK']['number']++;
+	$_SESSION['TRACK']['data'] .= '<b>'.basename(__FILE__).'</b> :'.__LINE__.' <div id="TRACK_HIDE_'.$_SESSION['TRACK']['number'].'" class="d_s_il d_s_l"><a href="javascript: '."divShowInline('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divShow('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('TRACK_HIDE_".$_SESSION['TRACK']['number']."'".');" class="d_s_vt">Expand +</a></div><div id="TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l"><a href="javascript: '."divShowInline('TRACK_HIDE_".$_SESSION['TRACK']['number']."'); divHide('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'".');" class="d_s_w">Collapse -</a></div> <span class="d_s_fp">('.__FILE__.')</span> <span class="d_s_fi">(included by '.$backtrace['0']['file'].":".$backtrace['0']['line'].")</span>\n";
+	// Include show div.
+	$_SESSION['TRACK']['data'] .= '<div id="BEGIN_TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l">'."\n";
+  // Start <ol>.
+  $_SESSION['TRACK']['ol'] += 1; $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent().'<ol class="d_s_op">'."\n";
+}
+
+// d__array($varName, $varArray, $flag)
+// Internal functions_debug only function. Called by d_Var() and d__array().
+// Display the array.
+//  $varName = Array name.
+// $varArray = Array values.
+//     $flag = Pass through of the $flag array.
+function d__array($varName, $varArray, $flag) {
+  $d__array_output = '';
+  #$d__array_output .= d__lb().'var_array_begin '.$varName.'<pre>'.print_r($varArray,true).'</pre>'.d__le(); // DEBUG d_Var.
+  if ( $flag['a'] != 'd_s_ap' ) $flag['a'] = 'd_s_an';
+  #$d__array_output .= d__lb().'('.print_r($varArray,true).') '.d__le(); // DEBUG d__array.
+  if ( !$flag['_.'] && $flag['a'] != 'd_s_an' ) {
+    $d__array_output .= d__lb().d__var_name_class($varName.' =',$flag).$flag['l']."<br>\n".d__le();
+  } else {
+    $d__array_output .= d__lb().'<br>'.d__le();
+  }
+  #$d__array_output .= d__lb().'('.print_r($varArray,true).') '.d__le(); // DEBUG d_Var.
+  $flag['_np'] = str_replace(' d_s_b','',$flag['_np']);
+  if ( $flag['a'] == 'd_s_an' ) $flag['a'] = 'd_s_ap';
+  if ( !$flag['k']  ) $varArray = d__ksorti($varArray);
+  #$d__array_output .= d__lb().'('.print_r($varArray,true).') '.d__le(); // DEBUG d_Var.
+  foreach ($varArray as $varArrayKey => $varArrayValue) {
+    if ( !is_array($varArrayValue) ) {
+      $flag['a'] = 'd_s_as';
+      if ( $flag['c'] ) $varArrayValue = d__var_color($varArrayValue, $flag);
+      $d__array_output .= d__lb().' &nbsp; '.d__var_line($varName."[".d__var_quote($varArrayKey)."]", $varArrayValue, $flag).d__le(); // With indent.
+      #$d__array_output .= d__lb().d__var_line($varName."[".d__var_quote($varArrayKey)."]", $varArrayValue, $flag).d__le(); // Without indent
+      $d__array_output .= d__lb()."<br>\n".d__le();
+    } else {
+      $flag['l'] = '';
+      $flag['a'] = 'd_s_ap';
+      #$d__array_output .= d__lb().'var_array_call '.$varArrayKey.'<pre>'.print_r($varArrayValue,true).'</pre>'.d__le(); // DEBUG d_Var.
+      $d__array_output .= d__lb().d__array(' &nbsp; '.$varName."[".d__var_quote($varArrayKey)."]", $varArrayValue, $flag).d__le(); // With indent.
+      #$d__array_output .= d__lb().d__array($varName."[".d__var_quote($varArrayKey)."]", $varArrayValue, $flag).d__le(); // Without indent.
+    }
+  }
+	/** /
+	if ( $varName == '$id' ) {
+		var_dump($varName);
+		var_dump($varArray);
+	}
+	/**/
+  return $d__array_output;
+}
+
+// d__htmlspecialchars($string)
+//"integer" "double"
+// Return html safe string with &nbsp; intact.
+function d__htmlspecialchars($string) {
+	if ( gettype($string) != 'string' ) {
+		#echo gettype($string),'<pre>';print_r($string);echo"</pre>\n";
+	}
+	return str_replace('&amp;nbsp;','&nbsp;',htmlspecialchars((string)$string));
+}
+
+// d__ksorti($array)
+// Internal functions_debug only function. Called by d__array() and pageFooter_debug.
+// Sort an associative array.
+// $array = The array to sort.
+function d__ksorti($array) {
+  #echo 'd__ksorti($array):'.__LINE__.' <pre>'.print_r($array,true)."</pre>\n"; // DEBUG d__ksorti.
+  if ( is_array($array) ) {
+    $keys = array_keys($array);
+    #echo '$keys:'.__LINE__.' <pre>'.print_r($keys,true)."</pre>\n"; // DEBUG d__ksorti.
+    $array2 = array();
+    foreach($keys as $key) {
+      if ( !is_numeric($key) ) {
+        $array2[strtolower($key).'_|_'.$key] = NULL;
+      } else {
+        $array2[twoDigit($key,5).'_|_'.$key] = NULL;
+      }
+    }
+		#ksort($array2);
+		uksort($array2, 'strcasecmp');
+    #echo '$array2:'.__LINE__.' <pre>'.print_r($array2,true)."</pre>\n"; // DEBUG d__ksorti.
+    $array3 = array();
+    foreach($array2 as $key => $subkey) {
+      $splitKeys = explode('_|_',$key);
+      #print_r($splitKeys); exit;
+      $array3[$splitKeys[1]] = $array[$splitKeys[1]];
+    }
+    #echo '$array3:'.__LINE__.' <pre>'.print_r($array3,true)."</pre>\n"; // DEBUG d__ksorti.
+    return $array3;
+  } else {
+    return $array;
+  }
+}
+
+// d__lb()
+// Internal functions_debug only function. Called by d_Var(), d__array(), d_varline(), and d__var_name_class().
+// Use at beginning of line.
+// TRACKs which __LINE__ generated output when $GLOBALS['DEBUG_functions_debug'] = true.
+function d__lb() {
+  if ( !$GLOBALS['DEBUG_functions_debug'] ) {
+    return '';
+  } else {
+    $d__bt = debug_backtrace();
+		//echo '$d__lb=<pre>'; print_r($d__lb); echo '</pre>';
+		$d__lb = "\n".'<span class="d_s_i">'.$d__bt[0]['line'];
+		if ( strstr($d__bt[0]['file'],'sub') ) $d__lb .= "_sub";
+		$d__lb .= ":</span>";
+		return $d__lb;
+  }
+}
+
+// d__le()
+// Internal functions_debug only function. Called by d_Var(), d__array(), d_varline(), and d__var_name_class().
+// Use at end of line.
+// TRACKs which __LINE__ generated output when $GLOBALS['DEBUG_functions_debug'] = true.
+function d__le() {
+  if ( !$GLOBALS['DEBUG_functions_debug'] ) {
+    return '';
+  } else {
+    $d__bt = debug_backtrace();
+		$d__le = '<span class="d_s_i">'.$d__bt[0]['line'];
+		if ( strstr($d__bt[0]['file'],'sub') ) $d__le .= "_sub:";
+		$d__le .= ":</span>";
+		return $d__le;
+  }
+}
+
+// d__object_mysqli_result($varName, $varObject, $flag)
+// Internal functions_debug only function. Called by d_Var().
+// Display the object.
+//  $varName = object name.
+// $varObject = object values.
+//     $flag = Pass through of the $flag object.
+function d__object_mysqli_result($varName, $varObject, $flag) {
+  $d__object_output = '';
+  #$d__object_output .= d__lb().'var_object_begin '.$varName.'<pre>'.print_r($varObject,true).'</pre>'.d__le(); // DEBUG d_Var.
+  if ( $flag['a'] != 'd_s_ap' ) $flag['a'] = 'd_s_an';
+  #$d__object_output .= d__lb().'('.print_r($varObject,true).') '.d__le(); // DEBUG d__object.
+  if ( !$flag['_.'] && $flag['a'] != 'd_s_an' ) {
+    $d__object_output .= d__lb().d__var_name_class($varName.' =',$flag).$flag['l']."<br>\n".d__le();
+  } else {
+    $d__object_output .= d__lb().'<br>'.d__le();
+  }
+  #$d__object_output .= d__lb().'('.print_r($varObject,true).') '.d__le(); // DEBUG d_Var.
+  $flag['_np'] = str_replace(' d_s_b','',$flag['_np']);
+  if ( $flag['a'] == 'd_s_an' ) $flag['a'] = 'd_s_ap';
+  if ( !$flag['k']  ) $varObject = d__ksorti($varObject);
+  #$d__object_output .= d__lb().'('.print_r($varObject,true).') '.d__le(); // DEBUG d_Var.
+  foreach ($varObject as $varObjectKey => $varObjectValue) {
+    if ( !is_array($varObjectValue) ) {
+      $flag['a'] = 'd_s_as';
+      if ( $flag['c'] ) $varObjectValue = d__var_color($varObjectValue, $flag);
+      $d__object_output .= d__lb().' &nbsp; '.d__var_line($varName."[".d__var_quote($varObjectKey)."]", $varObjectValue, $flag).d__le(); // With indent.
+      #$d__object_output .= d__lb().d__var_line($varName."[".d__var_quote($varObjectKey)."]", $varObjectValue, $flag).d__le(); // Without indent
+      $d__object_output .= d__lb()."<br>\n".d__le();
+    } else {
+      $flag['l'] = '';
+      $flag['a'] = 'd_s_ap';
+      #$d__object_output .= d__lb().'var_object_call '.$varObjectKey.'<pre>'.print_r($varObjectValue,true).'</pre>'.d__le(); // DEBUG d_Var.
+      $d__object_output .= d__lb().d__array(' &nbsp; '.$varName."[".d__var_quote($varObjectKey)."]", $varObjectValue, $flag).d__le(); // With indent.
+      #$d__object_output .= d__lb().d__array($varName."[".d__var_quote($varObjectKey)."]", $varObjectValue, $flag).d__le(); // Without indent.
+    }
+  }
+	/**/
+	if ( $varName == '$id' ) {
+		#var_dump($varName);
+		#var_dump($varObject);
+		$varObjectRows = query__num_rows($varObject);
+		#var_dump($varObjectRows);
+		d_Var('$varObjectRows',$varObjectRows,'d');
+		$varObjectFields = mysqli_fetch_fields($varObject);
+		/** /
+		?><pre>var_dump($varObjectFields); <? var_dump($varObjectFields); ?></pre><?
+		/**/
+		#d_Var('$varObjectFields',$varObjectFields,'d');
+		foreach ( $varObjectFields as $varObjectField ) {
+			d_Var('$varObjectField',$varObjectField,'d');
+			#d_Var("\$varObjectField['name']",$varObjectField['name'],'d');
+			#d_Var("\$varObjectField['name']",$varObjectField=>name,'d');
+			$arrayVars = get_object_vars($varObjectField);
+			d_Var('$arrayVars',$arrayVars,'d');
+		}
+	}
+	/**/
+  return $d__object_output;
+}
+
+// d__on_off($type, $value, $backtrace, $track)
+// Internal functions_debug only function. Called by d_Off() or d_On().
+//      $type = Type of debugging to turn on or off. See d_Off().
+//     $value = false to turn off, true to turn on.
+// $backtrace = Calling file/function backtrace. Default is calling file/function.
+function d__on_off($type, $value, $backtrace=false, $track) {
+  if ( !$backtrace ) $backtrace = debug_backtrace();  // Get caller information if not sent by d_Off or d_On().
+	#d_Var('$backtrace',$backtrace,'d');
+	#d_Var("\$GLOBALS['_DEBUG']",$GLOBALS['_DEBUG'],'d');
+  switch (strtolower($type)) {
+		case 'code':
+			if ( $value ) {
+				// d_On();
+				if ( $GLOBALS['_DEBUG']['page'][$type] === true ) return;
+				// Push code on stack.
+				$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+				$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>$backtrace[0]['function'].'() '.basename($backtrace[0]['file']),'line'=>$backtrace[0]['line'],'set'=>true);
+				array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+			} else {
+				// d_Off();
+				if ( $GLOBALS['_DEBUG']['page'][$type] === false ) return;
+				// Pop code from stack.
+				$pageCodeIndex = array_shift($GLOBALS['_DEBUG']['code']['stack']);
+				$GLOBALS['_DEBUG']['page']['code'] = d_currentPageCode();//$GLOBALS['_DEBUG']['code']['save'][$pageCodeIndex]['set'];
+			}
+		case 'foot':
+		case 'head':
+		case 'lock':
+		case 'memory':
+		case 'query':
+      $DEBUGFlagOK = true;
+      if ( $track ) {
+				if ( !isset($GLOBALS['_DEBUG']['set']) ) {
+					$GLOBALS['_DEBUG']['set'] = array();
+					$GLOBALS['_DEBUG']['set']['Type'] = array();
+					$GLOBALS['_DEBUG']['set']['State'] = array();
+					$GLOBALS['_DEBUG']['set']['File'] = array();
+					$GLOBALS['_DEBUG']['set']['Line'] = array();
+				}
+				$GLOBALS['_DEBUG']['set']['Type'][] = $type;
+				$GLOBALS['_DEBUG']['set']['State'][] = $value;
+				$GLOBALS['_DEBUG']['set']['File'][] = $backtrace['0']['file'];
+				$GLOBALS['_DEBUG']['set']['Line'][] = $backtrace['0']['line'];
+			}
+			$GLOBALS['_DEBUG']['page'][$type] = $value;  // Set debug code for this page.
+      if ( $GLOBALS['_DEBUG']['page'][$type] ) {
+        t_Line('<span class="d_s_vt">Debug '.$type.'Page turned on</span>','h',$backtrace);
+      } else {
+        t_Line('<span class="d_s_vf">Debug '.$type.'Page turned off</span>','h',$backtrace);
+      }
+		break;
+    default:
+      $DEBUGFlagOK = false;
+		break;
+  }
+  if ( $DEBUGFlagOK ) {
+    //t_Func($type,false,debug_backtrace());
+  } else {
+    t_Func('Bad call to '.__FUNCTION__.' made.');
+  }
+	#d_Var("\$GLOBALS['_DEBUG']",$GLOBALS['_DEBUG'],'d');
+}
+
+// d__shDivBegin($varName,$var,$flag)
+// Create expand and collapse divs.
+// $varName = The name of the variable.
+//     $var = The variable.
+//    $flag = Pass through of the $flag array.
+function d__shDivBegin($varName,$var,$flag) {
+  #$GLOBALS['_DEBUG']['func']['d__sh'] = true;
+	if ( !isset($GLOBALS['_DEBUG']['func']['d__sh']) ) $GLOBALS['_DEBUG']['func']['d__sh'] = false;
+	$outputText = '';
+	$outputValue = '';
+	if ( !is_resource($var) ) {
+		// Not resource.
+		if ( !is_array($var) && !is_object($var) ) {
+			// Not array or object.
+			$class = $flag['_v'];
+			if ( strpos($class,'d_s_q') == true ) {
+				$outputValue = ' <span class="d_s_qn">'."'".trim(preg_replace('/\s+/',' ',$var))."'".'</span>';
+			}
+		} else {
+			if ( is_object($var) ) {
+				// An object.
+				#echo 'get_class('.$varName.') == '.get_class($var)."<br>\n";
+				if ( get_class($var) == 'mysqli_result' ) {
+					$count = mysqli_num_rows($var);
+				} else {
+					$count = count($var);
+				}
+			} else {
+				$count = count($var);
+			}
+			$class = '<span class=">d_s_an">';
+			$outputText = d__lb().' ('.$count.' element'.d__le();
+			if ( $count != 1 )  $outputText .= 's';
+			$outputText .= d__lb().')'.d__le();
+		}
+	} else {
+		// Is resource.
+		if ( $flag['r'] == '') $flag['r'] = ' class="d_s_r"';
+		//switch ( get_resource_type($var) ) {
+			//case 'mysql result':
+			if ( ( is_resource($var) && get_resource_type($var) == 'mysql result' ) || ( is_object($var) && get_class($var) == 'mysqli' ) || ( is_resource($var) && get_resource_type($var) == 'pgsql result' ) ) { // Is this a database resource?
+				$class = '<span class="d_s_r">';
+				$outputText = d__lb().' ('.query__num_rows($var).' element'.d__le();
+				if ( query__num_rows($var) != 1 )  $outputText .= 's';
+				$outputText .= d__lb().')'.d__le();
+				//break;
+				//default:
+			} else { // Is this a database resource?
+				// No.
+				$class ='<span class="d_s_e">';
+				$outputText .= d__lb()." <span".$flag['r'].">$varName</span> is resource type ".get_resource_type($var).d__le();
+				//break;
+			} // Is this a database resource?
+	}
+	if ( $GLOBALS['_DEBUG']['func']['d__sh'] ) echo "The variable name is: ".'<span class="info">'.$varName.'</span><br>';
+	if ( $GLOBALS['_DEBUG']['func']['d__sh'] ) echo "The variable value is: ".'<span class="info">'.$var.'</span><br>';
+	if ( $GLOBALS['_DEBUG']['func']['d__sh'] ) echo "The outputText is: ".'<span class="info">'.$outputText.'</span><br>';
+	if ( $GLOBALS['_DEBUG']['func']['d__sh'] ) echo "The outputValue is: ".'<span class="info">'.$outputValue.'</span><br>';
+	if ( !isset($GLOBALS['_DEBUG']['div']['count']) ) $GLOBALS['_DEBUG']['div']['count'] = 0;
+	$GLOBALS['_DEBUG']['div']['count']++; // Increment the div id counter.
+	$d__sh_SHOW = 'd__sh_'.$GLOBALS['_DEBUG']['div']['count'].'_SHOW';
+	$d__sh_HIDE = 'd__sh_'.$GLOBALS['_DEBUG']['div']['count'].'_HIDE';	
+	$GLOBALS['_DEBUG']['div']['end'][$GLOBALS['_DEBUG']['div']['count']] = $d__sh_HIDE;
+	array_unshift($GLOBALS['_DEBUG']['div']['stack'],$GLOBALS['_DEBUG']['div']['count']);
+	$d__sh = d__lb().'<div id="'.$d__sh_SHOW.'" class="'.$flag['_p'].'">'.'<a href="javascript: divShow(\''.$d__sh_HIDE.'\'); divHide(\''.$d__sh_SHOW.'\');">'.$class.$varName.$outputText.' +</span></a>'.$outputValue.$flag['l'].'</div>'."\n".d__le();
+	$d__sh .= d__lb().'<div id="'.$d__sh_HIDE.'" class="'.$flag['_p_'].'">'.'<a href="javascript: divShow(\''.$d__sh_SHOW.'\'); divHide(\''.$d__sh_HIDE.'\');">'.$class.$varName.$outputText.' =</span></a>'.$flag['l']."\n".d__le();
+	return $d__sh;
+}
+
+// d__shDivEnd()
+// Pop the latest $GLOBALS['_DEBUG']['div']['end']
+// $line is the line that called d__shDivEnd (__LINE__).
+function d__shDivEnd($line) {
+	$d__shStack = array_shift($GLOBALS['_DEBUG']['div']['stack']);
+	$d__shEnd = $GLOBALS['_DEBUG']['div']['end'][$d__shStack];
+	return '<!-- '.$d__shEnd.' '.$line.' -->';
+}
+
+// d__uuid()
+// Internal functions_debug only function. Called by d_Var().
+// Generate a uuid for debug functions.
+function d__uuid() {
+  $d__uuid = md5(getmypid().uniqid(rand()).$_SERVER['SERVER_NAME']);
+  return $d__uuid;
+}
+
+// d__var_color($varValue, $flag)
+// Internal functions_debug only function. Called by d_Var() and d__array().
+// Returns $varValue in a span tag with the background color set to varValue.
+function d__var_color($varValue, $flag) {
+  if ( substr($varValue,0,1) == '#' ) {
+    $varValueHex = twoDigit(substr($varValue,1),6); // Hex value.
+  } elseif ( strlen($varValue) != 6 && is_numeric($varValue) ) {
+    $varValueHex = twoDigit(dechex($varValue+0),6); // Assume number.
+  } else {
+    $varValueHex = twoDigit($varValue,6); // Assume hex.
+  }
+  if ( hexdec(substr($varValueHex,0,2)) + hexdec(substr($varValueHex,2,2)) + hexdec(substr($varValueHex,4,2)) > 380 ) {
+    $d__var_color = '<span class="d_s_cb" style="background-color:#'.$varValueHex.';">'.$varValueHex.' '.hexdec(substr($varValueHex,0,2)).','.hexdec(substr($varValueHex,2,2)).','.hexdec(substr($varValueHex,4,2)).' '.d__htmlspecialchars($varValue);
+  } else {
+    $d__var_color = '<span class="d_s_cw" style="background-color:#'.$varValueHex.';">'.$varValueHex.' '.hexdec(substr($varValueHex,0,2)).','.hexdec(substr($varValueHex,2,2)).','.hexdec(substr($varValueHex,4,2)).' '.d__htmlspecialchars($varValue);
+  }
+  $d__var_color .= '</span>';
+  $GLOBALS['flag']['h'] = 'h'; // h = Do not make value htmlSafe().
+  return $d__var_color;
+}
+
+// d__var_line($varName,$varValue,$flag)
+// Internal functions_debug only function. Called by d_Var() and d__array().
+// Display variable value line.
+function d__var_line($varName,$varValue,$flag) {
+  $GLOBALS['_DEBUG']['func']['d__var_line'] = false;
+	if ( !isset($GLOBALS['_DEBUG']['func']['d__var_line']) ) $GLOBALS['_DEBUG']['func']['d__var_line'] = false;
+  // Begin with the name.
+	if ( strpos($flag['_v'],'d_s_q') == false ) {
+		$varoutput = d__lb().d__var_name_class($varName,$flag).d__le(); // query
+	} else {
+		$varoutput = d__lb().d__shDivBegin($varName,$varValue,$flag).'<br>'.d__le();#.'ON LINE:'.__LINE__;
+	}
+  if ( isset($varValue) ) {
+    // Add the equals.
+    if ( $varValue === true || $varValue === false ) {
+      $flag['e'] = '===';
+    } else {
+			if ( strpos($flag['_v'],'d_s_q') == false ) {
+				$flag['e'] = '==';
+			} else {
+				$flag['e'] = ''; // d_s_q.
+			}
+    }
+    $varoutput .= d__lb().$flag['_e'].' '.$flag['e'].' '.$flag['_e_'].d__le();
+    // Add the value.
+    if ( !$flag['p'] && ( strpos(strtoupper($varName),'PASSWORD') !== false || strpos($varName,'PW') !==false || strpos($varName,'pw') !==false ) ) $varValue = '***hidden***'; // Hide password value.
+    #$varValue .= ' '.$varName.' '.strpos(strtoupper($varName),'PASSWORD').' '.$flag['p'];
+		if ( strpos ($flag['_v'],'d_s_q') == false ) {
+			#echo __LINE__.': '.$varName.': '; print_r($flag); echo "<br>\n";
+			$varoutput .= d__lb().$flag['_v'].d__var_value($varValue,$flag['h'],$flag).' '.$flag['_v_'].d__le();
+		} else {
+			#echo __LINE__.': '; print_r($flag); echo "<br>\n";
+			$varoutput .= d__lb().$flag['_v'].d__var_value($varValue,$flag['h'],$flag).' '.$flag['_v_'].'</div>'.d__shDivEnd(__LINE__.'_sub')."</div>\n".d__le();#.'ON LINE:'.__LINE__;
+		}
+  } else {
+    // Check for variable wirh array_key_exists90.
+    $varNameLabel = str_replace("$","",$varName); // $varNameLabel now holds the name of the passed variable (without $).
+    // Cannot distinguish NULL from !isset() so we have to check $GLOBALS to see if the variable exists.
+    if ( strpos($varNameLabel,'[') === false ) {
+      // Not an array so a simple array_key_exists() check works.
+      if ( array_key_exists($varNameLabel,$GLOBALS) ) {
+        if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) { echo '<span class="info">Set at line:'.__LINE__.'</span><br>'; }
+        $isNULL = true;
+      } else {
+        if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) { echo '<span class="info">Set at line:'.__LINE__.'</span><br>'; }
+        $isNULL = false;
+      }
+    } else {
+      // The variable is an array so we have to break it down to test for NULL.
+      $varNameArray = explode("[",str_replace(array("]","'"),"",$varNameLabel));
+      /**/
+      $isNULL = false;
+      switch ( count($varNameArray) ) {
+				case 2:
+          #d_Var("\$GLOBALS[$varNameArray[0]]",$GLOBALS[$varNameArray[0]]);
+          if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) { echo '<span class="info">Set at line:'.__LINE__.'</span><br>'; }
+          if ( array_key_exists($varNameArray[0],$GLOBALS)
+            && array_key_exists($varNameArray[1],$GLOBALS[$varNameArray[0]]) )
+          $isNULL = true;;
+				break;
+				case 3:
+          if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) { echo '<span class="info">Set at line:'.__LINE__.'</span><br>'; }
+          if ( array_key_exists($varNameArray[0],$GLOBALS)
+            && array_key_exists($varNameArray[1],$GLOBALS[$varNameArray[0]])
+            && array_key_exists($varNameArray[2],$GLOBALS[$varNameArray[0]][$varNameArray[1]]) )
+          $isNULL = true;;
+				break;
+				case 4:
+          if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) { echo '<span class="info">Set at line:'.__LINE__.'</span><br>'; }
+          if ( array_key_exists($varNameArray[0],$GLOBALS)
+            && array_key_exists($varNameArray[1],$GLOBALS[$varNameArray[0]])
+            && array_key_exists($varNameArray[2],$GLOBALS[$varNameArray[0]][$varNameArray[1]])
+            && array_key_exists($varNameArray[3],$GLOBALS[$varNameArray[0]][$varNameArray[1]][$varNameArray[2]]) )
+          $isNULL = true;;
+				break;
+				case 5:
+          if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) { echo '<span class="info">Set at line:'.__LINE__.'</span><br>'; }
+          if ( array_key_exists($varNameArray[0],$GLOBALS)
+            && array_key_exists($varNameArray[1],$GLOBALS[$varNameArray[0]])
+            && array_key_exists($varNameArray[2],$GLOBALS[$varNameArray[0]][$varNameArray[1]])
+            && array_key_exists($varNameArray[3],$GLOBALS[$varNameArray[0]][$varNameArray[1]][$varNameArray[2]])
+            && array_key_exists($varNameArray[4],$GLOBALS[$varNameArray[0]][$varNameArray[1]][$varNameArray[2]][$varNameArray[3]]) )
+          $isNULL = true;;
+				break;
+        default:
+          $isNULL = 'NULL';
+				break;
+      }
+    }
+    if ( $isNULL === true ) {
+      #echo 'isNULL is <span class="d_s_vt">true</span><br>';
+      $flag['e'] = 'is';
+      $varoutput .= d__lb().$flag['_e'].' '.$flag['e'].' '.$flag['_e_'].d__le();
+      $varoutput .= d__lb().$flag['_v'].'<span class="d_s_w">NULL</span>'.' '.$flag['_v_'].d__le();
+    } elseif ( $isNULL === false ) {
+      #echo 'isNULL is <span class="d_s_vf">false</span><br>';
+      $flag['e'] = 'is';
+      $varoutput .= d__lb().$flag['_e'].' '.$flag['e'].' '.$flag['_e_'].d__le();
+      $varoutput .= d__lb().$flag['_v'].'<span class="d_s_e">unset</span>'.' '.$flag['_v_'].d__le();
+    } else {
+      #echo 'isNULL is <span class="d_s_w">NULL.</span><br>';
+      $flag['e'] = 'is';
+      $varoutput .= d__lb().$flag['_e'].' '.$flag['e'].' '.$flag['_e_'].d__le();
+      $varoutput .= d__lb().$flag['_v'].'<span class="d_s_e">unset or NULL</span>'.' '.$flag['_v_'].d__le();
+    }
+  }
+	if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) echo("The variable name is: ".'<span class="info">'.$varName.'</span><br>');
+	if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) echo("The variable label is: ".'<span class="info">'.$varNameLabel.'</span><br>');
+	if ( $GLOBALS['_DEBUG']['func']['d__var_line'] ) echo("The variable value is: ".'<span class="info">'.$varValue.'</span><br>');
+  return $varoutput;
+}
+
+// d__var_name_class($varName,$flag)
+// Internal functions_debug only function. Called by d_Var(), d__array(), and d__var_line().
+// Setup the variable name class.
+function d__var_name_class($varName,$flag) {
+  // Setup the name class.
+  #$flag['_n'] = '';
+	if ( !$flag['C'] ) {
+		$flag['_n'] = trim($flag['a'].$flag['_np']);
+		if ( $flag['_n'] ) {
+			$flag['_n'] = '<span class="'.$flag['_n'].'">';
+			$flag['_n_'] = '</span>';
+		} else {
+			$flag['_n_'] = '';
+		}
+	} else {
+		$flag['_n'] = '';
+		$flag['_n_'] = '';
+	}
+  if ( $flag['h'] ) {
+		return d__lb().$flag['_n'].$varName.$flag['_n_'].d__le();
+	} else {
+		return d__lb().$flag['_n'].$varName.$flag['_n_'].d__le();
+	}
+}
+
+// d__var_quote($var)
+// Internal functions_debug only function. Called by d__array().
+// Returns the $varValue within single quotes ('') if not numeric else returns $varValue.
+// $varValue = Variable value.
+function d__var_quote($varValue) {
+  if ( !is_numeric($varValue) ) {
+    return d__lb()."'".$varValue."'".d__le();
+  } else {
+    return d__lb().$varValue.d__le();
+  }
+}
+
+// d__var_value($varValue, $flagAdd, $flag)
+// Returns a formatted value of a variable or array.
+// Called by d_Var, d__var_line, d__var_value, and t_Func.
+// $varValue = The variable value.
+//  $flagAdd = Set to 'h' to not quote or d__htmlspecialchars() $varValue.
+//     $flag = Pass through of the $flag array.
+function d__var_value($varValue, $flagAdd=false,$flag=array()) {
+  #echo '$flagAdd='.$flagAdd."<br>\n";
+	if ( !isset($flag['_q']) ) $flag['_q'] = "'";
+  if ( isset($varValue) ) {
+    if ( !is_array($varValue) ) {
+      if ( $varValue === true ) {
+        if ( !isset($flag['C']) || !$flag['C'] ) {
+					$d__var_value = d__lb().'<span class="d_s_vt">true</span>'.d__le(); // true value.
+				} else {
+					$d__var_value = d__lb().'true'.d__le(); // true value.
+				}
+      } elseif ( $varValue === false ) {
+				#print_r($flag);
+				#print_r(debug_backtrace());
+        if ( !isset($flag['C']) || !$flag['C'] ) {
+					$d__var_value = d__lb().'<span class="d_s_vf">false</span>'.d__le(); // false value.
+				} else {
+					$d__var_value = d__lb().'false'.d__le(); // false value.
+				}
+      } elseif ( is_resource($varValue) ) {
+        $d__var_value = d__lb().d_Var('',d__htmlspecialchars($varValue),$flagAdd.'-',debug_backtrace()).d__le(); // resoutce value.
+      } elseif ( is_numeric($varValue) ) {
+        $d__var_value = d__lb().d__htmlspecialchars($varValue).d__le(); // numeric value.
+      } elseif ( gettype($varValue) == 'string' ) {
+				#echo __LINE__.': '; print_r($flag); echo "<br>\n";
+        if ( strpos($flagAdd,'h') === false && ( !isset($flag['h']) || !$flag['h'] ) ) {
+          $d__var_value = d__lb().$flag['_q'].d__htmlspecialchars($varValue).$flag['_q'].d__le(); // string value without html.
+        } else {
+          $d__var_value = d__lb().($varValue).d__le(); // string value with html.
+        }
+      } else {
+        $d__var_value = d__lb().'<span class="d_s_vf">'.gettype($varValue).'</span>'.d__le(); // other type.
+      }
+    } else {
+      // array value.
+			$d__var_value = d__lb().'<span class="d_s_an">Array('.d__le();
+      foreach ($varValue as $key => $value) {
+        if ( !is_array($value) ) {
+          if ( strpos($flagAdd,'h') === false ) {
+            $d__var_value .= d__lb().'<span class="d_s_ap">['.d__htmlspecialchars($key).']=</span><span class="d_s_dn">'.d__htmlspecialchars($value).'</span>, '.d__le();
+          } else {
+            $d__var_value .= d__lb().'<span class="d_s_ap">['.d__htmlspecialchars($key).']=</span><span class="d_s_dn">'.$value.'</span>, '.d__le();
+          }
+        } else {
+          $d__var_value .= d__lb().'<span class="d_s_ap">['.$key.']=</span>'.d__var_value($value,$flagAdd,$flag).', '.d__le();
+        }
+      }
+      $d__var_value = d__lb().substr($d__var_value,0,strlen($d__var_value)-2).')</span>'.d__le();
+    }
+  } else {
+    $d__var_value = d__lb().'<span class="d_s_e">unset</span>'.d__le(); // unset or NULL vlaue.
+  }
+  return $d__var_value;
+}
+
+t_End(false, __FILE__, __LINE__);
+?>

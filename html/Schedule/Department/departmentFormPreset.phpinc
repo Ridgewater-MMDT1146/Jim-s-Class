@@ -1,0 +1,75 @@
+<?
+// departmentFormPreset.phpinc
+// Get original data and preset the department form.
+t_Begin(); // Begin TRACKing included file.
+// Ensure primary key is set.
+if ( !isset($f['departmentId']) ) { formValue('departmentId'); if ( !$f['departmentId'] ) $f['departmentId'] = 0; }
+// Get original department data.
+if ( $f['departmentId'] ) {
+  // $f['departmentId'] is set. Load original data from database.
+  $query = "
+    SELECT * FROM `department`
+     WHERE departmentId = ".$f['departmentId']."
+  ";
+  $departmentResult = query_do($query,'scheduler');
+  $departmentCount = $GLOBALS['_QUERY']['count'];
+  if ( $departmentCount == 1 ) {
+    // Load original data from record.
+    query_seek($departmentResult, 0);
+    $departmentInfo = mysql_fetch_assoc($departmentResult);
+    $o['departmentCode'] = $departmentInfo['departmentCode'];
+    $o['departmentName'] = $departmentInfo['departmentName'];
+    $o['departmenttypeId'] = $departmentInfo['departmenttypeId'];
+    $o['departmentNote'] = $departmentInfo['departmentNote'];
+    $o['departmentInactive'] = $departmentInfo['departmentInactive'];
+  } else {
+    // The record count was not 1. This is an error.
+    programmingError('Record count ('.$departmentCount.') for departmentId='.$f['departmentId'].' was not 1.');
+  }
+} else {
+  // $f['departmentId'] is 0. This is an add form. Set form_department data to default values.
+  $f['departmentId'] = 0;
+  if ( !isset($o['departmentCode']) ) $o['departmentCode'] = '';
+  if ( !isset($o['departmentName']) ) $o['departmentName'] = NULL;
+  $f['departmenttypeId'] = 0;
+  if ( !isset($o['departmentNote']) ) $o['departmentNote'] = NULL;
+  if ( !isset($o['departmentInactive']) ) $o['departmentInactive'] = '0';
+}
+// Preset department form data.
+if ( $f['form'] != 'form_department' ) {
+  // form_department not called by itself. Preload data for form.
+  if ( $f['departmentId'] ) {
+    // $f['departmentId'] is set. This is an edit form. Load form_department data from database.
+    /** / // Remove this section if original data is obtained above.
+    $query = "
+      SELECT * FROM `department`
+       WHERE departmentId = ".$f['departmentId']."
+    ";
+    $departmentResult = query_do($query,'scheduler');
+    $departmentCount = $GLOBALS['_QUERY']['count'];
+    /**/ // Remove this section if original data is obtained above.
+    if ( $departmentCount == 1 ) {
+      // Load original data from record.
+      query_seek($departmentResult, 0);
+      $departmentInfo = mysql_fetch_assoc($departmentResult);
+      $f['departmentCode'] = $departmentInfo['departmentCode'];
+      $f['departmentName'] = $departmentInfo['departmentName'];
+      $f['departmenttypeId'] = $departmentInfo['departmenttypeId'];
+      $f['departmentNote'] = $departmentInfo['departmentNote'];
+      $f['departmentInactive'] = $departmentInfo['departmentInactive'];
+    } else {
+      // The record count was not 1. This is an error.
+      programmingError('Record count ('.$departmentCount.') for departmentId='.$f['departmentId'].' was not 1.');
+  }
+  } else {
+    // $f['departmentId'] is 0. This is an add form. Set form_department data to default values.
+    $f['departmentId'] = 0;
+    if ( !isset($f['departmentCode']) ) $f['departmentCode'] = '';
+    if ( !isset($f['departmentName']) ) $f['departmentName'] = NULL;
+    $f['departmenttypeId'] = 0;
+    if ( !isset($f['departmentNote']) ) $f['departmentNote'] = NULL;
+    if ( !isset($f['departmentInactive']) ) $f['departmentInactive'] = '0';
+  }
+}
+t_End(); // End TRACKing included file.
+?>

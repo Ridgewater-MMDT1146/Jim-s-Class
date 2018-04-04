@@ -1,0 +1,56 @@
+/* CSS Document */
+nav#topnav{
+	xborder:1px solid green;
+	display:inline-block;
+	padding:0;
+	float:right;
+}
+nav#topnav > ul {
+	margin:0;
+	xborder:1px solid white;	
+	padding:0;
+}
+nav#topnav > ul > li{
+	display:inline-block;
+	text-align:center;
+	border-radius:10px;	/*4/20/15 jjp*/
+	background-color:#000000;
+	padding:10px 20px;
+}
+nav#topnav > ul > li:hover{
+
+	background-color:silver;
+	
+}
+nav#topnav > ul > li a {
+	color:#FFF;
+	display:inline-block;
+	text-decoration:none;
+}
+nav#topnav > ul > li a:hover, nav#topnav > ul > li a:focus {
+	
+	text-decoration:underline;
+}
+
+header {
+	overflow:hidden;
+	background-color:#880000;
+	text-align:center;
+	padding-top:10px;
+	padding-left:10px;
+	padding:10px;
+}
+header > h1 {
+	display:inline-block;
+	margin:0;
+	xborder:1px solid black;
+	color:white;
+}
+
+#home{
+	float:left;
+	display:inline-block;	
+	xborder:1px solid black;
+	color: #000000;;
+}
+

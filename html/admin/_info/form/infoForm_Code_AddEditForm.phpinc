@@ -1,0 +1,38 @@
+<?
+// admin/_info/form/infoForm_Code_AddEditForm.phpinc
+// Display the Add/Edit form code.
+t_Begin(); // Begin TRACKing included file.
+$codeOutput = '';
+$codeOutput .= "
+<?
+// ".$f['filenameBase']."Form.phpinc
+// Display the ".basename($f['filenameBase'])." Add/Edit form.
+t_Begin(); // Begin TRACKing included file.
+include('".$f['filenameBase']."FormPreset.phpinc');";
+switch( $f['displayFormUsing'] ) {
+  case 'css':
+    include('admin/_info/form/infoForm_Code_AddEditForm_CSS.phpinc');
+  break;
+  case 'table':
+    include('admin/_info/form/infoForm_Code_AddEditForm_Table.phpinc');
+  break;
+  default:
+    programmingError('The displayFormUsing ('.$f['displayFormUsing'].') is of incorrect type.');
+}
+$codeOutput .= "
+t_End(); // End TRACKing included file.
+?>
+";
+// form_code.
+if ( !isset($f['form_code_value']) ) $f['form_code_value'] = 0;
+?>
+<a name="form_code_name"></a>
+<input type="hidden" name="form_code_value" id="form_code_value_id" value="<?=$f['form_code_value']?>">
+<table><tr><td><fieldset><legend><a href="#form_code_name" name="form_code" onClick="return info_Set(this);"><div id="form_code_status" class="inline"><? if ( !$f['form_code_value']) { ?>+<? } else { ?>-<? } ?></div> Form code <span class="small_info">(using <?=$f['displayFormUsing']?>)</span></a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'form_code_name');"></legend>
+<div id="form_code_show" class="<? if ( !$f['form_code_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=htmlSafe(trim($codeOutput))."\n"?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

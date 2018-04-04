@@ -1,0 +1,80 @@
+<?
+// buildingForm.phpinc
+// Display the building Add/Edit form.
+t_Begin(); // Begin TRACKing included file.
+include('buildingFormPreset.phpinc');
+?>
+<table><tr><td><fieldset><legend><? if ( $buildingId ) { ?>Edit<? } else { ?>Add<? } ?> Building</legend>
+<form name="form_building" id="id_form_building" action="<?=php_self()?>" method="post">
+<input type="hidden" name="form" value="form_building">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="buildingId" id="id_buildingId" value="<?=htmlSafe($f['buildingId'])?>">
+<table>
+<? if ( isset($formError['campusId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['campusId']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Campus</td>
+    <td>
+<?
+      $campusIdQuery = 'SELECT campusId,campusName FROM `campus` ORDER BY campusName';
+      $campusIdResult = query_do($campusIdQuery);
+      $campusIdCount = $GLOBALS['_QUERY']['count'];
+?>
+      <select class="" name="campusId" id="id_campusId">
+        <option value=""></option>
+<?
+      query_seek($campusIdResult, 0);
+      while ($campusIdInfo = mysql_fetch_assoc($campusIdResult)) {
+?>
+        <option value="<?=$campusIdInfo['campusId']?>"<? if ( $f['campusId'] == $campusIdInfo['campusId'] ) { ?> selected<? } ?>><?=htmlSafe($campusIdInfo['campusName'])?></option>
+<?
+      }
+?>
+      </select>
+    </td>
+  </tr>
+<? if ( isset($formError['buildingCode']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['buildingCode']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Code</td>
+    <td><input type="text" class="" name="buildingCode" id="id_buildingCode" value="<?=htmlSafe($f['buildingCode'])?>" maxlength="8" style="width:4.82em;"></td>
+  </tr>
+<? if ( isset($formError['buildingName']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['buildingName']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Name</td>
+    <td><input type="text" class="" name="buildingName" id="id_buildingName" value="<?=htmlSafe($f['buildingName'])?>" maxlength="128" style="width:28.28em;"></td>
+  </tr>
+  <tr>
+    <td class="center" colspan="2">
+<?
+      if ( $f['buildingId'] ) {
+?>
+      <input type="submit" name="task" value="Update building">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Add building">
+<?
+      }
+      if ( $f['form'] != 'form_building' || isset($formError) || isset($f['postId']) ) {
+?>
+      <input type="submit" name="task" value="Cancel">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Done">
+<?
+      }
+?>
+    </td>
+  </tr>
+</table>
+</form>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

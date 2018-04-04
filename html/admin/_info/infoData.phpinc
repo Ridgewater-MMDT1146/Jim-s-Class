@@ -1,0 +1,73 @@
+<?
+// admin/_info/infoData.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+$fieldQuery="SHOW COLUMNS FROM `".$f['table']."`";
+$fieldResult = query_do($fieldQuery,$f['database']);
+$fieldCount = $GLOBALS['_QUERY']['count'];
+$query="SELECT * FROM `".$f['table']."`";
+$dataResult = query_do($query,$f['database']);
+$dataCount = $GLOBALS['_QUERY']['count'];
+?>
+<style type="text/css">
+table.data { border-top:1px solid silver; border-left:1px solid silver; }
+td.data, th.data { border-bottom:1px solid silver; border-right:1px solid silver; padding-left:2px; padding-right:2px; text-align:left; }
+</style>
+<table cellpadding="0" cellspacing="0"><tr><td>
+<table><tr><td><fieldset><legend><?=$f['database']?> <?=$f['table']?> Data (<?=$dataCount?> records)</legend>
+<table cellpadding="1" cellspacing="0" class="data">
+<tr>
+<?
+query_seek($fieldResult, 0);
+while ($fieldInfo = query_row($fieldResult)) {
+?>
+  <th class="info_info data"><?=$fieldInfo['Field']?></th>
+<?
+}
+?>
+</tr>
+<?
+$divCount = 0;
+if ($dataCount) {
+  query_seek($dataResult, 0);
+  while ($dataInfo = query_row($dataResult)) {
+?>
+    <tr>
+<?
+    query_seek($fieldResult, 0);
+    while ($fieldInfo = query_row($fieldResult)) {
+      if ( stripos($fieldInfo['Field'],"password") !== false || strpos($fieldInfo['Field'],"pw") !== false || strpos($fieldInfo['Field'],"PW") !== false ) {
+?>
+      <td class="data"><?=str_repeat("*", strlen($fieldInfo['Field']))?></td>
+<?
+      } else {
+				if ( strlen($dataInfo[$fieldInfo['Field']]) <= 30 ) {
+?>
+      <td class="data"><?=htmlSafe($dataInfo[$fieldInfo['Field']])?></td>
+<?
+				} else {
+					// In div.
+?>
+      <td class="data"><?=info_Div(htmlSafe(substr($dataInfo[$fieldInfo['Field']],0,27)),htmlSafe($dataInfo[$fieldInfo['Field']]))?></td>
+<?
+				}
+      }
+    }
+?>
+    </tr>
+<?
+  }
+} else {
+?>
+    <tr><td colspan="<?=$fieldCount?>" class="bold_info center_info error_info">No data in table</td>
+    </tr>
+<?
+
+}
+?>
+</table>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+
+?>

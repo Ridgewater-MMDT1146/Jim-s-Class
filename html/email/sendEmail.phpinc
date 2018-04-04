@@ -1,0 +1,83 @@
+<?
+// sendEmail.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+// Verify mail fields.
+#$mailSend = false;
+if ( !isset($mailSend) ) $mailSend = true;
+#$DEBUGEmailOn = true;
+if ( !isset($DEBUGEmailOn) ) $DEBUGEmailOn = false;
+$mailMessage = '';
+if ($mail->From == "") { $mailSend = false; $mailMessage .= 'From address not set. ($mail->From == "")<br>'; }
+if (count($mail->to) == 0) { $mailSend = false;  $mailMessage .= 'To address not set. (count($mail->to) == 0)<br>'; }
+if ($mail->Subject == "") { $mailSend = false;  $mailMessage .= 'Subject not set. ($mail->Subject == "")<br>'; }
+if ($mail->Body == "") { $mailSend = false;  $mailMessage .= 'Body not set. ($mail->Body == "")<br>'; }
+if ($mail->AltBody == "") { $mail->AltBody = "Please view this email in HTML format."; }
+
+if ($DEBUGEmailOn) {
+  echo '<span style="font-weight:normal">';
+  echo "<b>\$mail->From=</b>",$mail->From,": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  echo "<b>\$mail->to=</b>"; print_r($mail->to); echo ": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  echo "<b>\$mail->Subject=</b>",$mail->Subject,": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  echo "<b>\$mail->Body=</b>",$mail->Body,": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  echo "<b>\$mail->AltBody=</b>",$mail->AltBody,": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  echo "<b>\$mailMessage=</b>",$mailMessage,": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  #$mailHost = "bunsen.ridgewater.edu";  // Specify main email server.
+  $mailHost = "gloat.ridgewater.edu";  // Specify main email server. Dave F tells me to use this address instead.
+  foreach ($mail->to as $thisMailTo) {
+    echo "<b>\$thisMailTo="; print_r($thisMailTo); echo "</b>: ",basename(__FILE__),": ",__LINE__,"<br>\n";
+    if (!strstr($thisMailTo[0],"ridgewater.edu")) {
+      #$mailHost = "134.29.172.137";  // Email address not in ridgewater.edu domain. Specify backup email server.
+      $mailHost = "134.29.172.135";  // Email address not in ridgewater.edu domain. Specify backup email server. Dave F tells me to use this address instead.
+    }
+  }
+  echo "<b>\$mailHost=",$mailHost,"</b>: ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  echo '</span>'."\n";
+  #$_SESSION['pageFooterNoExit'] = false; require('common/pageSend.phpinc'); // DEBUG send page and exit before sending email.
+}
+
+if ($mailSend) {
+  // Send email.
+  $mail->IsSMTP();                           // set mailer to use SMTP
+  #$mailHost = "knockknock.ridgewater.edu";  // Specify main email server.
+  /** /
+  $mailHost = "bunsen.ridgewater.edu";  // Specify main email server.
+  foreach ($mail->to as $thisMailTo) {
+    if (!strstr($thisMailTo[0],"ridgewater.edu")) {
+      #$mailHost = "134.29.172.137";  // Email address not in ridgewater.edu domain. Specify backup email server.
+      $mailHost = "134.29.172.135";  // Email address not in ridgewater.edu domain. Specify backup email server. Dave F tells me to use this address instead.
+    }
+  }
+  /**/
+  $mailHost = '';
+  $mail->Host =$_SESSION['APP']['EMAIL']['Host'];  // specify mail server
+  if ( $_SESSION['APP']['EMAIL']['SMTPAuth'] ) {
+    $mail->SMTPAuth = true;     // turn on SMTP authentication
+    $mail->Username = $_SESSION['APP']['EMAIL']['Username'];  // SMTP username
+    $mail->Password = $_SESSION['APP']['EMAIL']['Password']; // SMTP password
+  }
+  //$mail->WordWrap = 50;                                 // set word wrap to 50 characters
+  //$mail->AddAttachment("/var/tmp/file.tar.gz");         // add attachments
+  //$mail->AddAttachment("/tmp/image.jpg", "new.jpg");    // optional name
+  if ($mail->Body != '') {
+    $mail->IsHTML(true);                                  // set email format to HTML
+  } else {
+    $mail->IsHTML(false);                                  // set email format to text
+  }
+  if (!$mail->Send())
+  {
+     $mailError = $mail->ErrorInfo;
+     $mailSend = false;
+     $mailMessage = "Message could not be sent.<p>Mailer Error: ".$mailError."<br>";
+  } else {
+     $mailError = '';
+     $mailSend = true;
+     $mailMessage = "Message has been given to server.<br>";
+  }
+} else {
+  $mailError = 'Fields for email were not preset correctly.';
+}
+
+t_End(); // End TRACKing included file.
+?>

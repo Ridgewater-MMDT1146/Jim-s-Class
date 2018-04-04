@@ -1,0 +1,48 @@
+<?
+// classFormVerify.phpinc
+// Verify the class form.
+t_Begin(); // Begin TRACKing included file.
+unset($formError); // Begin with no errors.
+
+// Verify classId.
+f('classId'); $is_valid = is_valid('classId',$f['classId'],'classId','class',true);
+if ( $is_valid !== true ) { $formError['classId'] = $is_valid; } // ENTRY ERROR! The classId is not valid.
+
+// Verify YRTR.
+f('YRTR'); $is_valid = is_valid('YRTR',$f['YRTR'],'YRTR','class');
+if ( $is_valid !== true ) { $formError['YRTR'] = $is_valid; } // ENTRY ERROR! The YRTR is not valid.
+
+// Verify classQId.
+f('classQId'); $is_valid = is_valid('classQId',$f['classQId'],'classQId','class');
+if ( $is_valid !== true ) { $formError['classQId'] = $is_valid; } // ENTRY ERROR! The classQId is not valid.
+
+// Verify courseId.
+f('courseId'); $is_valid = is_valid('courseId',$f['courseId'],'courseId','class');
+if ( $is_valid !== true ) { $formError['courseId'] = $is_valid; } // ENTRY ERROR! The courseId is not valid.
+
+// Verify classSection.
+f('classSection'); $is_valid = is_valid('classSection',$f['classSection'],'classSection','class');
+if ( $is_valid !== true ) { $formError['classSection'] = $is_valid; } // ENTRY ERROR! The classSection is not valid.
+
+// Verify classEnr.
+f('classEnr'); $is_valid = is_valid('classEnr',$f['classEnr'],'classEnr','class');
+if ( $is_valid !== true ) { $formError['classEnr'] = $is_valid; } // ENTRY ERROR! The classEnr is not valid.
+
+// Verify classMax.
+f('classMax'); $is_valid = is_valid('classMax',$f['classMax'],'classMax','class');
+if ( $is_valid !== true ) { $formError['classMax'] = $is_valid; } // ENTRY ERROR! The classMax is not valid.
+
+// Verify classStartDate.
+f('classStartDate'); $is_valid = is_valid('classStartDate',$f['classStartDate'],'classStartDate','class');
+if ( $is_valid !== true ) { $formError['classStartDate'] = $is_valid; } // ENTRY ERROR! The classStartDate is not valid.
+
+// Verify classEndDate.
+f('classEndDate'); $is_valid = is_valid('classEndDate',$f['classEndDate'],'classEndDate','class');
+if ( $is_valid !== true ) { $formError['classEndDate'] = $is_valid; } // ENTRY ERROR! The classEndDate is not valid.
+
+// Verify courseinsttypeId.
+f('courseinsttypeId'); $is_valid = is_valid('courseinsttypeId',$f['courseinsttypeId'],'courseinsttypeId','class');
+if ( $is_valid !== true ) { $formError['courseinsttypeId'] = $is_valid; } // ENTRY ERROR! The courseinsttypeId is not valid.
+
+t_End(); // End TRACKing included file.
+?>

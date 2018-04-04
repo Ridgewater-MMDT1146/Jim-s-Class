@@ -1,0 +1,27 @@
+<?
+// Schedule/ScheduleClass/ScheduleClassUpdate/RemoveClass.phpinc
+// Handle the RemoveClass task.
+
+t_Begin(); // Begin TRACKing RemoveClass.
+
+if ( $pageHeaderCall ) d_On();
+
+f('scId');
+if ( $f['DEBUG'] ) {
+?>
+<h1><?=__FILE__?></h1>
+<?
+	d_V();
+}
+
+$query = "
+    DELETE FROM `scheduleclass`
+     WHERE scheduleclassId = ".$f['scId']."
+";
+d_Var('scheduleclassDELETE',$query,'q');
+if ( !$f['DEBUG'] ) $scheduleclassDELETE = query_do($query);
+@d_Var('$scheduleclassDELETE',$scheduleclassDELETE,'l');
+
+
+t_End(); // End TRACKing MoveClassMeeting.
+?>

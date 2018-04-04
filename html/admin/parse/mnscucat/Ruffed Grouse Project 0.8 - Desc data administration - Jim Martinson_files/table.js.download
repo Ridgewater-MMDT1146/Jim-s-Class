@@ -1,0 +1,73 @@
+// table.js
+
+debugOn_tables = 0;
+
+// rowHidden(rowId)
+// Set row to visiblilty hidden.
+function rowHidden(rowId) {
+  //console.warn('rowHidden['+rowId+']');
+	eId=document.getElementById(rowId);
+  if (eId) {
+    eId.style.visible='hidden';
+  }
+}
+// rowHide(rowId)
+// Hide the row.
+function rowHide(rowId) {
+  //console.warn('rowHide['+rowId+']');
+	eId=document.getElementById(rowId);
+  if (eId) {
+    eId.style.display='none';
+  }
+}
+// Toggle display of the row.
+function rowHideShow(rowId) {
+  console.warn('rowHideShow['+rowId+']');
+  //eId=document.getElementById(rowId);
+	console.log('eId.style.display='+eId.style.display);
+  if ( eId.style.display == 'none' || eId.style.display == '' ) {
+    rowShow(rowId)
+  } else {
+    rowHide(rowId)
+  }
+}
+// rowVisible(rowId)
+// Set row to visiblilty visible.
+function rowVisible(rowId) {
+  //console.warn('rowVisible['+rowId+']');
+  eId=document.getElementById(rowId);
+  if (eId) {
+    eId.style.visible = 'visible';
+  }
+}
+// rowShow(rowId)
+// Show the row.
+function rowShow(rowId) {
+  //console.warn('rowShow['+rowId+']');
+  eId=document.getElementById(rowId);
+  if (eId) {
+    try {
+      eId.style.display='table-row';
+    } catch(e) {
+      eId.style.display = 'block';
+    }
+  }
+}
+// rowVisible(rowId)
+// Set row to visiblilty visible.
+function rowVisible(rowId) {
+  //console.warn('rowVisible['+rowId+']');
+  eId=document.getElementById(rowId);
+  if (eId) {
+    eId.style.visible = 'visible';
+  }
+}
+// rowHideShow(rowId)
+
+// function rowDisplayState(rowId)
+// Return the display of the row.
+function rowDisplayState(rowId,caller) {
+  eId=document.getElementById(rowId);
+  //console.warn('rowHideShow['+rowId+','+caller+'] = '+eId.style.display);
+	return eId.style.display;
+}

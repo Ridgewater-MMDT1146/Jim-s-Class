@@ -1,0 +1,68 @@
+<?
+// admin/_info/form/infoForm_Code_AddEditFormProcess.phpinc
+// Display the process code.
+t_Begin(); // Begin TRACKing included file.
+$DEBUG_info = false;
+$codeOutput = "
+<?
+// ".$f['filenameBase']."FormProcess.phpinc
+// Process the ".basename($f['filenameBase'])." form.
+t_Begin(); // Begin TRACKing included file.
+if ( \$f['uuid'] != \$_SESSION['uuid'] ) {
+  // Not a page reload.";
+#d_Var('count($tablePrimaryKey)',count($tablePrimaryKey));
+if ( is_array($tablePrimaryKey) && count($tablePrimaryKey) ) {
+  $id_prefix = '';
+  $codeOutput .= '
+  if ( ';
+  foreach ( $tablePrimaryKey as $thisIdField ) {
+    $codeOutput .= $id_prefix.'$f[\''.$thisIdField.'\']';
+    $id_prefix = ' && ';
+  }
+  $codeOutput .= ' ) {';
+  $indent = '    ';
+} else {
+  $indent = '  ';
+}
+$codeOutput .= '
+'.$indent.'// UPDATE '.$f['table'].'.';
+$query = '';
+include('admin/_info/query/infoUPDATEquery.phpinc');
+$codeOutput .= '
+'.$query;
+$codeOutput .= $indent.'displayMessage(\''.ucwords($f['table']).' \'.$f[\''.$orderBy.'\'].\' updated.\');
+';
+$codeOutput .= '  } else {';
+$codeOutput .= '
+'.$indent.'// INSERT '.$f['table'].'.';
+$query = '';
+include('admin/_info/query/infoINSERTquery.phpinc');
+$codeOutput .= '
+'.$query;
+$codeOutput .= $indent.'displayMessage(\''.ucwords($f['table']).' \'.$f[\''.$orderBy.'\'].\' added.\');
+';
+$codeOutput .= '  }
+  // Remember that the form was processed.
+  $_SESSION[\'uuid\'] = $f[\'uuid\'];';
+$codeOutput .= '
+} else {
+  // Page was reloaded.
+  displayMessage(\'Page reloaded.\',\'warn\');';
+$codeOutput .= "
+}
+t_End(); // End TRACKing included file.
+?>
+";
+// form_process_code.
+if ( !isset($f['form_process_code_value']) ) $f['form_process_code_value'] = 0;
+?>
+<a name="form_process_code_name"></a>
+<input type="hidden" name="form_process_code_value" id="form_process_code_value_id" value="<?=$f['form_process_code_value']?>">
+<table><tr><td><fieldset><legend><a href="#form_process_code_name" name="form_process_code" onClick="return info_Set(this);"><div id="form_process_code_status" class="inline"><? if ( !$f['form_process_code_value']) { ?>+<? } else { ?>-<? } ?></div> <?=$f['filenameBase']?>FormProcess code</a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'form_process_code_name');"></legend>
+<div id="form_process_code_show" class="<? if ( !$f['form_process_code_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=htmlSafe(trim($codeOutput))."\n"?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

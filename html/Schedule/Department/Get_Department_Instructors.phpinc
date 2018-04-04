@@ -1,0 +1,30 @@
+<?
+// Schedule/Department/Get_Department_Instructors.phpinc
+// purpose_of_Get_Department_Instructors.
+
+t_Begin(); // Begin TRACKing Get_Department_Instructors.phpinc.
+
+$query = "
+SELECT user.userId
+         , CONCAT(COALESCE(userNickname,userFirstname), ' '
+         , IF ( userMiddlename IS NOT NULL, CONCAT(userMiddlename,' '), '')
+         , userLastname) AS userFullname
+      FROM `user_department`
+      JOIN `user` ON user.userId = user_department.userId
+     WHERE departmentId = ".$f['departmentId']."
+			 AND userInactive = 0
+  ORDER BY userFullname
+";
+d_Var('user_departmentResult',$query,'q');
+$user_departmentResult = query_do($query);
+$user_departmentCount = $GLOBALS['_QUERY']['count'];
+d_Var('$user_departmentResult',$user_departmentResult);
+if ( $user_departmentCount ) {
+  query_seek($user_departmentResult, 0);
+  while ($user_departmentInfo = query_row($user_departmentResult)) {
+    
+  }
+}
+
+t_End(); // End TRACKing Get_Department_Instructors.phpinc.
+?>

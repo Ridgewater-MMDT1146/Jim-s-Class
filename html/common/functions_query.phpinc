@@ -1,0 +1,501 @@
+<?
+// common/functions_query.phpinc
+// Contains query functions.
+// Version 2016.02.07.
+
+t_Begin(); // Begin TRACKing included file.
+
+// field_is_numeric($columnType)
+// Returns true if column is numeric.
+// If numeric returns qc[0] = ". qc[1] = ."
+//       Else returns qc[0] = ".query_safe( qc[1] = )."'
+function field_is_numeric($columnType) {
+  $isAlpha = array('binary', 'blob', 'char', 'date', 'enum', 'set', 'text', 'time', 'year'); // Array of non numeric fields.
+  $field_is_numeric = true; // For numeric field.
+  for ($i = 0; $i < count($isAlpha); $i++) {
+    if (strlen(stristr($columnType,$isAlpha[$i]))) $field_is_numeric = false; // For non numeric field.
+  }
+  return $field_is_numeric;
+}
+
+// query_do($query, $queryDatabase, $AbortOnError. $queryTrack)
+// Perform the requested $query.
+// Returns the query resource.
+//         $query = The query to perform.
+// $queryDatabase = The database to use. Default is $_SESSION['DATABASE']['Default'].
+//  $AbortOnError = Abort if there is an error.
+function query_do($query='', $queryDatabase=false, $AbortOnError=true, $queryTrack=true) {
+	$queryTrack = false;
+	if ( !isset($GLOBALS['_QUERY']) ) $GLOBALS['_QUERY'] = array();
+	if ( !isset($GLOBALS['_DEBUG']['func']['query_do']) ) $GLOBALS['_DEBUG']['func']['query_do'] = false;
+	if ( $queryTrack && $GLOBALS['_DEBUG']['func']['query_do'] ) t_FuncBegin($GLOBALS['_DEBUG']['func']['query_do']);
+  $backtrace = debug_backtrace(); // Get caller information.
+  // Store info about query call.
+  $GLOBALS['_QUERY']['file'] = $backtrace['0']['file'];
+  $GLOBALS['_QUERY']['line'] = $backtrace['0']['line'];
+  $GLOBALS['_QUERY']['text'] = $query;
+	$GLOBALS['_QUERY']['count'] = false;
+	$GLOBALS['_QUERY']['error'] = false; // Begin with no error.
+  // Is the query empty?
+  if ( $query == '') {
+    // The query is empty; This is an error.
+		$GLOBALS['_QUERY']['error'] = 'The query was empty.';
+		if ( $AbortOnError ) {
+			programmingError($GLOBALS['_QUERY']['error']);
+		} else {
+			return false;
+		}
+  }
+  query__database($queryDatabase);
+	if ( !isset($GLOBALS['DATABASE_LINK']) ) $GLOBALS['DATABASE_LINK'] = array();
+  $time_start = microtime(true); // Get query start time.
+	if ( !isset($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]) ) {
+		// Connect to the database server and select database.
+		switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+			case 'MySQL':
+				$GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']] = mysql_connect($_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['hostname'], $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['username'], $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['password']);
+				mysql_select_db($_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['database'], $GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]);
+				break;
+			case 'MySQLi':
+				$GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']] = mysqli_connect($_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['hostname'], $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['username'], $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['password'], $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['database']);
+				break;
+			case 'PostgreSQL':
+				$GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']] = pg_connect("host=".$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['hostname']." port=".$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['port']." dbname=".$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['database']." user=".$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['username']." password=".$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['password']);
+				break;
+			default:
+				query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+				break;
+		}
+		if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] && $GLOBALS['_DEBUG']['page']['query'] ) d_Var('$query',$query.' [database '.$GLOBALS['_QUERY']['DB'].']','dhq',$backtrace);
+		if ( !$GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']] ) {
+			$GLOBALS['_QUERY']['error'] = 'connect to hostname '.$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['hostname'].' database '.$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['database'].' with username '.$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['username'].' failed.';
+			if ( $AbortOnError ) {
+				programmingError($GLOBALS['_QUERY']['error']);
+			} else {
+				return false;
+			}
+		}
+	}
+	if ( !$GLOBALS['_QUERY']['error'] ) {
+		// Perform the query.
+		#d_Var("\$GLOBALS['DATABASE_LINK'][".$GLOBALS['_QUERY']['DB']."]",$GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']],'d');
+		#d_Var("\$_SESSION['DB'][".$GLOBALS['_QUERY']['DB']."]['system']",$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'],'d');
+		switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+			case 'MySQL':
+				$GLOBALS['_QUERY']['result'] = mysql_query($query, $GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]);
+				break;
+			case 'MySQLi':
+				$GLOBALS['_QUERY']['result'] = mysqli_query($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']], $query);
+				/** /
+				?><pre><? var_dump($GLOBALS['_QUERY']['result']); ?></pre><?
+        /**/
+				break;
+			case 'PostgreSQL':
+				$GLOBALS['_QUERY']['result'] = pg_query($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']],$query);
+				break;
+			default:
+				query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+				break;
+		}
+	} else {
+		if ( $AbortOnError ) {
+			programmingError($GLOBALS['_QUERY']['error']);
+		} else {
+			return false;
+		}
+	}
+  $GLOBALS['_QUERY']['time']= microtime(true) - $time_start; // Calculate time for query to execute.
+	#d_Var(basename($GLOBALS['_QUERY']['file']).':'.$GLOBALS['_QUERY']['line'].' $query',$query,'dq');
+  #@d_Var("\$GLOBALS['_QUERY']['result']",$GLOBALS['_QUERY']['result'],'d');
+	if ( $GLOBALS['_QUERY']['result'] !== false ) {
+		#d_Var("\$GLOBALS['_QUERY']['result']",$GLOBALS['_QUERY']['result'],'d');
+    $GLOBALS['_QUERY']['insertId'] = NULL;
+		if ( $GLOBALS['_QUERY']['result'] !== true ) {
+			/** / // DEBUG.
+			d_Var(basename($GLOBALS['_QUERY']['file']).':'.$GLOBALS['_QUERY']['line'].' $query',$query,'dq');
+			d_Var("is_resource(\$GLOBALS['_QUERY']['result'])",is_resource($GLOBALS['_QUERY']['result']),'d');
+			d_Var("is_object(\$GLOBALS['_QUERY']['result'])",is_object($GLOBALS['_QUERY']['result']),'d');
+			@d_Var("get_resource_type(\$GLOBALS['_QUERY']['result'])",get_resource_type($GLOBALS['_QUERY']['result']),'d');
+			@d_Var("get_class(\$GLOBALS['_QUERY']['result'])",get_class($GLOBALS['_QUERY']['result']),'d');
+			@d_Var("\$GLOBALS['_QUERY']['result']",$GLOBALS['_QUERY']['result'],'d');
+			/**/
+			if ( ( is_resource($GLOBALS['_QUERY']['result']) && get_resource_type($GLOBALS['_QUERY']['result']) == 'mysql link' ) 
+				|| ( is_object($GLOBALS['_QUERY']['result']) && get_class($GLOBALS['_QUERY']['result']) == 'mysqli' ) 
+				|| ( is_resource($GLOBALS['_QUERY']['result']) && get_resource_type($GLOBALS['_QUERY']['result']) == 'pgsql result' ) ) { // Is this a database resource?
+        // SELECT query.
+				$GLOBALS['_QUERY']['count'] = query__num_rows($GLOBALS['_QUERY']['result']);
+      } else {
+				// DELETE or UPDATE query.
+        $GLOBALS['_QUERY']['count'] = query__affected_rows();
+      }
+    } else {
+			$GLOBALS['_QUERY']['count'] = 0;
+			if ( substr(trim($query),0,6) == 'INSERT' ) {
+	      // INSERT query.
+				// Get insert id.
+				$GLOBALS['_QUERY']['insertId'] = query__insert_id();
+			}
+    }
+  } else {
+    if ( $AbortOnError ) {
+			$GLOBALS['_QUERY']['error'] = '
+			There is a MySQL query error: '.query__error().'<br>
+			The following query caused the error:
+			'.rtrim($GLOBALS['_QUERY']['text']);
+			/*<pre style="margin:0px;">'.rtrim($GLOBALS['_QUERY']['text']).'</pre>';*/
+			programmingError($GLOBALS['_QUERY']['error']);
+		} else {
+				$GLOBALS['_QUERY']['error'] = query__error();
+		}
+  }
+	if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] && $GLOBALS['_DEBUG']['page']['query'] ) {
+		d_Var("\$GLOBALS['_QUERY']['result']",$GLOBALS['_QUERY']['result'],'d',$backtrace);
+		d_Var("\$GLOBALS['_QUERY']",$GLOBALS['_QUERY'],'d');
+	}
+  #$GLOBALS['backtraceShow'] = true;
+  if ( $queryTrack ) t_Func($result,$backtrace);
+	//if ( $queryTrack && $GLOBALS['_DEBUG']['func']['query_do'] ) t_FuncEnd();
+  #unset($GLOBALS['backtraceShow']);
+	#var_dump($GLOBALS['_QUERY']['result']);
+	/** /
+	d_Var("\$GLOBALS['_QUERY']['count']",$GLOBALS['_QUERY']['count'],'d');
+	/**/
+  return $GLOBALS['_QUERY']['result'];
+}
+
+// query_info($query, $queryDatabase, $AbortOnError, $queryTrack)
+// Perform the requested single row query.
+// Returns the row.
+//         $query = The query to perform.
+// $queryDatabase = The database to use. Default is $_SESSION['DATABASE']['Default'].
+//  $AbortOnError = Abort if there is an error.
+function query_info($query='', $queryDatabase=false, $AbortOnError=true, $queryTrack=true) {
+  $backtrace = debug_backtrace(); // Get caller information.
+  if ( strtoupper(substr(trim($query),0,6)) == 'SELECT' || strtoupper(substr(trim($query),0,4)) == 'SHOW' ) {
+		$queryResult = query_do($query, $queryDatabase, $AbortOnError, false);
+		if ($GLOBALS['_QUERY']['count'] == 1) {
+      // One row returned. Return the row.
+      query_seek($queryResult);
+			$query_Info = query_row($queryResult);
+    } else {
+      // Zero or multiple rows returned. Return false.
+      $GLOBALS['_QUERY']['count'] = false;
+      $query_Info =  array();
+    }
+  } else {
+    // Not a SELECT or SHOW query.
+    $GLOBALS['_QUERY']['count'] = false;
+    $query_Info = array();
+  }
+  t_Func($query_Info,$backtrace);
+  return $query_Info;
+}
+
+// query_row($result, $row, $queryDatabase)
+// Moves the internal row pointer of the result to the specified row number.
+// $result = 
+function query_row($result, $arg1=false, $arg2=false ) {
+	$queryDatabase = false;
+	$queryRow = NULL;
+	if ( $arg1 !== false || $arg2 !== false ) { // Was a row or database included?
+		// Yes, detect $queryRow and $queryDatabase values.
+		if ( $arg1 !== false ) { // Is there an arg1?
+			// Yes, setup row or database based on value type.
+			if ( is_numeric($arg1) ) { $queryRow = $arg1; } else { $queryDatabase = $arg1; }
+		}
+		if ( $arg2 !== false ) { // Is there an arg2?
+			// Yes, setup row or database based on value type.
+			if ( is_numeric($arg2) ) { $queryRow = $arg2; } else { $queryDatabase = $arg2; }
+		}
+	} // Was a row or database included?
+	query__database($queryDatabase);
+	switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+		case 'MySQL':
+			if ( !is_null($queryRow) ) query_seek($result, $queryRow, $queryDatabase);
+			$query_row = mysql_fetch_assoc($result);
+			break;
+		case 'MySQLi':
+			if ( !is_null($queryRow) ) query_seek($result, $queryRow, $queryDatabase);
+			$query_row = mysqli_fetch_assoc($result);
+			break;
+		case 'PostgreSQL':
+			$query_row = pg_fetch_assoc($result, $queryRow);
+			break;
+		default:
+			query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+			break;
+	}
+	return $query_row;
+}
+
+// query_safe($str) {
+// Returns a query safe string. Similar to mysql_real_escape_string without the database call.
+// $str = The string to be converted.
+function query_safe($str) {
+  // Replace     backslash, null, newline, linefeed, ctrl-Z, single-quote, double-quote.
+  $search= array('\\',      "\0", "\n",    "\r",     "\x1a", "'",          '"' );
+  $replace=array('\\\\',    "\\0","\\\n",  '\\r',    '\\Z',  "\'",         '\"');
+  return str_replace($search,$replace,$str);
+}
+
+// query_seek($result, $row, $queryDatabase, $AbortOnError)
+// Moves the internal row pointer of the result to the specified row number.
+// $result = 
+function query_seek($result, $row = 0, $queryDatabase=false, $AbortOnError=true ) {
+	/** /
+	echo "\$result()=<pre>"; print_r($result); echo "</pre>\n";
+	if ( !$result ) {
+		$backtrace = debug_backtrace();
+		echo "\$backtrace()=<pre>"; print_r($backtrace); echo "</pre>\n";
+	}
+	/**/
+	switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+		case 'MySQL':
+			mysql_data_seek($result, $row);
+			break;
+		case 'MySQLi':
+			mysqli_data_seek($result, $row);
+			break;
+		case 'PostgreSQL':
+			pg_result_seek($result, $row);
+			break;
+		default:
+			query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+			break;
+	}
+}
+
+// query_to_array($result, $field='')
+// Returns an array from a query result.
+// $result = The query result to use to build the array.
+// $field =  The field in the query to use to build the array.
+function query_to_array($result, $field='') {
+  $resultArray = array();
+  $index = 0;
+  if (query__num_rows($result)) {
+    query_seek($result, 0);
+    if ($field == '') {
+      while ($row = query_row($result)) {
+        foreach ($row as $value) {
+          $index++;
+          $resultArray[$index] = $value;
+        }
+      }
+    } else {
+      while ($row = query_row($result)) {
+        $index++;
+        $resultArray[$index] = $row[$field];
+      }
+    }
+  }
+  // function TRACK
+  t_Func($resultArray);
+  return $resultArray;
+}
+
+// query_to_list($result,$field,$addNull)
+// Returns a comma separated list from a query result.
+// $result = The query result to use to build the list.
+// $addNull = true to include null or empty values. Default is false.
+// $defaultValue = the default value to use for null or empty values. Default = '';
+function query_to_list($result, $field='', $addNull=false, $defaultValue='') {
+  $backtrace = debug_backtrace(); $file = basename($backtrace['0']['file']); $filepath = $backtrace['0']['file']; $line = $backtrace['0']['line'];
+  $resultList = '';
+  #echo "\$result=",$result,": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  #echo "query__num_rows($result)=",query__num_rows($result),": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  if (query__num_rows($result)) {
+    query_seek($result, 0);
+    if ($field == '') {
+      while ($row = query_row($result)) {
+        #echo "\$row="; print_r($row); echo ": ",basename(__FILE__),":",__LINE__,"<br>\n";
+        foreach ($row as $value) {
+          if ($value != '' || $addNull) if ($value != '' ) { $resultList .= ','.$value; } else { $resultList .= ','.$defaultValue; }
+        }
+      }
+    } else {
+      while ($row = query_row($result)) {
+        if ($row[$field] != '' || $addNull) if ($row[$field] != '' ) { $resultList .= ','.$row[$field]; } else { $resultList .= ','.$defaultValue; }
+      }
+    }
+  }
+  $resultList = substr($resultList,1);
+  t_Func($resultList);
+  return $resultList;
+}
+
+// query__affected_rows()
+// Returns the number of affected rows.
+function query__affected_rows() {
+	switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+		case 'MySQL':
+			$query__affected_rows = mysql_affected_rows();
+			break;
+		case 'MySQLi':
+			$query__affected_rows = mysqli_affected_rows($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]);
+			break;
+		case 'PostgreSQL':
+			$query__affected_rows = pg_last_error($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]);
+			break;
+		default:
+			query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+			break;
+	}
+	return $query__affected_rows;
+}
+
+// query__database($queryDatabase)
+// Sets the database name for the query.
+function query__database($queryDatabase) {
+	if ( !$queryDatabase ) {
+		$GLOBALS['_QUERY']['DB'] = $_SESSION['DATABASE']['Default']; // Use the default database.
+	} else {
+		if ( in_array($queryDatabase,$_SESSION['DATABASE']['Names']) ) {
+		$GLOBALS['_QUERY']['DB'] = $queryDatabase; // Use to database.
+		} else {
+			// The current DB is not in the list; This is an error.
+			$GLOBALS['_QUERY']['error'] = 'The requested database ('.$queryDatabase.') is not in the list.';
+			if ( $AbortOnError ) {
+				programmingError($GLOBALS['_QUERY']['error']);
+			} else {
+				return false;
+			}
+		}
+	}
+}
+	
+// query__database_system_error($AbortOnError)
+// Set and display the error for unknown database management system.
+function query__database_system_error($AbortOnError=true) {
+	$GLOBALS['_QUERY']['error'] = 'The requested database management system ('.$_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'].') is not in the list.';
+	if ( $AbortOnError ) {
+		programmingError($GLOBALS['_QUERY']['error']);
+	} else {
+		return false;
+	}
+}
+
+// query__error()
+// Returns the query error.
+function query__error() {
+	switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+		case 'MySQL':
+			$query__error = mysql_error().' ('.mysql_errno().')';
+			break;
+		case 'MySQLi':
+			$query__error = mysqli_error($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]).' ('.mysqli_errno($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]).')';;
+			break;
+		case 'PostgreSQL':
+			$query__error = pg_last_error($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]);
+			break;
+		default:
+			query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+			break;
+	}
+	return $query__error;
+}
+
+// query__field($result, $row, $queryDatabase)
+// Moves the internal row pointer of the result to the specified row number.
+// $result = 
+function query__field($result, $arg1=false, $arg2=false ) {
+	$queryDatabase = false;
+	$queryRow = NULL;
+	if ( $arg1 !== false || $arg2 !== false ) { // Was a row or database included?
+		// Yes, detect $queryRow and $queryDatabase values.
+		if ( $arg1 !== false ) { // Is there an arg1?
+			// Yes, setup row or database based on value type.
+			if ( is_numeric($arg1) ) { $queryRow = $arg1; } else { $queryDatabase = $arg1; }
+		}
+		if ( $arg2 !== false ) { // Is there an arg2?
+			// Yes, setup row or database based on value type.
+			if ( is_numeric($arg2) ) { $queryRow = $arg2; } else { $queryDatabase = $arg2; }
+		}
+	} // Was a row or database included?
+	query__database($queryDatabase);
+	switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+		case 'MySQL':
+			if ( !is_null($queryRow) ) query_seek($result, $queryRow, $queryDatabase);
+			$query__field = mysql_fetch_field($result);
+			break;
+		case 'MySQLi':
+			if ( !is_null($queryRow) ) query_seek($result, $queryRow, $queryDatabase);
+			$query__field = mysqli_fetch_field($result);
+			break;
+		case 'PostgreSQL':
+			$query__field = pg_fetch_field($result, $queryRow);
+			break;
+		default:
+			query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+			break;
+	}
+	return $query__field;
+}
+
+// query__insert_id()
+// Returns the insert id of the INSERT query.
+function query__insert_id() {
+	switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+		case 'MySQL':
+			$query__insert_id = mysql_insert_id();
+			break;
+		case 'MySQLi':
+			$query__insert_id = mysqli_insert_id($GLOBALS['DATABASE_LINK'][$GLOBALS['_QUERY']['DB']]);
+			break;
+		case 'PostgreSQL':
+			$insert_query = pg_query("SELECT lastval();");
+			$insert_row = pg_fetch_row($insert_query);
+			$insert_id = $insert_row[0];			
+			break;
+		default:
+			query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+			break;
+	}
+	return $query__insert_id;
+}
+
+// query__num_fields($result)
+// Moves the internal row pointer of the result to the specified row number.
+// $result = 
+function query__num_fields($result) {
+	switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+		case 'MySQL':
+			query_seek($result);
+			$query__num_fields = mysql_num_fields($result);
+			break;
+		case 'MySQLi':
+			query_seek($result);
+			$query__num_fields = mysqli_num_fields($result);
+			break;
+		case 'PostgreSQL':
+			$query__num_fields = pg_num_fields($result, $row);
+			break;
+		default:
+			query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+			break;
+	}
+	return $query__num_fields;
+}
+
+// query__num_rows($result)
+// Moves the internal row pointer of the result to the specified row number.
+// $result = 
+function query__num_rows($result) {
+	switch ( $_SESSION['DB'][$GLOBALS['_QUERY']['DB']]['system'] ) {
+		case 'MySQL':
+			$query__num_rows = mysql_num_rows($result);
+			break;
+		case 'MySQLi':
+			$query__num_rows = mysqli_num_rows($result);
+			break;
+		case 'PostgreSQL':
+			$query__num_rows = pg_num_rows($result, $row);
+			break;
+		default:
+			query__database_system_error($AbortOnError); // Set and display the error for unknown database management system.
+			break;
+	}
+	return $query__num_rows;
+}
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

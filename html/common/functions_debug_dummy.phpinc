@@ -1,0 +1,24 @@
+<?
+// common/functions_debug_dummy.phpinc
+// Contains the dummy debug functions.
+// Called when $debuggingAvailable is not set or is not true.
+$GLOBALS['debuggingAvailable'] = false;
+function d_End() { return false; }
+function d_Line($lineText='', $flagList='', $backtrace=false) { return false; }
+function d_O($type='') { return false; }
+function d_Off($type='') { return false; }
+function d_On($type='') { return false; }
+function d_Status($type='') { return false; }
+function d_V($fIndex, $flagList='', $backtrace=false) { return false; }
+function d_Var($varName, $var='', $flagList='', $backtrace=false) { return false; }
+function t_Begin($codePage=false) { return false; }
+function t_End($backtrace=false) { return false; }
+function t_Func($functionReturnValue, $backtrace=false) { return false; }
+function t_FuncBegin() { return false; }
+function t_FuncEnd($backtrace=false) { return false; }
+function t_Line($lineText='', $flagList='', $backtrace=false) { return false; }
+function t_V($varName, $var, $flagList='') { return false; }
+function t_Var($varName, $var, $flagList='') { return false; }
+function d_ad_begin($file, $line) { return false; }
+function d_ad_end($file, $line) { return false; }
+?>

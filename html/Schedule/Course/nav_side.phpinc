@@ -1,0 +1,15 @@
+<?
+// Schedule/Course/nav_side.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// include_filename_content_goes_here.
+?>
+<ul class="nav nav_sidebar">
+	<li ><a href="../" role="button" class="btn btn-xs">Schedule</a></li>
+</ul>
+<?
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

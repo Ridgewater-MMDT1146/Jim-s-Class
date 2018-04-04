@@ -1,0 +1,62 @@
+@charset "utf-8";
+/* css/debug.css */
+/* Contains the debugging styles */
+/* Version 2012.05.22. */
+
+#div_debugInfoFront, #div_debugInfoBack { display:none; text-align:left; }
+#id_followClickOutputFront, #id_followClickOutputBack, #id_followKeyUpOutputFront, #id_followKeyUpOutputBack, #id_followMouseOutputFront, #id_followMouseOutputBack { text-align:left; }
+
+.d_s_a  { color:#af3; }                     /* attention */
+.d_s_an { color:#fe0; }                     /* array name */
+.d_s_ap { color:#fc0; }                     /* array-part name */
+.d_s_as { color:#faf; }                     /* array scaler name */
+.d_s_b  { font-weight:bold; }               /* bold */
+.d_s_c  { text-align:center; }              /* center */
+.d_s_d  { color:#fff; }                     /* data value */
+.d_s_dn { color:#fff; font-weight:normal; } /* data value normal */
+.d_s_e  { color:#f00; }                     /* error */
+.d_s_f  { color:#aaf; }                     /* function */
+.d_s_fc { color:#eef; font-size:.9em; }     /* calling file and line */
+.d_s_fi { color:#fee; font-size:.9em; }     /* including file and line */
+.d_s_fl { color:#eea; font-size:1em; }      /* file and line */
+.d_s_fp { color:#efe; font-size:.9em; }     /* file path */
+.d_s_h  { display:none; }                   /* hidden */
+.d_s_i  { color:#aaf; }                     /* info */
+.d_s_l  { text-align:left; }                /* left */
+.d_s_pw { color:#f60; font-weight:bold; }   /* password */
+.d_s_q  { color:#f0f; font-family:"Courier New", Courier, monospace; white-space:pre; } /* query */
+.d_s_qc { color:#fcf; }                     /* query count */
+.d_s_qn { color:#f0f; font-family:"Courier New", Courier, monospace; } /* query with wrap */
+.d_s_r  { color:#099; }                     /* resource name */
+.d_s_v  { color:#666; }                     /* variable (other) */
+.d_s_vf { color:#e00; }                     /* false */
+.d_s_vt { color:#0e0; }                     /* true */
+.d_s_w  { color:#f90; }                     /* warn */
+
+a:hover .d_s_an { background-color:#af3; color:#000; }
+a:hover .d_s_r { background-color:#099; color:#fff; }
+
+a.d_s_aq { background-color:transparent; color:#f0f; font-family:"Courier New", Courier, monospace; white-space:pre; text-decoration:underline; }
+a.d_s_vf { background-color:transparent; color:#e00; text-decoration:none; }
+a.d_s_vt { background-color:transparent; color:#0e0; text-decoration:underline; }
+a.d_s_w { background-color:transparent; color:#f90; text-decoration:underline; }
+a.d_s_aq:hover { background-color:#e00; color:#f0f; font-family:"Courier New", Courier, monospace; white-space:pre; }
+a.d_s_vf:hover { background-color:#e00; color:#000; }
+a.d_s_vt:hover { background-color:#0e0; color:#000; }
+a.d_s_w:hover { background-color:#f90; color:#000; }
+ 
+div#d_s_pf { border:1px solid silver; font-size:.8em; margin-top:10px; padding:10px; } /* pageFooter_debug div */
+div.d_s_il { display:inline; text-align:left; }   /* div wrapper is inline left */
+
+input[type="button"].d_s_vf,         input[type="submit"].d_s_vf        { background-color:#900; color:#fff; text-decoration:none; }
+input[type="button"].d_s_vf:hover,   input[type="submit"].d_s_vf:hover  { background-color:#f00; color:#000; text-decoration:underline; }
+input[type="button"].d_s_vt,         input[type="submit"].d_s_vt        { background-color:#090; color:#fff; text-decoration:none; }
+input[type="button"].d_s_vt:hover,   input[type="submit"].d_s_vt:hover  { background-color:#0f0; color:#000; text-decoration:underline; }
+
+ol.d_s_op, ol.d_s_ot { padding-left:2em; padding-right:2em; } /* TRACKing ol */
+ol.d_s_ot { margin-bottom:0; margin-top:0; } /* top TRACKing ol */
+
+span.d_s_cb { color:#000; font-family:"Courier New", Courier, monospace; }
+span.d_s_cw { color:#fff; font-family:"Courier New", Courier, monospace; }
+
+table.d_s_l { margin:auto auto auto 0px !important; }

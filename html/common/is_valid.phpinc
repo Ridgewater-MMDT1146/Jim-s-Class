@@ -1,0 +1,223 @@
+<?
+// is_valid($formLabel, $value, $fieldName, $tableName, $zeroIdOK, $database)
+// Validates that data is valid for the table field.
+// Returns: true if the $value is valid.
+//          An error message if the $value is not valid.
+// $formLabel = The label used on the form. This is used if an error message is needed.
+//     $value = The value to be validated.
+// $fieldName = The field name in the table.
+// $tableName = The table name.
+//  $zeroIdOK = Set true if you want to allow 0 as a valid Id. Default is false.
+//  $database = The database the table is in. Default is $_SESSION['DATABASE']['Default'].
+function is_valid($formLabel, $value, $fieldName, $tableName, $zeroIdOK=false, $database=false) {
+  t_FuncBegin();
+  $d_O_is_valid = d_O();
+  #if ( $formLabel == 'credentialInactive' ) d_On();
+	d_Line('is_valid('.$formLabel.', '.$value.', '.$fieldName.', '.$tableName.', '.$zeroIdOK.', '.$database.')','/');
+	if ( !$database ) $database = $_SESSION['DATABASE']['Default']; // $database was not sent so use the default.
+  $is_valid = false; // Start with an invalid state.
+  $formLabelSafe = htmlSafe($formLabel); // Set htmlSafe(). Used for error message.
+  $valueSafe = htmlSafe($value); // Set htmlSafe(). Used for error message.
+  // Get field info.
+  $fieldQuery = 'SHOW COLUMNS FROM `'.$tableName.'` WHERE field=\''.$fieldName.'\'';
+	$columnInfo = query_info($fieldQuery,$database,false,false,false);
+	d_Var('$columnInfo',$columnInfo);
+	if ( $columnInfo ) {
+		#query_seek($columnResult, 0);
+		#$columnInfo = query_row($columnResult);
+		#d_Var('$columnInfo',$columnInfo,'d');
+		// Is $value empty and NULL allowed?
+		if ( ( $value === '' || $value === false ) && $columnInfo['Key'] == '' && $columnInfo['Null'] == 'YES' ) { $is_valid = true; t_Line('$is_valid = true on line '.__LINE__); }
+		if ( !$is_valid ) {
+			// Get the field length from the Type.
+			$ts = explode('(',$columnInfo['Type']);
+			d_Var('$ts',$ts);
+			$type = $ts[0];
+			d_Var('$type',$type);
+			// Get integer and decimal length.
+			if ( isset($ts[1]) ) {
+				$ts = explode(')',$ts[1]);
+				#d_Var('$ts',$ts,'+');
+				if ( strpos($ts[0],',') === false ) {
+					$columnLength = $ts[0];
+					$decimalLength = 0;
+					$totalLength = $columnLength;
+				} else {
+					$ts = explode(',',$ts[0]);
+					$columnLength = $ts[0]-$ts[1];
+					$decimalLength = $ts[1];
+					$totalLength = $ts[0];
+					if ( $decimalLength ) $totalLength++;
+				}
+			} else {
+				$columnLength = 0;
+				$decimalLength = 0;
+			}
+			d_Var('$columnLength',$columnLength);
+			d_Var('$decimalLength',$decimalLength);
+			@d_Var('$totalLength',$totalLength);
+			
+			
+			#d_Var($fieldName,$columnInfo);
+			if ( $columnInfo['Key'] == 'PRI' || $columnInfo['Key'] == 'MUL' ) {
+				if ( $columnInfo['Key'] != 'MUL' ) {
+					$tableNameToTest = $tableName; // For PRIMARY key use $tableName as the table name to check.
+					$keyType = 'PRIMARY';
+				} else {
+					$keyType = 'MULTIPLE';
+					// Determine the table name from the $field.
+					if ( substr($fieldName,-2) == 'Id' ) {
+						$tableNameToTest = substr($fieldName,0,-2); // For MULTIPLE key use $fieldName with the 'Id' stripped on the end as the table name to check.
+						// Check if there is a table with that name.
+						$tableNameTested = $tableNameToTest;
+						$query="SHOW TABLES FROM ".$database;
+						$ShowTables_QueryField = 'Tables_in_'.$database;
+						$tableResult = query_do($query,$database,false);
+						$tableCount = $GLOBALS['_QUERY']['count'];
+						if ($tableCount) {
+							$tableExists = false;
+							query_seek($tableResult, 0);
+							while ($tableInfo = query_row($tableResult)) {
+								#d_Var('$tableInfo[$ShowTables_QueryField]',$tableInfo[$ShowTables_QueryField]);
+								if ( $tableNameTested == $tableInfo[$ShowTables_QueryField] ) $tableExists = true;
+							}
+							if ( !$tableExists ) $tableNameToTest = false;
+						}
+					} else {
+						$tableNameToTest = false;
+					}
+				}
+				d_Var('$tableNameToTest',$tableNameToTest);
+				d_Var('is_numeric($value)',is_numeric($value));
+				d_Var('$value',$value);
+				d_Var('strlen($value)',strlen($value));
+				d_Var('$columnLength',$columnLength);
+				if ( $tableNameToTest && is_numeric($value) && $value >= 0 && strlen($value) <= $columnLength ) {
+					$query = "
+							SELECT ".$fieldName."
+								FROM `".$tableNameToTest."`
+							 WHERE ".$fieldName." = ".$value."
+					";
+					$IdResult = query_do($query,$database,false);
+					$IdCount = $GLOBALS['_QUERY']['count'];
+					if ($IdCount == 1) { $is_valid = true; t_Line('$is_valid = true on line '.__LINE__); }
+				}
+				if ( $tableNameToTest && $zeroIdOK && $value == 0 && $keyType == 'PRIMARY' ) { $is_valid = true; t_Line('$is_valid = true on line '.__LINE__); }
+				if ( !$is_valid ) {
+					if ( $tableNameToTest ) {
+						$is_valid = 'The '.$formLabelSafe.' ('.$valueSafe.') is not a valid '.$keyType.' key in '.$tableNameToTest.' table.';
+					} else {
+						$is_valid = 'The '.$formLabelSafe.' ('.$valueSafe.') is not a valid '.$keyType.' key. Table \''.$tableNameTested.'\' does not exist.';
+					}
+				}
+			}
+			if ( !$is_valid ) {
+				// Continue checking.
+				d_Var('$value',$value);
+				d_Var('$columnLength',$columnLength);
+				d_Var('$decimalLength',$decimalLength);
+				@d_Var('$totalLength',$totalLength);
+				d_Var('$ts',$ts,'+');
+				d_Var('$type',$type);
+				// Check if $value is valid for the field.
+				switch ($type) {
+					case 'bigint':
+					case 'bit':
+					case 'decimal':
+					case 'double':
+					case 'float':
+					case 'int':
+					case 'mediumint':
+					case 'smallint':
+					case 'tinyint':
+					case 'year':
+						// Set field format. Used for error message.
+						if ( !$decimalLength ) {
+							$fieldFormat = ' ('.str_repeat('n',$columnLength).')';
+						} else {
+							$fieldFormat = ' ('.str_repeat('n',$columnLength).'.'.str_repeat('n',$decimalLength).')';
+						}
+						d_Var('$fieldFormat',$fieldFormat);
+						// Is $value numeric?
+						$value_no_comma = str_replace(',','',$value);
+						d_Var('$value_no_comma',$value_no_comma);
+						if ( !is_numeric($value_no_comma) ) {
+							$is_valid = 'The '.$formLabelSafe.' ('.$valueSafe.') is not a valid number';
+						} else {
+							// Get the $value parts.
+							$ts = explode('.',$value_no_comma);
+							d_Var('$ts',$ts,'+');
+							$integerPart = $ts[0];
+							if ( !isset($ts[1]) ) { $decimalPart = NULL; }
+							d_Var('$integerPart',$integerPart);
+							d_Var('$decimalPart',$decimalPart);
+							// Is $value too large?
+							if ( strlen($integerPart) > $columnLength ) {
+								$is_valid = 'The '.$formLabelSafe.' ('.$valueSafe.') is too large '.$fieldFormat.'';
+							}
+							// Is $value too long?
+							if ( strlen($decimalPart) > $decimalLength ) {
+								$is_valid = 'The '.$formLabelSafe.' ('.$valueSafe.') decimal part too long '.$fieldFormat.'';
+							}
+							if ( !$is_valid ) $is_valid = true;
+						}
+					break;
+					case 'binary':
+					case 'char':
+					case 'enum':
+					case 'set':
+					case 'varbinary':
+					case 'varchar':
+						if ( strlen($value) <= $columnLength ) {
+							$is_valid = true; t_Line('$is_valid = true on line '.__LINE__);
+						} else {
+							$is_valid = 'The '.$formLabelSafe.' entry is too long ('.strlen($value).' character'.(strlen($value) != 1 ? 's' : '').' entered when limit is '.$columnLength.').';
+						}
+					break;
+					case 'date':
+						$totalLength = 10;
+					break;
+					case 'datetime':
+						$totalLength = 24;
+					break;
+					case 'time':
+						$totalLength = 13;
+					break;
+					case 'timestamp':
+						$totalLength = 14;
+					break;
+
+					case 'blob':
+					case 'text':
+						if ( !isset($totalLength) ) $totalLength = 65535;
+					case 'longblob':
+					case 'longtext':
+						if ( !isset($totalLength) ) $totalLength = 4294967295;
+					case 'mediumblob':
+					case 'mediumtext':
+						if ( !isset($totalLength) ) $totalLength = 16777215;
+					case 'tinyblob':
+					case 'tinytext':
+						if ( !isset($totalLength) ) $totalLength = 255;
+						d_Var('$totalLength',$totalLength);
+						if ( strlen($value) <= $totalLength ) {
+							$is_valid = true; 
+						} else {
+							$is_valid = 'The '.$formLabelSafe.' entry is too long ('.strlen($value).' character'.(strlen($value) != 1 ? 's' : '').' entered when limit is '.$totalLength.').';
+						}
+					break;
+					default:
+				}
+			}
+		} // if ( !$is_valid )
+	}
+  if ( $is_valid === false ) {
+    $is_valid = 'is_valid not defined for '.$formLabelSafe.' ('.$valueSafe.').';
+  }
+  d_Var('$is_valid',$is_valid);
+  if ( !$d_O_is_valid && d_O() ) d_Off();
+  t_Func($is_valid);
+	t_FuncEnd();
+  return $is_valid;
+}
+?>

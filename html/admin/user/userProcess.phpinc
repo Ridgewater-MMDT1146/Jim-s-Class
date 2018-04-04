@@ -1,0 +1,155 @@
+<?
+// admin/user/userProcess.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+if ( $f['uuid'] != $_SESSION['uuid'] ) { // Page was not reloaded.
+  // Not a page reload.
+  if ($f['userId']) {
+    // UPDATE the user.
+    $f['ModifiedOn'] = currentDateTime();
+    $query = "
+        UPDATE `user`
+           SET userUsername = '".query_safe($f['userUsername'])."'";
+               if ( $f['userPassword'] !== false ) {
+    $query .="
+             , userPassword = '".query_safe($f['userPassword'])."'";
+               }
+    $query .="
+             , userFirstname = '".query_safe($f['userFirstname'])."'";
+               if ( $f['userMiddlename'] !== false ) {
+    $query .="
+             , userMiddlename = '".query_safe($f['userMiddlename'])."'";
+               }
+               if ( $f['userLastname'] !== false ) {
+    $query .="
+             , userLastname = '".query_safe($f['userLastname'])."'";
+               }
+               if ( $f['userNickname'] !== false ) {
+    $query .="
+             , userNickname = '".query_safe($f['userNickname'])."'";
+               }
+               if ( $f['userEmailAddress'] !== false ) {
+    $query .="
+             , userEmailAddress = '".query_safe($f['userEmailAddress'])."'";
+               }
+               if ( $f['userImage'] !== false ) {
+    $query .="
+             , userImage = '".query_safe($f['userImage'])."'";
+               }
+               if ( $f['userNote'] !== false ) {
+    $query .="
+             , userNote = '".query_safe($f['userNote'])."'";
+               }
+    $query .="
+             , userInactive = ".$f['userInactive']."
+             , ModifiedOn = '".query_safe($f['ModifiedOn'])."'
+             , modifiedBy = ".$_SESSION['user']['trueId']."
+         WHERE userId = ".$f['userId']."
+    ";
+    #d_Var('$query',$query,'q');
+    $userUpdate = query_do($query);
+    } else {
+    // INSERT the user.
+    $f['AddedOn'] = currentDateTime();
+    $query = "
+        INSERT INTO `user` (
+               userUsername";
+               if ( $f['userPassword'] !== false ) {
+    $query .="
+             , userPassword";
+               }
+    $query .="
+             , userFirstname";
+               if ( $f['userMiddlename'] !== false ) {
+    $query .="
+             , userMiddlename";
+               }
+               if ( $f['userLastname'] !== false ) {
+    $query .="
+             , userLastname";
+               }
+               if ( $f['userNickname'] !== false ) {
+    $query .="
+             , userNickname";
+               }
+               if ( $f['userEmailAddress'] !== false ) {
+    $query .="
+             , userEmailAddress";
+               }
+               if ( $f['userImage'] !== false ) {
+    $query .="
+             , userImage";
+               }
+               if ( $f['userNote'] !== false ) {
+    $query .="
+             , userNote";
+               }
+    $query .="
+             , userInactive
+             , AddedOn
+             , AddedBy
+        ) VALUES (
+               '".query_safe($f['userUsername'])."'";
+               if ( $f['userPassword'] !== false ) {
+    $query .="
+             , '".query_safe($f['userPassword'])."'";
+               }
+    $query .="
+             , '".query_safe($f['userFirstname'])."'";
+               if ( $f['userMiddlename'] !== false ) {
+    $query .="
+             , '".query_safe($f['userMiddlename'])."'";
+               }
+               if ( $f['userLastname'] !== false ) {
+    $query .="
+             , '".query_safe($f['userLastname'])."'";
+               }
+               if ( $f['userNickname'] !== false ) {
+    $query .="
+             , '".query_safe($f['userNickname'])."'";
+               }
+               if ( $f['userStudentId'] !== false ) {
+    $query .="
+             , '".query_safe($f['userStudentId'])."'";
+               }
+               if ( $f['userEmailAddress'] !== false ) {
+    $query .="
+             , '".query_safe($f['userEmailAddress'])."'";
+               }
+               if ( $f['userImage'] !== false ) {
+    $query .="
+             , '".query_safe($f['userImage'])."'";
+               }
+               if ( $f['userNote'] !== false ) {
+    $query .="
+             , '".query_safe($f['userNote'])."'";
+               }
+    $query .="
+             , ".$f['userIsAlumni']."
+             , ".$f['userIsStudent']."
+             , ".$f['userInactive']."
+             , '".query_safe($f['AddedOn'])."'
+             , ".$_SESSION['user']['trueId']."
+        )
+    ";
+    #d_Var('$query',$query,'q');
+    #$userInsert = query_do($query);
+    #$f['userId'] = $GLOBALS['_QUERY']['insertId']
+  }
+  // Remember that the form was processed.
+  $_SESSION['uuid'] = $f['uuid'];
+} else { // Page was not reloaded.
+  // Page was reloaded.
+} // Page was not reloaded.
+$message = 'User '.userName($f['userId']);
+if ( $f['userId'] ) {
+  $message .= ' updated.';
+} else {
+  $message .= ' added.';
+}
+$message .= '<br><br>';
+displayInfo($message);
+
+t_End(); // End TRACKing included file.
+?>

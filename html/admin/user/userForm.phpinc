@@ -1,0 +1,210 @@
+<?
+// User/userForm.phpinc
+// Display the user form.
+t_Begin(); // Begin TRACKing included file.
+pageHeader("User administration",'','encode');
+// Get form values.
+if ( !isset($f['userId']) ) formValue('userId'); if ( !$f['userId'] ) $f['userId'] = 0;
+if ( $f['form'] != 'form_user' ) {
+  // form_user not called by itself. Preload data for form.
+  if ( $f['userId'] ) {
+    // $f['userId'] set. This is an edit form. Load form_user data from database.
+    $query = "
+      SELECT * FROM `user`
+      WHERE userId = ".$f['userId']."
+    ";
+    $userResult = query_do($query);
+    $userCount = $GLOBALS['_QUERY']['count'];
+    if ($userCount) {
+      // Load form_user data from data record.
+      query_seek($userResult, 0);
+      $userInfo = query_row($userResult);
+      $f['userUsername'] = $userInfo['userUsername'];
+      $f['userFirstname'] = $userInfo['userFirstname'];
+      $f['userMiddlename'] = $userInfo['userMiddlename'];
+      $f['userLastname'] = $userInfo['userLastname'];
+      $f['userNickname'] = $userInfo['userNickname'];
+      $f['userEmailAddress'] = $userInfo['userEmailAddress'];
+      $f['userImage'] = $userInfo['userImage'];
+      $f['userInactive'] = $userInfo['userInactive'];
+      $f['userNote'] = $userInfo['userNote'];
+    } else {
+      // There was no record for $f['userId']. This is an error.
+      programmingError('No record for userId='.$f['userId'].' found.');
+    }
+  } else {
+    // $f['userId'] is 0. This is an add form. Set form_user data to default values.
+    $f['userUsername'] = '';
+    $f['userFirstname'] = '';
+    $f['userMiddlename'] = '';
+    $f['userLastname'] = '';
+    $f['userNickname'] = '';
+    $f['userEmailAddress'] = '';
+    $f['userImage'] = '';
+    $f['userInactive'] = 0;
+    $f['userNote'] = '';
+  }
+}
+if ( !isset($formError) ) $formError = array();
+// Disable if editing Admin.
+if ( $f['userUsername'] != 'Admin' ) { $adminReadonly = ''; } else { $adminReadonly = ' readonly'; }
+// Disable if editing Admin & !Admin.
+if ( $f['userUsername'] != 'Admin' || ( $f['userUsername'] == 'Admin' && $_SESSION['user']['Username'] == 'Admin' ) ) {  $passwordDisabled = ''; } else { $passwordDisabled = ' disabled'; }
+// Set default Admin userUsername.
+$defaultAdminUsername = 'Admin';
+// Set newPassword and confirmPassword as empty string if unset.
+if ( !isset($f['newPassword']) ) $f['newPassword'] = '';
+if ( !isset($f['confirmPassword']) ) $f['confirmPassword'] = '';
+?>
+<p>
+<div id="container" style="border:1px solid red; display:table; margin:auto;">
+<div id="userdiv" style="float:left">
+<fieldset><legend><? if ( $f['userId'] ) { ?>Edit<? } else { ?>Add<? } ?> User</legend>
+<form name="form_user" id="id_form_user" action="<?=php_self()?>" method="post" enctype="multipart/form-data">
+
+<input type="hidden" name="form" value="form_user">
+<input type="hidden" name="userId" id="userId" value="<?=$f['userId']?>">
+<input type="hidden" name="newPassword" id="id_newPassword" value="">
+<input type="hidden" name="confirmPassword" id="id_confirmPassword" value="">
+<input type="hidden" name="task" id="task" value="">
+<input type="hidden" name="uuid" value="<?=uuid()?>"></legend>
+<table>
+<? if ( isset($formError['userUsername']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userUsername']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Username</td>
+    <td><input type="text" class="<? if ( $f['userUsername'] == $defaultAdminUsername ) { ?>readonly<? } ?>" name="userUsername" id="id_userUsername" value="<?=htmlSafe($f['userUsername'])?>"<? if ( $f['userUsername'] == $defaultAdminUsername ) { ?> readonly onClick="alert('The Admin Username cannot be changed'); this.selected=false;"<? } ?>></td>
+  </tr>
+<? if ( isset($formError['userPassword']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userPassword']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Password</td>
+    <td><input type="password" class="" name="np" id="id_np" value="<?=$f['newPassword']?>" autocomplete="off"></td>
+  </tr>
+  <tr>
+    <td class="right">Confirm password</td>
+    <td><input type="password" class="" name="cp" id="id_cp" value="<?=$f['confirmPassword']?>" autocomplete="off"></td>
+  </tr>
+<? if ( isset($formError['userFirstname']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userFirstname']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Firstname</td>
+    <td><input type="text" class="" name="userFirstname" id="id_userFirstname" value="<?=htmlSafe($f['userFirstname'])?>"></td>
+  </tr>
+<? if ( isset($formError['userMiddlename']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userMiddlename']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Middlename</td>
+    <td><input type="text" class="" name="userMiddlename" id="id_userMiddlename" value="<?=htmlSafe($f['userMiddlename'])?>"></td>
+  </tr>
+<? if ( isset($formError['userLastname']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userLastname']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Lastname</td>
+    <td><input type="text" class="" name="userLastname" id="id_userLastname" value="<?=htmlSafe($f['userLastname'])?>"></td>
+  </tr>
+<? if ( isset($formError['userNickname']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userNickname']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Nickname</td>
+    <td><input type="text" class="" name="userNickname" id="id_userNickname" value="<?=htmlSafe($f['userNickname'])?>"></td>
+  </tr>
+<? if ( isset($formError['userEmailAddress']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userEmailAddress']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">EmailAddress</td>
+    <td><input type="text" class="" name="userEmailAddress" id="id_userEmailAddress" value="<?=htmlSafe($f['userEmailAddress'])?>" style="width:20em;"></td>
+  </tr>
+<? if ( isset($formError['userImage']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userImage']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Image</td>
+    <td><? if ( $f['userImage'] ) { ?><img src="/images/<?=$f['userImage']?>" align="top" style="border:1px solid black; margin-right:2px;"><? } ?><input type="file" class="" name="userImage" id="id_userImage"></td>
+  </tr>
+<? if ( isset($formError['userInactive']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userInactive']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Inactive</td>
+    <td>
+      <input type="radio" class="" name="userInactive" id="id_userInactive_1" value="1"<? if ($f['userInactive'] == 1) { ?> checked<? } ?>>Yes
+      <input type="radio" class="" name="userInactive" id="id_userInactive_0" value="0"<? if ($f['userInactive'] == 0) { ?> checked<? } ?>>No</td>
+  </tr>
+<? if ( isset($formError['userNote']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userNote']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Note</td>
+    <td><textarea class="" name="userNote" id="id_userNote" style=" height:5em; width:21.6em;"><?=htmlSafe($f['userNote'])?></textarea></td>
+  </tr>
+  <tr>
+    <td class="center" colspan="2">
+<?
+      if ( $f['userId'] ) {
+?>
+      <input type="button" name="button" value="Update user" onClick="submit_form_user(this)">
+<?
+      } else {
+?>
+      <input type="button" name="button" value="Add user" onClick="submit_form_user(this)">
+<?
+      }
+      if ( $f['form'] != 'form_user' || count($formError) ) {
+?>
+      <input type="button" name="button" value="Cancel" onClick="exit_form_user(this)">
+<?
+      } else {
+?>
+      <input type="button" name="button" value="Done" onClick="exit_form_user(this)">
+<?
+      }
+?>
+    </td>
+  </tr>
+</table>
+</form>
+</fieldset>
+</div><!-- id=userdiv -->
+<?
+if ($f['userId']) require('userGroupForm.phpinc');
+?>
+</div><!-- id="container" -->
+<script type="text/javascript">
+<!--
+  function submit_form_user(eId) {
+    document.form_user.task.value = eId.value;
+    if ( document.form_user.id_np.value != '' ) {
+      document.form_user.id_newPassword.value = document.form_user.id_np.value; // Store the new password.
+      document.form_user.id_np.disabled = true; // Disable the element.
+      encode('id_newPassword');
+    }
+    if ( document.form_user.id_cp.value != '' ) {
+      document.form_user.id_confirmPassword.value = document.form_user.id_cp.value;
+      document.form_user.id_cp.disabled = true; // Disable the element.
+      encode('id_confirmPassword');
+    }
+    document.form_user.submit();
+  }
+  function exit_form_user(eId) {
+    document.form_user.task.value = eId.value;
+    document.form_user.id_np.disabled = true; // Disable the element.
+    document.form_user.id_cp.disabled = true; // Disable the element.
+    document.form_user.id_newPassword.disabled = true; // Disable the element.
+    document.form_user.id_confirmPassword.disabled = true; // Disable the element.
+    document.form_user.submit();
+  }
+  document.form_user.id_np.value = '';
+  document.form_user.id_cp.value = '';
+// -->
+</script>
+<?
+pageFooter();
+?>

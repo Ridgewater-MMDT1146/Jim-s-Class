@@ -1,0 +1,17 @@
+<?
+// Schedule/displayScheduleClassDivs.phpinc
+// Display the schedule.
+
+t_Begin(); // Begin TRACKing displayScheduleClassDivs.phpinc.
+
+// Create class divs.
+if ( $scheduleclassCount ) { // Are there schedule classes?
+  $classes = array();
+	query_seek($scheduleclassResult, 0);
+  while ($scheduleclassInfo = query_row($scheduleclassResult)) { // Loop thru schedule classes.
+		require('Schedule/displayScheduleClassDiv.phpinc');
+  } // Loop thru schedule classes.
+} // Are there schedule classes?
+
+t_End(); // End TRACKing displayScheduleClassDivs.phpinc.
+?>

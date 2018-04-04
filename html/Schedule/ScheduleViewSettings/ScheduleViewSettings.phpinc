@@ -1,0 +1,115 @@
+<?
+// Schedule/ScheduleViewSettings/ScheduleViewSettings.phpinc
+// Display forn or update settings.
+// calendar_dayview, calendar_timebegin, calendar_timeend, calendar_timeincrement, calendar_incrementheight
+
+#$DEBUG_ScheduleViewSettings = true;
+if ( !isset($DEBUG_ScheduleViewSettings) ) $DEBUG_ScheduleViewSettings = false;
+t_Begin($DEBUG_ScheduleViewSettings); // Begin TRACKing included_file.
+
+f('Update');
+if ( $f['Update'] ) { // Is this a calendar settings update?
+	// Yes, update the calendar settings.
+	if ( !$DEBUG_ScheduleViewSettings ) {
+		$_SESSION['user']['calendar_dayview'] = $f['calendar_dayview'];
+		$_SESSION['user']['calendar_timebegin'] = $f['calendar_timebegin'];
+		$_SESSION['user']['calendar_timeend'] = $f['calendar_timeend'];
+		$_SESSION['user']['calendar_timeincrement'] = $f['calendar_timeincrement'];
+		$_SESSION['user']['calendar_incrementheight'] = $f['calendar_incrementheight'];
+	}
+	$query = "
+			UPDATE `userdata`
+				 SET calendar_dayview = '".query_safe($f['calendar_dayview'])."'
+					 , calendar_timebegin = ".$f['calendar_timebegin']."
+					 , calendar_timeend = ".$f['calendar_timeend']."
+					 , calendar_timeincrement = ".$f['calendar_timeincrement']."
+					 , calendar_incrementheight = ".$f['calendar_incrementheight']."
+			 WHERE userId = ".$_SESSION['user']['userId']."
+	";
+	d_Var('userdataUPDATE',$query,'q');
+	if ( !$DEBUG_ScheduleViewSettings ) $userdataUPDATE = query_do($query);
+	@d_Var('$userdataUPDATE',$userdataUPDATE,'l');
+/** /
+					 , calendar_showconflicts = ".$f['calendar_showconflicts']."
+/**/
+} else { // Is this a calendar settings update?
+	// No, show the form.
+?>
+	<fieldset><legend>Schedule view settings</legend>
+	<form name="form_ScheduleViewSettings" id="id_form_ScheduleViewSettings" action="<?=php_self()?>" method="post">
+	<input type="hidden" name="form" value="form_ScheduleViewSettings">
+	<input type="hidden" name="task" id="task" value="">
+	<input type="hidden" name="uuid" value="<?=uuid()?>">
+	<table>
+		<tr><td class="right">Day view:</td><td>
+			<label for="radcalendar_dayview0"><input type="radio" name="calendar_dayview" id="radcalendar_dayview0" value="Work week"<? if ( $_SESSION['user']['calendar_dayview'] == 'Work week' ) { ?> checked<? } ?>><span>Work week</span></label>
+			<label for="radcalendar_dayview1"><input type="radio" name="calendar_dayview" id="radcalendar_dayview1" value="Full week"<? if ( $_SESSION['user']['calendar_dayview'] == 'Full week' ) { ?> checked<? } ?>><span>Full week</span></label>
+		</td></tr>
+		<tr><td class="right">Begin time:</td><td>
+			<select name="calendar_timebegin" id="inp_calendar_timebegin">
+<?
+	for ( $time=0; $time<20; $time++ ) {
+?>
+				<option value="<?=$time?>"<? if ( $time == $_SESSION['user']['calendar_timebegin'] ) { ?> selected<? } ?>><?=valid_time($time.':00','USA')?></option>
+<?
+	}
+?>
+			</select>
+		</td></tr>
+		<tr><td class="right">End time:</td><td>
+			<select name="calendar_timeend" id="inp_calendar_timeend">
+<?
+	for ( $time=$_SESSION['user']['calendar_timebegin']+4; $time<=24; $time++ ) {
+?>
+				<option value="<?=$time?>"<? if ( $time == $_SESSION['user']['calendar_timeend'] ) { ?> selected<? } ?>><?=valid_time($time.':00','USA')?></option>
+<?
+	}
+?>
+			</select>
+		</td></tr>
+		<tr><td class="right">Time increment:</td><td>
+			<select name="calendar_timeincrement" id="inp_calendar_timeincrement">
+<?
+	$increments = array(15,30,60);
+	foreach ( $increments as $increment ) {
+?>
+				<option value="<?=$increment?>"<? if ( $increment == $_SESSION['user']['calendar_timeincrement'] ) { ?> selected<? } ?>><?=$increment?></option>
+<?
+	}
+?>
+			</select>minutes
+		</td></tr>
+		<tr><td class="right">Increment height:</td><td>
+			<select name="calendar_incrementheight" id="inp_calendar_incrementheight">
+<?
+	$increments = array(20,40,60,80);
+	foreach ( $increments as $increment ) {
+?>
+				<option value="<?=$increment?>"<? if ( $increment == $_SESSION['user']['calendar_incrementheight'] ) { ?> selected<? } ?>><?=$increment?></option>
+<?
+	}
+?>
+			</select>px
+		</td></tr>
+		<?/** /?>
+		<tr><td class="right">Show class highlights:</td><td>
+			<label for="calendar_showconflicts_Yes"><input type="radio" name="calendar_showconflicts" id="calendar_showconflicts_Yes" value="1"<? if ( $_SESSION['user']['calendar_showconflicts'] ) { ?> checked<? } ?>><span>Yes</span></label>
+			<label for="calendar_showconflicts_No"><input type="radio" name="calendar_showconflicts" id="calendar_showconflicts_No" value="0"<? if ( !$_SESSION['user']['calendar_showconflicts'] ) { ?> checked<? } ?>><span>No</span></label>
+		</td></tr>
+		<?/**/?>
+		<tr><td colspan="2" class="center">
+<?
+	#button('Update settings','Update schedule view settings.',"return ScheduleViewSettings('Update schedule settings with reload');");
+	button('Update settings','Update schedule view settings.',"return ScheduleViewSettings('Update schedule settings via javascript');");
+	button('Cancel','Do not change the schedule view settings.',"return ScheduleViewSettings('Cancel');");
+?>
+		</td></tr>
+	</table>
+	</form>
+	</fieldset>
+<?
+} // Is this a calendar settings update?
+
+#d_On('foot');
+t_End(); // End TRACKing included_file.
+?>

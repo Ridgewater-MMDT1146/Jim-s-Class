@@ -1,0 +1,212 @@
+<?
+// application_site.phpinc
+// Local setup for this website.
+
+//	********** Note that two site specific variables are set in application.phpinc:
+//	$debuggingAvailable on line 8.
+//	$default_timezone on line 12.
+
+t_Begin(); // Begin TRACKing included file.
+// Setup page variables.
+$css_StopCache = true; // Stop css files from being chached.
+$js_StopCache = true; // Stop js files from being chached.
+// Comma seperated list of default css files. If the .css extension is left off it is assumed. If the path does not begin with a / then /css/ assumed.
+$_PAGE['css'] .= ''
+							. ',normalize.css'
+							. ',font-awesome.min.css'
+							.	',site'
+							.	',tooltip'
+							.	''
+							;
+// This is for dynamic js by directory. It will look in the 'current' directory for a 'js_write_current.phpinc' file and require it in site_js.php.
+// See js/site_js.php.
+if ( isset($backtrace[3]) && isset($backtrace[3]['file']) ) { $js_site_directory = '?js_site_directory='.basename(dirname($backtrace[3]['file'])); } else { $js_site_directory = ''; }
+$_PAGE['js'] .= ''
+							.	',https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'
+							.	',https://code.jquery.com/ui/1.11.4/jquery-ui.js'
+							.	',site.js'
+							.	',site_js.php'.$js_site_directory
+							.	',tooltip.js'
+							.	',updateHTMLelement.js'
+							.	''
+							;
+#$_PAGE['js'] .= ',site,site_js.php,tooltip,updateHTMLelement'; // Comma seperated list of javascript files to be linked. If the .js extension is left off it is assumed.
+#$_PAGE['meta'] .= '|'.''; // Vertical bar (|) seperated list of default meta data.
+$_PAGE['onload'] .= ',_Initialize_Tooltip,_Initialize';
+$_PAGE['onresize'] .= ',_Resized';
+$_PAGE['onscroll'] .= ',_Scrolled';
+
+// Site variables.
+$HTTP = $_SESSION['ROOT']['http'];			// Give the http root a short name.
+$ROOT = $_SESSION['ROOT']['directory'];	// Give the directory root a short name.
+
+// Remove cst.ridgewater.edu settings.
+if ( isset($_SESSION['APP']) && ( !isset($_SESSION['APP']['shortname']) || $_SESSION['APP']['shortname'] != 'Scheduler' ) ) {
+  unset($_SESSION['DB']);
+  unset($_SESSION['APP']);
+  unset($_SESSION['user']);
+  echo 'Cleared CST session.';
+}
+
+if ( !isset($_SESSION['user']) ) $_SESSION['user'] = array();
+if ( !isset($_SESSION['user']['Sound']) ) {
+	$_SESSION['user']['Sound'] = array();
+	$_SESSION['user']['Sound']['Mute'] = 0;
+	$_SESSION['user']['Sound']['Attention'] = 1;
+	$_SESSION['user']['Sound']['Available'] = 1;
+	$_SESSION['user']['Sound']['Error'] = 1;
+	$_SESSION['user']['Sound']['Notice'] = 1;
+	$_SESSION['user']['Sound']['Ping'] = 1;
+	$_SESSION['user']['Sound']['Warning'] = 1;
+}
+#echo "\$HTTP=".$HTTP."<br>\n";
+
+// To force reload of the APP and DATABASE variables use ?reload in the URL.
+if ( isset($_GET['appload']) ) {
+  // Save the cookie and javascript settings.
+  $saveAPP['APP'] = array();
+  $saveAPP['APP']['REQUIRES'] = array();
+  $saveAPP['APP']['REQUIRES']['cookies'] = $_SESSION['APP']['REQUIRES']['cookies'];
+  $saveAPP['APP']['REQUIRES']['javascript'] = $_SESSION['APP']['REQUIRES']['javascript'];
+  // Clear the APP variables.
+  unset($_SESSION['APP']);
+  // Restore the cookie and javascript settings.
+  $_SESSION['APP'] = array();
+  $_SESSION['APP']['REQUIRES'] = array();
+  $_SESSION['APP']['REQUIRES']['cookies'] = $saveAPP['APP']['REQUIRES']['cookies'];
+  $_SESSION['APP']['REQUIRES']['javascript'] = $saveAPP['APP']['REQUIRES']['javascript'];
+  unset($saveAPP);
+  // Clear the DATABASE variables.
+  unset($_SESSION['DATABASE']);
+  unset($_SESSION['DB']);
+  displayInfo("\$_SESSION['APP'] and \$_SESSION['DB'] variables reloaded.");
+}
+
+// Setup session application variables.
+#unset($_SESSION['APP']); // Uncomment to clear and reload session APP variables on page reload.
+if ( !isset($_SESSION['APP']['version']) ) {
+  if ( !isset($_SESSION['APP']) ) $_SESSION['APP'] = array();
+  $_SESSION['APP']['version'] = ''; // The current version of website. jjp03/03
+  $_SESSION['APP']['copyrightyear'] = 2015; // The starting year for the copyright statement.
+	$_SESSION['APP']['copyrightowner'] = array('Jim Martinson' => 'jim.martinson@ridgewater.edu'
+																						,'James Hang' => 'HangJam@go.ridgewater.edu'
+																						,'Matthew Karels' => 'KarelsMat1@go.ridgewater.edu'
+																						,'Darin Kroger' => 'KrogerDar@go.ridgewater.edu'
+																						,'Michael Oellien' => 'OellienMic@go.ridgewater.edu'
+																						,'Grant Ojanen' => 'OjanenOja@go.ridgewater.edu'
+																						,'Kelly Olson' => 'OlsonKel@go.ridgewater.edu'
+																						,'Matthew Patten' => 'PattenMat@go.ridgewater.edu'
+																						,'Sean Porter' => 'Porter Sea@go.ridgewater.edu'
+																						,'Dillon Quast' => 'QuastDil@go.ridgewater.edu'
+																						,'Brandon Refsland' => 'RefslandBra@go.ridgewater.edu'
+																						,'Kyle Schultz' => 'SchultzKyl@go.ridgewater.edu'
+																						,'Torrey Sorensen' => 'SorensenTor@go.ridgewater.edu'
+																						,'Matthew Tidwell' => 'TidwellMat@go.ridgewater.edu'
+																						,'Bradley Westby' => 'WestbyBra@go.ridgewater.edu'
+
+																						);																						
+	$_SESSION['APP']['longname']  = "Scheduler".' '.$_SESSION['APP']['version']; // The long name of the application.
+  $_SESSION['APP']['shortname'] = "Scheduler"; // The short name of the application.
+  $_SESSION['APP']['ADMIN'] = array();
+  $_SESSION['APP']['ADMIN']['email'] = "jim.jimmartinson@ridgewater.edu"; // The email address of the website administrator.
+  $_SESSION['APP']['ADMIN']['name']  = "Jim Martinson"; // The name of the website administrator.
+  if ( !isset($_SESSION['APP']['REQUIRES']) ) $_SESSION['APP']['REQUIRES'] = array(); // Setup application requirements.
+  if ( !isset($_SESSION['APP']['REQUIRES']['backup']) ) $_SESSION['APP']['REQUIRES']['backup'] = false; // Set to true if table data should be backed up before DELETE or UPDATE.
+  if ( !isset($_SESSION['APP']['REQUIRES']['cookies']) ) $_SESSION['APP']['REQUIRES']['cookies'] = true; // Set to true if cookies are required.
+  if ( !isset($_SESSION['APP']['REQUIRES']['javascript']) ) $_SESSION['APP']['REQUIRES']['javascript'] = true; // Set to true if javascript is required.
+	if ( !isset($_SESSION['APP']['REQUIRES']['postdata']) ) $_SESSION['APP']['REQUIRES']['postdata'] = false; // Set to true if postdata functions (pageCall, pageDelete, pageReturn, and pageSave) are required.
+	$_SESSION['APP']['stopjscache'] = true; // Set to true to append datetime to all js files file to stop caching. Set to false to only append date time to js.php files.
+  // Setup for emailling of programming errors.
+  unset($_SESSION['APP']['EMAIL']);
+  //$_SESSION['APP']['EMAIL'] = array(); // Comment out this line to stop emailling of programming errors.
+  if ( isset($_SESSION['APP']['EMAIL']) ) {
+    require('email/getHostAddress.phpinc');
+    #echo "\$ipNetwork == ".$ipNetwork."<br>\n";
+    switch ($ipNetwork) {
+			case 'mediacom':
+        $_SESSION['APP']['EMAIL']['Host'] = 'mail.mediacombb.net';
+        $_SESSION['APP']['EMAIL']['SMTPAuth'] = false;
+			break;
+			case 'ridgewater':
+        $_SESSION['APP']['EMAIL']['Host'] = '134.29.172.135';
+        $_SESSION['APP']['EMAIL']['SMTPAuth'] = true;
+        $_SESSION['APP']['EMAIL']['Username'] = 'CST';
+        $_SESSION['APP']['EMAIL']['Password'] = '';
+			break;
+    }
+  }
+}
+
+// Setup session DATABASE variables.
+unset($_SESSION['DB']); // Uncomment to clear and reload session DATABASE variables on page reload.
+if ( !isset($_SESSION['DB']) ) {
+  $_SESSION['DATABASE'] = array();
+  $_SESSION['DB'] = array();
+  // Test for URL.
+  if ( strpos($_SERVER['HTTP_HOST'],'productionserver.com') !== false ) {
+    // Production site. (productionserver.com)
+    $_SESSION['DATABASE']['Default'] = 'scheduler'; // Set to your default database name. The query_do function will default to this database.
+    $_SESSION['DB']['scheduler'] = array();  // Define a set of these for each database.
+    $_SESSION['DB']['scheduler']['hostname'] = "127.0.0.1"; // The hostname where the MySQL server resides.
+    $_SESSION['DB']['scheduler']['database'] = "scheduler"; // The name of the MySQL database.
+    $_SESSION['DB']['scheduler']['username'] = "scheduler"; // The username to use for the MySQL database connection.
+    $_SESSION['DB']['scheduler']['password'] = "Scheduler2146"; // The username to use for the MySQL database connection.
+	$_SESSION['DB']['scheduler']['system'] = "MySQLi"; // The database management system (MySQL, MySQLi, or PostgreSQL).
+    $_SESSION['DB']['scheduler']['backup'] = ""; // The backup database name to use for DELETE and UPDATE backup records. Leave empty if no backup is desired.
+    $_SESSION['DB']['scheduler']['backupExclude'] = array('post','postdata'); // An array of tables to exclude from backup.
+  } else if ( strpos($_SERVER['HTTP_HOST'],'scheduler.jimmartinson.com') !== false ) {
+    // Development site. (sc.jimmartinson.com)
+    $_SESSION['DATABASE']['Default'] = 'scheduler'; // Set to your default database. The query_do function will default to this database.
+    $_SESSION['DB']['scheduler'] = array();  // Define a set of these for each database.
+    $_SESSION['DB']['scheduler']['hostname'] = "127.0.0.1"; // The hostname where the MySQL server resides.
+    $_SESSION['DB']['scheduler']['database'] = "scheduler"; // The name of the MySQL database.
+    $_SESSION['DB']['scheduler']['username'] = "scheduler"; // The username to use for the MySQL database connection.
+    $_SESSION['DB']['scheduler']['password'] = "Scheduler2146"; // The password to use for the MySQL database connection.
+	$_SESSION['DB']['scheduler']['system'] = "MySQLi"; // The database management system (MySQL, MySQLi, or PostgreSQL).
+    $_SESSION['DB']['scheduler']['backup'] = ""; // The backup database name to use for DELETE and UPDATE backup records. Leave empty if no backup is desired.
+    $_SESSION['DB']['scheduler']['backupExclude'] = array('post','postdata'); // An array of tables to exclude from backup.
+  } else {
+    // Test site. (usually on 127.0.0.1)
+    $_SESSION['DATABASE']['Default'] = 'scheduler'; // Set to your default database. The query_do function will default to this database.
+    $_SESSION['DB']['scheduler'] = array();  // Define a set of these for each database.
+    $_SESSION['DB']['scheduler']['hostname'] = "127.0.0.1"; // The hostname where the MySQL server resides.
+    $_SESSION['DB']['scheduler']['database'] = "scheduler"; // The name of the MySQL database.
+    $_SESSION['DB']['scheduler']['username'] = "scheduler"; // The username to use for the MySQL database connection.
+    $_SESSION['DB']['scheduler']['password'] = "Scheduler2146"; // The password to use for the MySQL database connection.
+	$_SESSION['DB']['scheduler']['system'] = "MySQLi"; // The database management system (MySQL, MySQLi, or PostgreSQL).
+    $_SESSION['DB']['scheduler']['backup'] = ""; // The backup database name to use for DELETE and UPDATE backup records. Leave empty if no backup is desired.
+    $_SESSION['DB']['scheduler']['backupExclude'] = array('post','postdata'); // An array of tables to exclude from backup.
+  }
+  /** /
+    // Additional database. Change databasename to the name of the database and copy above as needed.
+    $_SESSION['DB']['databasename'] = array();  // Define a set of these for each database.
+    $_SESSION['DB']['databasename']['hostname'] = "127.0.0.1"; // The hostname where the MySQL server resides.
+    $_SESSION['DB']['databasename']['database'] = "databasename"; // The name of the MySQL database.
+    $_SESSION['DB']['databasename']['username'] = "username"; // The username to use for the MySQL database connection.
+    $_SESSION['DB']['databasename']['password'] = "password"; // The password to use for the MySQL database connection.
+	$_SESSION['DB']['databasename']['system'] = "MySQLi"; // The database management system (MySQL, MySQLi, or PostgreSQL).
+    $_SESSION['DB']['databasename']['backup'] = ""; // The backup database name to use for DELETE and UPDATE backup records. Leave empty if no backup is desired.
+    $_SESSION['DB']['databasename']['backupExclude'] = array('post','postdata'); // An array of tables to exclude from backup.
+  /**/
+  // Populate the $_SESSION['DATABASE']['Names'] array.
+  $_SESSION['DATABASE']['Names'] = array();
+  foreach ( $_SESSION['DB'] as $temp => $database ) {
+    $_SESSION['DATABASE']['Names'][] = $database['database'];
+  }
+  ###$_SESSION['DATABASE']['Last'] = ''; // Leave blank. Stores the last database connection made.
+}
+
+// Check for browser compatability.
+if ( isset($_SESSION['BROWSER']) ) {
+	// Disabled browsers.
+	switch ( $_SESSION['BROWSER']['name'] ) {
+		case 'XXX':
+			require('site/BrowserNotSupported.phpinc');
+		break;
+		default:
+		break;
+	}
+}
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

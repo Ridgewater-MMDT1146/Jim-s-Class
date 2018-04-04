@@ -1,0 +1,119 @@
+<?
+// admin/database/phonenumbertypeList.phpinc
+// Display list of phonenumbertypes.
+
+t_Begin(); // Begin TRACKing included file.
+
+// Is this the first load of the form?
+if ( $f['form'] != 'form_phonenumbertype' ) {
+  // Get the data from the database.
+  $query = "
+      SELECT phonenumbertypeId
+           , phonenumbertypeName
+           , phonenumbertypeDescription
+           , phonenumbertypeInactive
+        FROM `phonenumbertype`
+    ORDER BY phonenumbertypeName
+  ";
+  $phonenumbertypeResult = query_do($query);
+  $phonenumbertypeCount = $GLOBALS['_QUERY']['count'];
+  // Store the data in an array.
+  query_seek($phonenumbertypeResult, 0);
+  while ($phonenumbertypeInfo = query_row($phonenumbertypeResult)) {
+    $phonenumbertypeId = $phonenumbertypeInfo['phonenumbertypeId'];
+    $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName'] = $phonenumbertypeInfo['phonenumbertypeName'];
+    $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeDescription'] = $phonenumbertypeInfo['phonenumbertypeDescription'];
+    $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive'] = $phonenumbertypeInfo['phonenumbertypeInactive'];
+  }
+}
+?>
+<fieldset><legend>Phone number types</legend>
+<form name="form_phonenumbertype" action="<?=php_self()?>" method="post">
+<input type="hidden" name="form" value="form_phonenumbertype">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="phonenumbertypeInactive_0" value="0">
+<table>
+  <tr>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th colspan="2">Active</th>
+  </tr>
+  <tr>
+    <th></th>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Yes</th>
+    <th>No</th>
+  </tr>
+<?
+$have_phonenumbertypeInactive = false; // Set $have_phonenumbertypeInactive flag.
+if ($phonenumbertypeCount) {
+  foreach ( $f['phonenumbertype'] as $phonenumbertypeId => $temp ) {
+    if ( $phonenumbertypeId ) {
+?>
+<? if ( isset($formError[$phonenumbertypeId]['phonenumbertypeName']) ) { ?>
+  <tr><td colspan="2"></td><td colspan="2" class="error"><?=$formError[$phonenumbertypeId]['phonenumbertypeName']?></td></tr>
+<? } ?>
+<? if ( isset($formError[$phonenumbertypeId]['phonenumbertypeDescription']) ) { ?>
+  <tr><td colspan="2"></td><td colspan="2" class="error"><?=$formError[$phonenumbertypeId]['phonenumbertypeDescription']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">
+    </td>
+    <td>
+      <input type="text"<? if ( $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive'] ) { ?> class="error"<? }?> name="phonenumbertypeName_<?=$phonenumbertypeId?>" value="<?=htmlSafe($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName'])?>" style="width:4em;" title="Six characters or less">
+    </td>
+    <td>
+      <input type="text"<? if ( $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive'] ) { ?> class="error"<? }?> name="phonenumbertypeDescription_<?=$phonenumbertypeId?>" value="<?=htmlSafe($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeDescription'])?>" style="width:30em;">
+    </td>
+    <td class="center">
+      <input type="radio" name="phonenumbertypeInactive_<?=$phonenumbertypeId?>" value="0"<? if (!$f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive']) { ?> checked<? } ?>>
+    </td>
+    <td class="center">
+      <input type="radio" name="phonenumbertypeInactive_<?=$phonenumbertypeId?>" value="1"<? if ($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive']) { ?> checked<? } ?>>
+    </td>
+   </tr>
+<?
+  if ( $f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive'] ) $have_phonenumbertypeInactive = true;
+    }
+  }
+}
+if ( !isset($f['phonenumbertype'][0]) ) { $f['phonenumbertype'][0] = array(); $f['phonenumbertype'][0]['phonenumbertypeName'] = ''; $f['phonenumbertype'][0]['phonenumbertypeDescription'] = ''; }
+?>
+<? if ( isset($formError[0]['phonenumbertypeName']) ) { ?>
+  <tr><td colspan="2"></td><td colspan="2" class="error"><?=$formError[0]['phonenumbertypeName']?></td></tr>
+<? } ?>
+<? if ( isset($formError[0]['phonenumbertypeDescription']) ) { ?>
+  <tr><td colspan="2"></td><td colspan="2" class="error"><?=$formError[0]['phonenumbertypeDescription']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">
+    </td>
+    <td>
+      <input type="text" name="phonenumbertypeName_0" value="<?=htmlSafe($f['phonenumbertype'][0]['phonenumbertypeName'])?>" style="width:4em;">
+    </td>
+    <td>
+      <input type="text" name="phonenumbertypeDescription_0" value="<?=htmlSafe($f['phonenumbertype'][0]['phonenumbertypeDescription'])?>" style="width:30em;">
+    </td>
+    <td colspan="2" class="center">&laquo; Add</td>
+   </tr>
+  <tr>
+    <td class="center" colspan="4">
+      <input type="submit" name="task" value="Update">
+    </td>
+  </tr>
+<?
+if ( $have_phonenumbertypeInactive ) {
+?>
+  <tr><td colspan="2"></td><td colspan="2" class="error">NOTE: Phone number types in red are Inactive.</td></tr>
+<?
+}
+?>
+</table>
+</form>
+</fieldset>
+<?
+
+t_End(); // End TRACKing included file.
+?>

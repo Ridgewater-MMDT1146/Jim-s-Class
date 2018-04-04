@@ -1,0 +1,47 @@
+<?
+// buildingFormProcess.phpinc
+// Process the building form.
+t_Begin(); // Begin TRACKing included file.
+if ( $f['uuid'] != $_SESSION['uuid'] ) {
+  // Not a page reload.
+  if ( $f['buildingId'] ) {
+    // UPDATE building.
+    $query = "
+        UPDATE `building`
+           SET campusId = ".$f['campusId']."
+             , buildingCode = '".query_safe($f['buildingCode'])."'
+             , buildingName = '".query_safe($f['buildingName'])."'
+         WHERE buildingId = ".$f['buildingId']."
+    ";
+    d_Var('buildingUPDATE',$query,'q');
+    $buildingUPDATE = query_do($query);
+    d_Var('$buildingUPDATE',$buildingUPDATE,'l');
+    displayMessage('Building '.$f['buildingName'].' updated.');
+  } else {
+    // INSERT building.
+    $query = "
+      INSERT INTO `building` (           AND
+          campusId
+        , buildingCode
+        , buildingName
+      ) VALUES (
+          ".$f['campusId']."
+        , '".query_safe($f['buildingCode'])."'
+        , '".query_safe($f['buildingName'])."'
+      )
+    ";
+    d_Var('buildingINSERT',$query,'q');
+    $buildingINSERT = query_do($query);
+    d_Var('$buildingINSERT',$buildingINSERT,'l');
+    $f['buildingId'] = mysql_insert_id();
+    d_Var("\$f['buildingId']",$f['buildingId']);
+    displayMessage('Building '.$f['buildingName'].' added.');
+  }
+  // Remember that the form was processed.
+  $_SESSION['uuid'] = $f['uuid'];
+} else {
+  // Page was reloaded.
+  displayMessage('Page reloaded.','warn');
+}
+t_End(); // End TRACKing included file.
+?>

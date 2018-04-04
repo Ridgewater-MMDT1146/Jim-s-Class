@@ -1,0 +1,74 @@
+<?php
+// common/pageHeader.phpinc
+// Generate the page header for each page.
+t_Begin(false); // Begin TRACKing included file.
+
+if ( !isset($GLOBALS['_PAGE']['showAnyHeader']) ) $GLOBALS['_PAGE']['showAnyHeader'] = true;
+if ( !isset($GLOBALS['_PAGE']['showFullHeader']) ) if ( $GLOBALS['_PAGE']['showAnyHeader'] ) { $GLOBALS['_PAGE']['showFullHeader'] = true; } else { $GLOBALS['_PAGE']['showFullHeader'] = false; }
+#d_line('common/pageHeader.phpinc','d');
+if ( !isset($GLOBALS['_PAGE']['pageHeaderLoaded']) && $GLOBALS['_PAGE']['showAnyHeader'] ) { // Is pageHeader not loaded and $_PAGE['showAnyHeader] = true?
+	// pageHeader not loaded and $_PAGE['showAnyHeader] = true.
+	$GLOBALS['_PAGE']['pageHeaderLoaded'] = true; // Ensure page header is loaded only once.
+	// Begin document.
+	$GLOBALS['_PAGE']['DOCTYPE'] = '<!DOCTYPE html>';
+	echo $GLOBALS['_PAGE']['DOCTYPE']."\n\n";
+?>
+<html>
+<?
+	if ( $GLOBALS['TRACK'] && $GLOBALS['debuggingAvailable'] ) {
+		// Insert comments to track calling files.
+		$pageHeader_debug_backtrace = debug_backtrace();
+		for ($backtrace_index=count($pageHeader_debug_backtrace)-1; $backtrace_index>0; $backtrace_index--) { ?><!-- <?=str_replace($_SESSION['ROOT']['directory'],"",str_replace("\\","/",$pageHeader_debug_backtrace[$backtrace_index]['file']))?><? if ( isset($pageHeader_debug_backtrace[$backtrace_index]['function']) ) { ?> <?=$pageHeader_debug_backtrace[$backtrace_index]['function']?>(<? $args = ''; foreach ( $pageHeader_debug_backtrace[$backtrace_index]['args'] as $arg ) { $args = listAppend($args,str_replace(array('\\',$_SESSION['ROOT']['directory']),array('/',''),$arg)); } ?><?=$args?>) called from line <?=$pageHeader_debug_backtrace[$backtrace_index]['line']?><? } ?> --><? echo "\n";
+		}
+		echo "<!-- BEGIN ".str_replace(array("\\",$_SESSION['ROOT']['directory']),array("/",""),__FILE__)." -->\n";
+	}
+	require('common/pageHeader_head.phpinc');
+?>
+
+<body<?=$GLOBALS['_PAGE']['bodyId']?><?=$onloadBody?><?=$onresizeBody?><?=$onscrollBody?><?=$onunloadBody?>><?=d_Var("\$GLOBALS['_PAGE']['showAnyHeader']",$GLOBALS['_PAGE']['showAnyHeader'],'C')?><?=d_Var("\$GLOBALS['_PAGE']['showFullHeader']",$GLOBALS['_PAGE']['showFullHeader'],'C')?>
+<?
+	// Test for javascript if required.
+	#d_Var("\$_SESSION['APP']['REQUIRES']['javascript']",$_SESSION['APP']['REQUIRES']['javascript'],'d');
+	if ( $_SESSION['APP']['REQUIRES']['javascript'] && $_SESSION['APP']['REQUIRES']['javascript'] !== 'OK' ) { require('common/testJavascriptEnabled.phpinc'); }
+	// Test for cookies if required.
+	if ( $_SESSION['APP']['REQUIRES']['cookies'] && $_SESSION['APP']['REQUIRES']['cookies'] !== 'OK' ) { require('common/testCookiesEnabled.phpinc'); }
+	if ( $GLOBALS['_PAGE']['showFullHeader'] ) { // displayHeader = true?
+		// displayHeader = true.
+		// Add link to / if page is not /.
+?>
+<?
+// Display calling .php file if calling file codePage is true;
+		if ( isset($GLOBALS['DEBUG']['set']) && isset($GLOBALS['DEBUG']['set']['Type']) && isset($GLOBALS['DEBUG']['set']['Type'][0]) && $GLOBALS['DEBUG']['set']['Type'][0] == 'codePage' && $GLOBALS['DEBUG']['set']['State'][0] ) {
+?>
+pageHeader() called from <span class="d_s_fl"><?=basename($backtrace[0]['file'])?>:<?=$backtrace[0]['line']?></span> <span class="d_s_fp"><?=$backtrace[0]['file']?></span>.<br>
+<?
+		}
+if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] && $GLOBALS['DEBUG_Show_menu'] ) require('common/pageHeader_topnav_DEBUG.phpinc');
+?>
+<header id="headerPage">
+	<div class="float_left"><a<? if ($_SESSION['ROOT']['http'] != dirname($_SERVER['PHP_SELF']) ) { ?> href="<?=$_SESSION['ROOT']['http']?>/" <? } ?> id="home" style="color : #eee;" class="fa fa-3x fa-calendar"></a></div>
+	<div class="float_right"><? require('common/pageHeader_topnav.phpinc'); ?></div>
+	<h1 id="pageTitle"><?=$GLOBALS['_PAGE']['pageTitle']?></h1>
+</header>
+<div id="tooltipContainer"><div id="tooltipDiv"><!-- Needed for tooltip --></div></div>
+<div id="dialogContainer" draggable="false"><div id="dialogDiv"></div></div>
+<main id="pageContent">
+<?
+	displayMessage(); // Display any messages.
+	require('common/pageHeader_sidenav.phpinc');
+	$GLOBALS['_PAGE']['pageContent'] = true;
+  } else { // displayHeader = true?
+		// displayHeader = false.
+		if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] && $GLOBALS['DEBUG_Show_menu'] ) require('common/pageHeader_topnav_DEBUG.phpinc');
+		displayMessage(); // Display any messages.
+	} // displayHeader = true?
+} else { // Is pageHeader not loaded and $_PAGE['showAnyHeader] = true?
+	// pageHeader loaded or $_PAGE['showAnyHeader] = false.
+	#d_Line("Skipped \$GLOBALS['_PAGE']['pageHeaderLoaded'] = true;",'de');
+	$GLOBALS['_PAGE']['pageHeaderLoaded'] = true;
+} // Is pageHeader not loaded and $_PAGE['showAnyHeader] = true?
+#$GLOBALS['_PAGE']['pageHeaderLoaded'] = true; // Ensure page header is loaded only once.
+#d_Var("\$GLOBALS['_PAGE']['pageHeaderLoaded']",$GLOBALS['_PAGE']['pageHeaderLoaded'],'d');
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

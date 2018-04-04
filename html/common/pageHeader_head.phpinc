@@ -1,0 +1,319 @@
+<?
+// common/pageHeader_head.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing pageHeader_head.phpinc file.
+
+#if ( $GLOBALS['f']['useCanvasMap'] ) $GLOBALS['_PAGE']['css'] .= ',canvas.css';
+#if ( $GLOBALS['f']['useCanvasMap'] ) $GLOBALS['_PAGE']['js'] .= ',canvas.js';
+#if ( $GLOBALS['f']['useCanvasMap'] ) $GLOBALS['_PAGE']['onload'] .= ',Initialize_Canvas';
+
+// Setup DEBUGging.
+if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] ) {
+	//  Add debug files to css and js.
+	$GLOBALS['_PAGE']['css'] .= ',debug'; // Link debug.css file.
+	$GLOBALS['_PAGE']['js'] .= ',div,debug';    // Link div.js file.
+}
+// Setup head and page title.
+#if ( !isset($GLOBALS['_PAGE']['pageTitle']) ) $GLOBALS['_PAGE']['pageTitle'] = '';
+#if ( $GLOBALS['_PAGE']['pageTitle'] == '' ) { $GLOBALS['_PAGE']['showFullHeader'] = false; }
+#if ( $GLOBALS['_PAGE']['pageTitle'] == ' ' ) { $GLOBALS['_PAGE']['pageTitle'] = ''; }
+if ( $GLOBALS['_PAGE']['pageTitle'] ) {
+	$GLOBALS['_PAGE']['headTitle'] = strip_tags($GLOBALS['_PAGE']['pageTitle']);
+	//$GLOBALS['_PAGE']['pageTitle'] = str_replace(" - ","<br>",$GLOBALS['_PAGE']['pageTitle']);
+	if ( isset($_SESSION['userId']) && $_SESSION['userId'] ) {
+		$GLOBALS['_PAGE']['headTitle'] = $_SESSION['APP']['longname']." - ".$GLOBALS['_PAGE']['headTitle']." - ".$_SESSION['user']['Fullname'];
+		$GLOBALS['_PAGE']['pageTitle'] = $_SESSION['APP']['longname']." - ".$_SESSION['user']['Fullname']."<br>".$GLOBALS['_PAGE']['pageTitle'];
+	} else {
+		$GLOBALS['_PAGE']['headTitle'] = $_SESSION['APP']['longname']." - ".$GLOBALS['_PAGE']['headTitle'];
+		$GLOBALS['_PAGE']['pageTitle'] = $_SESSION['APP']['longname']." - ".$GLOBALS['_PAGE']['pageTitle'];
+	}
+} else {
+	$GLOBALS['_PAGE']['headTitle'] = '';
+}
+#if ( $GLOBALS['_PAGE']['pageTitle'] === '' ) $GLOBALS['_PAGE']['showFullHeader'] = false;
+?>
+
+<head>
+	<title><?=$GLOBALS['_PAGE']['headTitle']?></title>
+<?
+// Keep track of meta, css, and js tags added.
+$GLOBALS['_PAGE']['mcjAdded'] = array();
+// BEGIN Add meta tags.
+//if ( !isset($_SESSION['BROWSER']) || ( isset($_SESSION['BROWSER']) && $_SESSION['BROWSER']['name'] == 'Explorer' ) ) $GLOBALS['_PAGE']['meta'] .= '|http-equiv="X-UA-Compatible" content="IE=Edge"'; // Stop Compatibility mode in IE.
+$metaArray = explode('|', $GLOBALS['_PAGE']['meta']);
+if ( strpos($GLOBALS['_PAGE']['meta'],'charset') === false ) {
+	//array_unshift($metaArray, 'http-equiv="content-type" content="text/html; charset=UTF8"'); // Add the charset to $metaArray.
+	array_unshift($metaArray, 'charset="UTF-8"'); // Add the charset to $metaArray.
+}
+$metaTagsAdded = '';
+foreach ( $metaArray as $thisMeta) {
+	$thisMeta = trim($thisMeta);
+	if ($thisMeta != '') {
+		if ( strpos($metaTagsAdded,$thisMeta) === false ) {
+			echo '	<meta '.$thisMeta.'>'."\n";
+			$GLOBALS['_PAGE']['mcjAdded'][] = '<meta '.$thisMeta.'>';
+			$metaTagsAdded = listAppend($metaTagsAdded,$thisMeta);
+		}
+	}
+}
+// END Add meta tags.
+
+// BEGIN Link css files.
+if ( !isset($GLOBALS['_PAGE']['css']) ) $GLOBALS['_PAGE']['css'] = '';
+if ( $GLOBALS['_PAGE']['css'] != '' ) {
+	$cssFileArray = explode(",", $GLOBALS['_PAGE']['css']);
+	#d_Var('$cssFileArray',$cssFileArray);
+	$cssLinks = '';
+	$cssStopCache = $GLOBALS['css_StopCache'];
+	foreach ( $cssFileArray as $cssFile) {
+		if (trim($cssFile) != '') {
+			// Get the css file path.
+			#d_Var('$cssFile',$cssFile,'/');
+			if (strpos($cssFile,"/") === false) {
+				$cssPath = $_SESSION['ROOT']['http'].'/css/';
+				$cssExists = $_SESSION['ROOT']['directory'].'/css/';
+			} else {
+				$cssPath = dirname($cssFile).'/';
+				$cssFile = basename($cssFile); 
+				if ( substr($cssPath,0,1) != '.' && substr($cssPath,0,7) != 'http://' && substr($cssPath,0,8) != 'https://' ) {
+					if ( substr($cssPath,0,1) != '/' ) {
+						$cssPath = $_SESSION['ROOT']['http'].'/'.$cssPath;
+						$cssExists = $_SESSION['ROOT']['directory'].'/'.$cssPath;
+					} else {
+						$cssPath = $_SESSION['ROOT']['http'].$cssPath;
+						$cssExists = $_SESSION['ROOT']['directory'].$cssPath;
+					}
+				} else {
+					if ( substr($cssPath,0,7) != 'http://' && substr($cssPath,0,8) != 'https://' ) {
+						$cssExists = $cssPath;
+					} else {
+						$cssExists = true;
+					}
+				}
+			}
+			// Get the css file and ext.
+			$cssFileExt = explode('.',trim($cssFile));
+			if ( !isset( $cssFileExt[1] ) ) { $cssFile = $cssFileExt[0]; $cssExt = '.css'; } else { $cssExt = ''; }
+			#d_Var('$cssPath',$cssPath);
+			#d_Var('$cssFile',$cssFile);
+			#d_Var('$cssExt',$cssExt);
+			#d_Var('$cssExists',$cssExists);
+			#if (strpos($cssFile,"/") === false) { $cssPath = '/css/'; } else { $cssPath = dirname($cssFile).'/'; $cssFile = basename($cssFile); }
+			#d_Var('$cssPath - $cssFile - $cssExt',$cssPath.' - '.$cssFile.' - '.$cssExt);
+			if ( strpos($cssLinks,$cssPath.$cssFile.$cssExt) === false ) {
+				if ( file_exists($cssExists.$cssFile.$cssExt) ) {
+					if ( !$cssStopCache && substr($cssFile.$cssExt,-4) != '.php' ) { // Should we append datetime to stop caching?
+						// No, clear the stop cache.
+						$cssStopCacheString = '';
+					} else { // Should we append datetime to stop caching?
+						if ( substr($cssPath,0,7) != 'http://' && substr($cssPath,0,8) != 'https://' ) {
+							$cssStopCacheString = '?datetime='.urlencode(CurrentDateTime()); // Append the stop cache.
+						} else {
+							$cssStopCacheString = '';
+						}
+						//Yes, append the stop cache.
+					} // Should we append datetime to stop caching?
+					#d_Var('$cssStopCacheString',$cssStopCacheString,'');
+					echo '	<link href="'.$cssPath.$cssFile.$cssExt.$cssStopCacheString.'" rel="stylesheet" type="text/css">'."\n";
+					$GLOBALS['_PAGE']['mcjAdded'][] = '<link href="'.$cssPath.$cssFile.$cssExt.'" rel="stylesheet" type="text/css">';
+					$cssLinks = listAppend($cssLinks,$cssPath.$cssFile.$cssExt);
+					if ( isset($_SESSION['BROWSER']['name']) ) {
+						if ( in_array($_SESSION['BROWSER']['name'],array('Chrome','Explorer','Firefox','Safari')) ) {
+							if ( file_exists($cssExists.$cssFile.'_'.$_SESSION['BROWSER']['name'].$cssExt) ) { // Detect if css file exists for this browser.
+								$cssFile .= '_'.$_SESSION['BROWSER']['name'];
+								echo '	<link href="'.$cssPath.$cssFile.$cssExt.$cssStopCacheString.'" rel="stylesheet" type="text/css">'."\n"; // if it does, add the link.
+								$GLOBALS['_PAGE']['mcjAdded'][] = '<link href="'.$cssPath.$cssFile.$cssExt.'" rel="stylesheet" type="text/css">';
+								$cssLinks = listAppend($cssLinks,$cssPath.$cssFile.$cssExt);
+							}
+							if ( file_exists($cssExists.$cssFile.(int)$_SESSION['BROWSER']['version'].$cssExt) ) { // Detect if css file exists for this browser version.
+								$cssFile .= (int)$_SESSION['BROWSER']['version'];
+								echo '	<link href="'.$cssPath.$cssFile.$cssExt.$cssStopCacheString.'" rel="stylesheet" type="text/css">'."\n"; // if it does, add the link.
+								$GLOBALS['_PAGE']['mcjAdded'][] = '<link href="'.$cssPath.$cssFile.$cssExt.'" rel="stylesheet" type="text/css">';
+								$cssLinks = listAppend($cssLinks,$cssPath.$cssFile.$cssExt);
+							}
+						}
+					}
+				} else {
+					echo '	<!-- Skipped css file '.$cssFile.'. Not found at '.$cssExists.$cssFile.$cssExt.' -->'."\n";
+					$GLOBALS['_PAGE']['mcjAdded'][] = ' Skipped css file '.$cssFile.'. Not found at '.$cssExists.$cssFile.$cssExt.'.';
+				} // if ( file_exists($cssExists.$cssFile.$cssExt) )
+			} // if ( strpos($cssLinks,'/'.$cssFile.substr($cssExt,0,1)) === false )
+		} // if (trim($cssFile) != '')
+	} // foreach ( $cssFileArray as $cssFile)
+} // if (isset($GLOBALS['_PAGE']['css']) && $GLOBALS['_PAGE']['css'] != '')
+#d_Var("\$cssLinks",$cssLinks,'+');
+// END Link css files.
+
+// BEGIN Add js files.
+if ( !isset($GLOBALS['_PAGE']['js']) ) $GLOBALS['_PAGE']['js'] = '';
+if ( $GLOBALS['_PAGE']['js'] != '') {
+	$jsFileArray = explode(",", $GLOBALS['_PAGE']['js']);
+	#d_Var('$jsFileArray',$jsFileArray);
+	$jsLinks = '';
+	$jsStopCache = $GLOBALS['js_StopCache'];
+	foreach ( $jsFileArray as $jsFile) {
+		#d_Var('$jsFile',$jsFile,'d/');
+		if (trim($jsFile) != '') {
+			// Strip query from js filename.
+			$jsFile = explode('?',$jsFile); // $jsFile[0] = path/file, $jsFile[1] = query string.
+			#d_Var('$jsFile[0]',$jsFile[0],'d');
+			#d_var("stripos(substr(\$jsFile[0],-4),'.php') === false",stripos(substr($jsFile[0],-4),'.php') === false,'d');
+			if ( !$jsStopCache && stripos(substr($jsFile[0],-4),'.php') === false ) { // Should we append datetime to stop caching?
+				// No, clear the stop cache.
+				$jsStopCacheString = '';
+			} else { // Should we append datetime to stop caching?
+				//Yes, append the stop cache.
+				#@d_Var('$jsFile[1]',$jsFile[1],'d');
+				if ( !isset($jsFile[1]) ) { // Is there not a query string?
+					// No, begin a query string
+					$jsStopCacheString = '?';
+				} else { // Is there not a query string?
+					// Yes, begin with the current query.
+					$jsStopCacheString = '?'.$jsFile[1].'&';
+				} // Is there not a query string?
+				$jsStopCacheString .= 'datetime='.urlencode(CurrentDateTime()); // Append the stop cache.
+			} // Should we append datetime to stop caching?
+			#d_Var('$jsStopCacheString',$jsStopCacheString,'d');
+			$jsFile = $jsFile[0];
+			// Get the js file path.
+			#d_Var('$jsFile',$jsFile,'/');
+			if (strpos($jsFile,"/") === false) {
+				$jsType = 'No /';
+				$jsPath = $_SESSION['ROOT']['http'].'/js/';
+				$jsExists = $_SESSION['ROOT']['directory'].'/js/';
+			} else {
+				$jsType = 'Has /';
+				$jsPath = dirname($jsFile).'/';
+				$jsFile = basename($jsFile); 
+				if ( substr($jsPath,0,1) != '.' && substr($jsPath,0,7) != 'http://' && substr($jsPath,0,8) != 'https://' ) {
+					if ( substr($jsPath,0,1) != '/' ) {
+						$jsPath = $_SESSION['ROOT']['http'].'/'.$jsPath;
+						$jsExists = $_SESSION['ROOT']['directory'].'/'.$jsPath;
+					} else {
+						$jsExists = $_SESSION['ROOT']['directory'].$jsPath;
+						$jsPath = $_SESSION['ROOT']['http'].$jsPath;
+					}
+				} else {
+					if ( substr($jsPath,0,7) != 'http://' && substr($jsPath,0,8) != 'https://' ) {
+						$jsExists = $jsPath;
+					} else {
+						$jsExists = true;
+					}
+				}
+			}
+			// Get the js file and ext.
+			$jsFileExt = explode('.',trim($jsFile));
+			if ( !isset( $jsFileExt[1] ) ) { $jsFile = $jsFileExt[0]; $jsExt = '.js'; } else { $jsExt = ''; }
+			#d_Var('$jsType',$jsType,'d/');
+			#d_Var('$jsPath',$jsPath,'d');
+			#d_Var('$jsExists',$jsExists,'d');
+			#d_Var('$jsFile',$jsFile,'d');
+			#d_Var('$jsExt',$jsExt,'d');
+			if ( strpos($jsLinks,$jsPath.$jsFile.$jsExt) === false ) {
+				if ( $jsExists === true || file_exists($jsExists.$jsFile.$jsExt) ) {
+					echo '	<script type="text/javascript" src="'.$jsPath.$jsFile.$jsExt.$jsStopCacheString.'"></script>'."\n";
+					$GLOBALS['_PAGE']['mcjAdded'][] = '<script type="text/javascript" src="'.$jsPath.$jsFile.$jsExt.$jsStopCacheString.'"></script>';
+					$jsLinks = listAppend($jsLinks,$jsPath.$jsFile.$jsExt);
+					if ( isset($_SESSION['BROWSER']['name']) ) {
+						if ( in_array($_SESSION['BROWSER']['name'],array('Chrome','Explorer','Firefox','Safari')) ) {
+							if ( file_exists($jsExists.$jsFile.'_'.$_SESSION['BROWSER']['name'].$jsExt) ) { // Detect if js file exists for this browser.
+								$jsFile .= '_'.$_SESSION['BROWSER']['name'];
+								echo '	<script type="text/javascript" src="'.$jsPath.$jsFile.$jsExt.$jsStopCacheString.'"></script>'."\n"; // if it does, add the link.
+								$GLOBALS['_PAGE']['mcjAdded'][] = '<script type="text/javascript" src="'.$jsPath.$jsFile.$jsExt.$jsStopCacheString.'"></script>>';
+								$jsLinks = listAppend($jsLinks,$jsPath.$jsFile.$jsExt);
+							}
+							if ( file_exists($jsExists.$jsFile.(int)$_SESSION['BROWSER']['version'].$jsExt) ) { // Detect if js file exists for this browser version.
+								$jsFile .= (int)$_SESSION['BROWSER']['version'];
+								echo '	<script type="text/javascript" src="'.$jsPath.$jsFile.$jsExt.$jsStopCacheString.'"></script>'."\n"; // if it does, add the link.
+								$GLOBALS['_PAGE']['mcjAdded'][] = '<script type="text/javascript" src="'.$jsPath.$jsFile.$jsExt.$jsStopCacheString.'"></script>';
+								$jsLinks = listAppend($jsLinks,$jsPath.$jsFile.$jsExt);
+							}
+						}
+					}
+				} else {
+					echo '	<!-- Skipped js file '.$jsFile.'. Not found at '.$jsExists.$jsFile.$jsExt.' -->'."\n";
+					$GLOBALS['_PAGE']['mcjAdded'][] = ' Skipped js file '.$jsFile.'. Not found at '.$jsExists.$jsFile.$jsExt.$jsStopCacheString.'.';
+				} // if ( file_exists($jsExists.$jsFile.$jsExt) )
+			} // if ( strpos($jsLinks,'/'.$jsFile.substr($jsExt,0,1)) === false )
+		} // if (trim($jsFile) != '')
+	} // foreach ( $jsFileArray as $jsFile)
+} // if (isset($GLOBALS['_PAGE']['js']) && $GLOBALS['_PAGE']['js'] != '')
+#d_Var("\$jsLinks",$jsLinks,'+');
+// END Add js files.
+t_Var('meta, css, and js tags added',$GLOBALS['_PAGE']['mcjAdded'],'k');
+
+// BEGIN Add body onload functions;
+$onloadBody = '';
+if ( !isset($GLOBALS['_PAGE']['onload']) ) $GLOBALS['_PAGE']['onload'] ='';
+if ( $GLOBALS['_PAGE']['onload'] != '' ) {
+	$onloadFunctionArray = explode(",", $GLOBALS['_PAGE']['onload']);
+	foreach ( $onloadFunctionArray as $onloadFunction) {
+		if ( trim($onloadFunction) != '' && strpos($onloadBody,' '.$onloadFunction.'()') === false ) {
+			$onloadBody .= ' '.trim($onloadFunction).'();';
+		}
+	}
+	$onloadBody = trim($onloadBody);
+	if ( $onloadBody != '' ) $onloadBody = ' onload="'.$onloadBody.'"';
+}
+t_Var('onloadBody',$onloadBody);
+// END Add body onload functions;
+// BEGIN Add body onresize functions;
+$onresizeBody = '';
+if ( isset($GLOBALS['_PAGE']['onresize']) && $GLOBALS['_PAGE']['onresize'] != '' ) {
+	$onresizeFunctionArray = explode(",", $GLOBALS['_PAGE']['onresize']);
+	t_Var('$onresizeFunctionArray',$onresizeFunctionArray);
+	foreach ( $onresizeFunctionArray as $onresizeFunction) {
+		if ( trim($onresizeFunction) != '' && strpos($onresizeBody,' '.$onresizeFunction.'()') === false ) {
+			$onresizeBody .= ' '.trim($onresizeFunction).'();';
+		}
+	}
+	$onresizeBody = trim($onresizeBody);
+	if ( $onresizeBody != '' ) $onresizeBody = ' onresize="'.$onresizeBody.'"';
+}
+t_Var('onresizeBody',$onresizeBody);
+// END Add body onresize functions;
+// BEGIN Add body onscroll functions;
+$onscrollBody = '';
+if ( isset($GLOBALS['_PAGE']['onscroll']) && $GLOBALS['_PAGE']['onscroll'] != '' ) {
+	$onscrollFunctionArray = explode(",", $GLOBALS['_PAGE']['onscroll']);
+	t_Var('$onscrollFunctionArray',$onscrollFunctionArray);
+	foreach ( $onscrollFunctionArray as $onscrollFunction) {
+		if ( trim($onscrollFunction) != '' && strpos($onscrollBody,' '.$onscrollFunction.'()') === false ) {
+			$onscrollBody .= ' '.trim($onscrollFunction).'();';
+		}
+	}
+	$onscrollBody = trim($onscrollBody);
+	if ( $onscrollBody != '' ) $onscrollBody = ' onscroll="'.$onscrollBody.'"';
+}
+t_Var('onscrollBody',$onscrollBody);
+// END Add body onscroll functions;
+// BEGIN Add body onunload functions;
+$onunloadBody = '';
+if ( isset($GLOBALS['_PAGE']['onunload']) && $GLOBALS['_PAGE']['onunload'] != '' ) {
+	$onunloadFunctionArray = explode(",", $GLOBALS['_PAGE']['onunload']);
+	t_Var('$onunloadFunctionArray',$onunloadFunctionArray);
+	foreach ( $onunloadFunctionArray as $onunloadFunction) {
+		if ( trim($onunloadFunction) != '' && strpos($onunloadBody,' '.$onunloadFunction.'()') === false ) {
+			$onunloadBody .= ' '.trim($onunloadFunction).'();';
+		}
+	}
+	$onunloadBody = trim($onunloadBody);
+	if ( $onunloadBody != '' ) $onunloadBody = ' onunload="'.$onunloadBody.'"';
+}
+t_Var('onunloadBody',$onunloadBody);
+// END Add body onunload functions;
+if ( false /** /!isset($_SESSION['BROWSER']) || !isset($_SESSION['BROWSER']['name']) || $_SESSION['BROWSER']['name'] == 'Chrome' || $_SESSION['BROWSER']['name'] == 'Chrome'/**/ ) {
+?>
+	<style type="text/css">
+		/* This style is here because Chrome is stupid and ignores the margin and padding in a css file! */
+		input[type="button"],                input[type="reset"],                input[type="submit"]                { margin:1px 2px; padding:1px 2px; }
+	</style>
+<?
+}
+?>
+</head>
+<?
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

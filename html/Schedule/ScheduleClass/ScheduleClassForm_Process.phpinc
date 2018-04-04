@@ -1,0 +1,171 @@
+<?
+// Schedule/ScheduleClass/ScheduleClassForm_Process.phpinc
+// Process the scheduleclassmeeting form.
+
+//$DEBUG_ScheduleClassForm_Process = true;
+$DEBUG_ScheduleClassForm_Process_No = true;
+if ( !isset($DEBUG_ScheduleClassForm_Process_No) ) $DEBUG_ScheduleClassForm_Process_No = false;
+if ( $DEBUG_ScheduleClassForm_Process_No ) $DEBUG_ScheduleClassForm_Process = true;
+if ( !isset($DEBUG_ScheduleClassForm_Process) ) $DEBUG_ScheduleClassForm_Process = false;
+
+t_Begin($DEBUG_ScheduleClassForm_Process); // Begin TRACKing included file.
+
+d_Var('$sessionInfo',$sessionInfo);
+d_Var("\$f['uuid']",$f['uuid']);
+d_Var("\$_SESSION['uuid']",$_SESSION['uuid']);
+
+if ( false || $f['uuid'] != $_SESSION['uuid'] ) {
+  // Not a page reload.
+	//d_V(false,'d');
+  
+	// scheduleclass table.
+  if ( $f['scheduleclassId'] ) {
+		// UPDATE scheduleclass.
+    $query = "
+        UPDATE `scheduleclass`
+           SET scheduleId = ".$f['scheduleId']."
+             , courseId = ".$f['courseId']."
+             , scheduleclassSection = '".query_safe($f['scheduleclassSection'])."'
+             , scheduleclassStartDate = '".query_safe($f['scheduleclassStartDate'])."'
+             , scheduleclassEndDate = '".query_safe($f['scheduleclassEndDate'])."'
+						 , scheduleclassOnline = ".$f['scheduleclassOnline']."
+         WHERE scheduleclassId = ".$f['scheduleclassId']."
+    ";
+    d_Var('scheduleclassUPDATE',$query,'q');
+    if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassUPDATE = query_do($query);
+    @d_Var('$scheduleclassUPDATE',$scheduleclassUPDATE,'l');
+    //displayMessage('Scheduleclass  updated.');
+		$query = "
+				DELETE FROM `scheduleclassmeeting`
+				 WHERE scheduleclassId = ".$f['scheduleclassId']."
+		";
+		d_Var('scheduleclassmeetingDELETE',$query,'q');
+		if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingDELETE = query_do($query);
+		@d_Var('$scheduleclassmeetingDELETE',$scheduleclassmeetingDELETE,'l');
+  } else {
+    // INSERT scheduleclass.
+    $query = "
+      INSERT INTO `scheduleclass` (
+          scheduleId
+				, YRTR
+        , courseId
+        , scheduleclassSection
+        , scheduleclassStartDate
+        , scheduleclassEndDate
+				, scheduleclassOnline
+      ) VALUES (
+          ".$f['scheduleId']."
+				, '".query_safe($sessionInfo['YRTR'])."'
+        , ".$f['courseId']."
+        , '".query_safe($f['scheduleclassSection'])."'
+        , '".query_safe($f['scheduleclassStartDate'])."'
+        , '".query_safe($f['scheduleclassEndDate'])."'
+				, ".$f['scheduleclassOnline']."
+      )
+    ";
+    d_Var('scheduleclassINSERT',$query,'q');
+    if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassINSERT = query_do($query);
+    @d_Var('$scheduleclassINSERT',$scheduleclassINSERT,'l');
+    $f['scheduleclassId'] = $GLOBALS['_QUERY']['insertId'];
+    @d_Var("\$f['scheduleclassId']",$f['scheduleclassId']);
+    //displayMessage('Scheduleclass added.');
+  }
+	
+	// scheduleclassmeeting table.
+	// INSERT scheduleclassmeetings.
+	$query = "
+		INSERT INTO `scheduleclassmeeting` (
+				scheduleclassId
+			, scheduleclassmeetingStartDate
+			, scheduleclassmeetingEndDate
+			, scheduleclassmeetingBeginTime
+			, scheduleclassmeetingEndTime
+			, scheduleclassmeetingOnCampus
+		) VALUES (
+				".$f['scheduleclassId']."
+			, '".query_safe($f['scheduleclassmeetingStartDate'])."'
+			, '".query_safe($f['scheduleclassmeetingEndDate'])."'
+			, '".query_safe($f['scheduleclassmeetingBeginTime'])."'
+			, '".query_safe($f['scheduleclassmeetingEndTime'])."'
+			, ".$f['scheduleclassmeetingOnCampus']."
+		)
+	";
+	d_Var('scheduleclassmeetingINSERT',$query,'q');
+	if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingINSERT = query_do($query);
+	@d_Var('$scheduleclassmeetingINSERT',$scheduleclassmeetingINSERT,'l');
+	$f['scheduleclassmeetingId'] = $GLOBALS['_QUERY']['insertId'];
+	@d_Var("\$f['scheduleclassmeetingId']",$f['scheduleclassmeetingId']);
+	//displayMessage('Scheduleclassmeeting '.$f['scheduleclassmeetingStartDate'].' added.');
+
+	// INSERT scheduleclassmeetinginstructors.
+	foreach ( $f['instructorIds'] as $instructorId ) {
+		$query = "
+			INSERT INTO `scheduleclassmeetinginstructor` (
+					scheduleclassmeetingId
+				, userId
+			) VALUES (
+					".$f['scheduleclassmeetingId']."
+				, ".$instructorId."
+			)
+		";
+		d_Var('scheduleclassmeetinginstructorINSERT',$query,'q');
+		if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetinginstructorINSERT = query_do($query);
+		@d_Var('$scheduleclassmeetinginstructorINSERT',$scheduleclassmeetinginstructorINSERT,'l');
+	}
+	
+	// INSERT scheduleclassmeetingrooms.
+	if ( count($f['roomIds']) ) {
+		$query = "
+			INSERT INTO `scheduleclassmeetingroom` (
+					scheduleclassmeetingId
+				, roomId
+			)
+			VALUES";
+		$prefix = ' ';
+		foreach ( $f['roomIds'] as $roomId ) {
+			$query .= "
+			".$prefix."(
+						".$f['scheduleclassmeetingId']."
+					, ".$roomId."
+				)";
+			$prefix = ',';
+		}
+		$query .= "
+		";
+		d_Var('scheduleclassmeetingroomINSERT',$query,'q');
+		if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingroomINSERT = query_do($query);
+		@d_Var('$scheduleclassmeetingroomINSERT',$scheduleclassmeetingroomINSERT,'l');
+	}
+
+	// INSERT scheduleclassmeetingweekdays.
+	if ( count($f['weekdayIds']) ) {
+		$query = "
+			INSERT INTO `scheduleclassmeetingweekday` (
+					scheduleclassmeetingId
+				, weekdayId
+			)
+			VALUES";
+		$prefix = ' ';
+		foreach ( $f['weekdayIds'] as $weekdayId ) {
+			$query .= "
+			".$prefix."(
+						".$f['scheduleclassmeetingId']."
+					, ".$weekdayId."
+				)";
+			$prefix = ',';
+		}
+		$query .= "
+		";
+		d_Var('scheduleclassmeetingweekdayINSERT',$query,'q');
+		if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingweekdayINSERT = query_do($query);
+		@d_Var('$scheduleclassmeetingweekdayINSERT',$scheduleclassmeetingweekdayINSERT,'l');
+	}
+
+	// Remember that the form was processed.
+  $_SESSION['uuid'] = $f['uuid'];
+#} else {
+  // Page was reloaded.
+#  displayMessage('Page reloaded.','warn');
+}
+t_End(); // End TRACKing included file.
+?>

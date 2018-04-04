@@ -1,0 +1,18 @@
+<?
+// getSession.phpinc
+// Get session information.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// Get session.
+$query = "
+    SELECT *
+      FROM `session`
+			WHERE sessionId = ".$f['sessionId']."
+";
+d_Var('sessionInfo',$query,'q');
+$sessionInfo = query_info($query);
+d_Var('$sessionInfo',$sessionInfo);
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

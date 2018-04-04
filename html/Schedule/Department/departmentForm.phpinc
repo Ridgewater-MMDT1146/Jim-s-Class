@@ -1,0 +1,78 @@
+<?
+// departmentForm.phpinc
+// Display the department Add/Edit form.
+t_Begin(); // Begin TRACKing included file.
+include('departmentFormPreset.phpinc');
+?>
+<table><tr><td><fieldset><legend><? if ( $departmentId ) { ?>Edit<? } else { ?>Add<? } ?> Department</legend>
+<form name="form_department" id="id_form_department" action="<?=php_self()?>" method="post">
+<input type="hidden" name="form" value="form_department">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="departmentId" id="id_departmentId" value="<?=htmlSafe($f['departmentId'])?>">
+<table>
+<? if ( isset($formError['departmentCode']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['departmentCode']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Code</td>
+    <td><input type="text" class="" name="departmentCode" id="id_departmentCode" value="<?=htmlSafe($f['departmentCode'])?>" maxlength="4" style="width:3em;"></td>
+  </tr>
+<? if ( isset($formError['departmentName']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['departmentName']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Name</td>
+    <td><input type="text" class="" name="departmentName" id="id_departmentName" value="<?=htmlSafe($f['departmentName'])?>" maxlength="64" style="width:20em;"></td>
+  </tr>
+<? if ( isset($formError['departmenttypeId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['departmenttypeId']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Departmenttype</td>
+    <td><input type="text" class="" name="departmenttypeId" id="id_departmenttypeId" value="<?=htmlSafe($f['departmenttypeId'])?>" maxlength="11" style="width:6.06em;"></td>
+  </tr>
+<? if ( isset($formError['departmentNote']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['departmentNote']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Note</td>
+    <td><input type="text" class="" name="departmentNote" id="id_departmentNote" value="<?=htmlSafe($f['departmentNote'])?>" maxlength="256" style="height:6em;"></td>
+  </tr>
+<? if ( isset($formError['departmentInactive']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['departmentInactive']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Inactive</td>
+    <td>
+      <input type="radio" class="" name="departmentInactive" id="id_departmentInactive_$f['departmentInactive']" value="$f['departmentInactive']"<? if ( $f['departmentInactive'] == $f['departmentInactive']) { ?> checked<? } ?>></td>
+  </tr>
+  <tr>
+    <td class="center" colspan="2">
+<?
+      if ( $f['departmentId'] ) {
+?>
+      <input type="submit" name="task" value="Update department">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Add department">
+<?
+      }
+      if ( $f['form'] != 'form_department' || isset($formError) || isset($f['postId']) ) {
+?>
+      <input type="submit" name="task" value="Cancel">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Done">
+<?
+      }
+?>
+    </td>
+  </tr>
+</table>
+</form>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

@@ -1,0 +1,313 @@
+<?
+// Schedule/ScheduleClass/ScheduleClassForm.phpinc
+// Create the ScheduleClass form.
+
+t_Begin(); // Begin TRACKing ScheduleClassForm.phpinc.
+
+/** /
+Class meeting can be:
+
+DONE *Online (or not)
+
+meeting schedule: 
+DONE  (begin-end-times, multiple days or Arranged) 
+	(multiple rooms or Off Campus or none) 
+	(multiple instructors or staff)
+
+all meeting info needs a unique html id as there can be multiple meetings for a class.
+/**/
+
+f('scheduleclassId'); if ( !$f['scheduleclassId'] ) $f['scheduleclassId'] = 0;
+
+if ( !f('campusId') ) $f['campusId'] = -1;
+if ( !f('buildingId') ) $f['buildingId'] = -1;
+f('courseId'); // Ensure 'courseId' exists.
+f('instructorId');
+if ( !f('roomId') ) $f['roomId'] = -1;
+f('scheduleId');
+f('scheduleclassSection');
+f('scheduleclassStartDate');
+f('scheduleclassEndDate');
+f('scheduleclassmeetingId');
+f('scheduleclassmeetingBeginTime');
+f('scheduleclassmeetingEndTime');
+if ( !f('weekdayIds') || !is_array($f['weekdayIds']) ) $f['weekdayIds'] = array();
+f('userFullname');
+
+// Get courses.
+$query = "
+SELECT courseId
+		 , departmentCode
+		 , courseNumber
+		 , courseTitle
+		 , courseCredits
+		 , courseCreditsMax
+FROM `course`
+JOIN department ON department.departmentId = course.departmentId
+WHERE courseInactive = 0
+  AND department.departmentId = ".$f['departmentId']."
+ORDER BY departmentCode, courseNumber
+";
+d_Var('courseIdResult',$query,'q');
+$courseIdResult = query_do($query);
+$courseIdCount = $_QUERY['count'];
+#d_Var('$courseIdResult',$courseIdResult,'d');
+
+// Get weekdays.
+require('site/get_weekdays.phpinc');
+
+// Get Instructors:
+$query = "
+SELECT user.userId
+         , CONCAT(COALESCE(userNickname,userFirstname), ' '
+         , IF ( userMiddlename IS NOT NULL, CONCAT(userMiddlename,' '), '')
+         , userLastname) AS userFullname
+      FROM `user_department`
+      JOIN `user` ON user.userId = user_department.userId
+     WHERE departmentId = ".$f['departmentId']."
+			 AND userInactive = 0
+  ORDER BY userFullname
+";
+d_Var('user_departmentResult',$query,'q');
+$user_departmentResult = query_do($query);
+$user_departmentCount = $GLOBALS['_QUERY']['count'];
+d_Var('$user_departmentResult',$user_departmentResult);
+
+
+d_V('scheduleclassId','');
+if ( $f['scheduleclassId'] ) {
+	$closeTooltip = 'Close; Do not change the class on the schedule';
+} else {
+	$closeTooltip = 'Close; Do not add the class to the schedule';
+}
+?>
+<div id="scheduleBox">
+<fieldset id="idScheduleForm"><legend onmouseover="ttShow('<div class=&quot;actionback nowrap&quot;>Mouse-down / drag / drop to move.</div>')" onmouseout="ttHide();" class="drag_cursor">Schedule <span style="display: inline-block; background-image:url(/images/mousemove.png); width: 23px;">&nbsp;</span> Class</legend>
+<form name="Schedule_form" action="/Schedule/" method="post">
+	<input type="hidden" name="form" value="Schedule_form">
+	<input type="hidden" name="uuid" value="<?=uuid()?>">
+	<input type="hidden" name="scheduleclassId" value="<?=$f['scheduleclassId']?>">
+	<input class="small float_right upMargin" type="button" value="Close" onClick="document.removeEventListener('scroll', ScheduleClass_ScrollHandler); document.getElementById('dialogDiv').style.display = 'none';" onMouseOver="ttShow('<?=$closeTooltip?>');" onMouseOut="ttHide();">
+	<label for="id_courseid">Class:
+<?
+if ( $f['scheduleclassId'] ) {
+	// Get scheduleclass info.
+	$query = "
+			SELECT scheduleclassId
+					 , scheduleId
+					 , YRTR
+					 , scheduleclassQId
+					 , courseId
+					 , scheduleclassSection
+					 , scheduleclassEnr
+					 , scheduleclassMax
+					 , scheduleclassStartDate
+					 , scheduleclassEndDate
+					 , courseinsttypeId
+					 , scheduleclassOnline
+				FROM `scheduleclass`
+			 WHERE scheduleclassId = ".$f['scheduleclassId']."
+	";
+	d_Var('scheduleclassInfo',$query,'q');
+	$scheduleclassInfo = query_info($query);
+	d_Var('$scheduleclassInfo',$scheduleclassInfo,'');
+	// Get course info.
+	$query = "
+			SELECT courseId
+					 , departmentCode
+					 , courseNumber
+					 , courseTitle
+					 , courseCredits
+					 , courseCreditsMax
+				FROM `course`
+				JOIN department ON department.departmentId = course.departmentId
+			 WHERE courseId = ".$scheduleclassInfo['courseId']."
+	";
+	d_Var('courseInfo',$query,'q');
+	$courseInfo = query_info($query);
+	d_Var('$courseInfo',$courseInfo,'');
+?>
+	<input type="hidden" name="courseId" id="id_courseid" value="<?=$courseInfo['courseId']?>">
+	<b><?=$courseInfo['departmentCode']?><?=$courseInfo['courseNumber']?> <?=$courseInfo['courseTitle']?></b>
+<?	
+} else {
+?>
+	<select id="id_courseid" name="courseId">
+		<option value=""></option>
+<?
+		if ( $courseIdCount ) {
+			query_seek($courseIdResult, 0);
+			while ($courseInfo = query_row($courseIdResult)) {
+?>
+		<option value="<?=$courseInfo['courseId']?>"><?=$courseInfo['departmentCode']?><?=$courseInfo['courseNumber']?> <?=$courseInfo['courseTitle']?></option>
+<?
+			}
+		}		
+?>	
+	</select>
+<?				 
+}
+?>
+	</label>
+	<label for="id_scheduleclassSection">Section(s):
+<?
+if ( $f['scheduleclassId'] ) {
+	$f['scheduleclassSection'] = $scheduleclassInfo['scheduleclassSection'];
+	$f['scheduleclassStartDate'] = substr($scheduleclassInfo['scheduleclassStartDate'],0,10);
+	$f['scheduleclassEndDate'] = substr($scheduleclassInfo['scheduleclassEndDate'],0,10);
+}
+?>
+	<input type="text" class="sectionNumbers" id="id_scheduleclassSection" name="scheduleclassSection" value="<?=$f['scheduleclassSection']?>">
+	</label>
+	<label for="id_scheduleclassOnline"><input type="checkbox" name="scheduleclassOnline" id="id_scheduleclassOnline" value="1"<? if ( $f['scheduleclassId'] && $scheduleclassInfo['scheduleclassOnline'] ) { ?> checked<? } ?>><span>Online</span></label>
+	<br>Class dates:
+	<input type="date" name="scheduleclassStartDate" id="id_scheduleclassStartDate" value="<?=$f['scheduleclassStartDate']?>" max="">
+	-
+	<input type="date" name="scheduleclassEndDate" id="id_scheduleclassEndDate" value="<?=$f['scheduleclassEndDate']?>" min="">
+<?
+	button('Full','Class runs the full semester',"dateStartEnd_Set('id_scheduleclassStartDate','id_scheduleclassEndDate',SemesterFullStart,SemesterFullEnd);",'','small');
+	button('1st half','Class runs the first half of the semester',"dateStartEnd_Set('id_scheduleclassStartDate','id_scheduleclassEndDate',Semester1stStart,Semester1stEnd);",'','small');
+	button('2nd half','Class runs the second half of the semester',"dateStartEnd_Set('id_scheduleclassStartDate','id_scheduleclassEndDate',Semester2ndStart,Semester2ndEnd);",'','small');
+
+ $scm = array();
+ if ( $f['scheduleclassId'] ) { // Is this a previously scheduled class?
+	 $query = "
+			SELECT scheduleclassmeetingId
+					 , scheduleclassId
+					 , scheduleclassmeetingStartDate
+					 , scheduleclassmeetingEndDate
+					 , scheduleclassmeetingBeginTime
+					 , scheduleclassmeetingEndTime
+					 , scheduleclassmeetingOnCampus
+				FROM `scheduleclassmeeting`
+			 WHERE scheduleclassId = ".$f['scheduleclassId']."
+		ORDER BY scheduleclassmeetingStartDate, scheduleclassmeetingBeginTime
+	";
+	d_Var('scheduleclassmeetingResult',$query,'q');
+	$scheduleclassmeetingResult = query_do($query);
+	$scheduleclassmeetingCount = $GLOBALS['_QUERY']['count'];
+	#d_Var('$scheduleclassmeetingResult',$scheduleclassmeetingResult,'d');
+	if ( $scheduleclassmeetingCount ) { // Are there any scheduled meetings?
+		query_seek($scheduleclassmeetingResult, 0);
+		while ($scheduleclassmeetingInfo = query_row($scheduleclassmeetingResult)) {
+			$scmId = $scheduleclassmeetingInfo['scheduleclassmeetingId'];
+			$scm[$scmId] = array();
+			$scm[$scmId]['scheduleclassmeetingStartDate'] = $scheduleclassmeetingInfo['scheduleclassmeetingStartDate'];
+			$scm[$scmId]['scheduleclassmeetingEndDate'] = $scheduleclassmeetingInfo['scheduleclassmeetingEndDate'];
+			$scm[$scmId]['scheduleclassmeetingBeginTime'] = $scheduleclassmeetingInfo['scheduleclassmeetingBeginTime'];
+			$scm[$scmId]['scheduleclassmeetingEndTime'] = $scheduleclassmeetingInfo['scheduleclassmeetingEndTime'];
+			$scm[$scmId]['scheduleclassmeetingOnCampus'] = $scheduleclassmeetingInfo['scheduleclassmeetingOnCampus'];
+			// Get scheduleclassmeetingweekdays.
+			$scm[$scmId]['Day'] = array();
+			$query = "
+					SELECT weekdayId
+						FROM `scheduleclassmeetingweekday`
+					 WHERE scheduleclassmeetingId = ".$scmId."
+				ORDER BY weekdayId
+			";
+			d_Var('scheduleclassmeetingweekdayResult',$query,'q');
+			$scheduleclassmeetingweekdayResult = query_do($query);
+			$scheduleclassmeetingweekdayCount = $GLOBALS['_QUERY']['count'];
+			d_Var('$scheduleclassmeetingweekdayResult',$scheduleclassmeetingweekdayResult);
+			if ( $scheduleclassmeetingweekdayCount ) {
+				query_seek($scheduleclassmeetingweekdayResult, 0);
+				while ($scheduleclassmeetingweekdayInfo = query_row($scheduleclassmeetingweekdayResult)) {
+					$scm[$scmId]['Day'][] = $scheduleclassmeetingweekdayInfo['weekdayId'];
+				}
+			}
+			// Get scheduleclassmeetingrooms.
+			$scm[$scmId]['Room'] = array();
+			$query = "
+					SELECT room.roomId
+							 , building.buildingId
+							 , campus.campusId
+						FROM `scheduleclassmeetingroom`
+						JOIN `room` ON room.roomId = scheduleclassmeetingroom.roomId
+						JOIN `building` ON building.buildingId = room.buildingId
+						JOIN `campus` ON campus.campusId = building.campusId
+					 WHERE scheduleclassmeetingId = ".$scmId."
+				ORDER BY campusName, buildingCode, roomNumber
+			";
+			d_Var('scheduleclassmeetingroomResult',$query,'q');
+			$scheduleclassmeetingroomResult = query_do($query);
+			$scheduleclassmeetingroomCount = $GLOBALS['_QUERY']['count'];
+			d_Var('$scheduleclassmeetingroomResult',$scheduleclassmeetingroomResult);
+			if ( $scheduleclassmeetingroomCount ) {
+				query_seek($scheduleclassmeetingroomResult, 0);
+				while ($scheduleclassmeetingroomInfo = query_row($scheduleclassmeetingroomResult)) {
+					$scm[$scmId]['Room'][] = array('roomId'=>$scheduleclassmeetingroomInfo['roomId'],'buildingId'=>$scheduleclassmeetingroomInfo['buildingId'],'campusId'=>$scheduleclassmeetingroomInfo['campusId']);
+				}
+			}
+			// Get scheduleclassmeetinginstructors.
+			$scm[$scmId]['Instructor'] = array();
+			$query = "
+					SELECT userId
+						FROM `scheduleclassmeetinginstructor`
+					 WHERE scheduleclassmeetingId = ".$scmId."
+				ORDER BY userId
+			";
+			d_Var('scheduleclassmeetinginstructorResult',$query,'q');
+			$scheduleclassmeetinginstructorResult = query_do($query);
+			$scheduleclassmeetinginstructorCount = $GLOBALS['_QUERY']['count'];
+			d_Var('$scheduleclassmeetinginstructorResult',$scheduleclassmeetinginstructorResult);
+			if ( $scheduleclassmeetinginstructorCount ) {
+				query_seek($scheduleclassmeetinginstructorResult, 0);
+				while ($scheduleclassmeetinginstructorInfo = query_row($scheduleclassmeetinginstructorResult)) {
+					$scm[$scmId]['Instructor'][] = $scheduleclassmeetinginstructorInfo['userId'];
+				}
+			}
+		}
+	} // Are there any scheduled meetings?
+} else { // Is this a previously scheduled class?
+	// No, set defaults.
+	$scm[0] = array();
+	$scm[0]['Day'] = array();
+	$scm[0]['Instructor'] = array();
+	$scm[0]['Room'] = array();
+	$scm[0]['scheduleclassmeetingBeginTime'] = '';
+	$scm[0]['scheduleclassmeetingEndDate'] = '';
+	$scm[0]['scheduleclassmeetingEndTime'] = '';
+	$scm[0]['scheduleclassmeetingOnCampus'] = 1 ;
+	$scm[0]['scheduleclassmeetingStartDate'] = '';
+} // Is this a previously scheduled class?
+$scmIds = '';
+foreach ( $scm as $scmId => $thisMeeting ) {
+	require('Schedule/ScheduleClass/ScheduleClassForm_Meeting.phpinc');
+}		
+				 
+				 
+?>
+<input type="hidden" name="scheduleId" value="<?=$_SESSION['user']['scheduleId']?>">
+<!--<input type="hidden" name="scheduleclassmeetingId" value="<?=$f['scheduleclassmeetingId']?>">-->
+<input type="hidden" name="scheduleclassmeetingIds" id="hid_scheduleclassmeetingIds" value="<?=$scmId?>">
+
+<br>
+<?
+	if ( $f['scheduleclassId'] ) {
+		button('Update class','Update the class on the schedule'," SaveAutoscrollPosition(); scmFormDTVerify(); formSubmit(this,'Update class');",'','');
+		button('Remove class','Remove the class from the schedule',"ScheduleClass_RemoveClassVerify();",'','');
+		button('Tyson','See scmIds from hid_scheduleclassmeetingIds',"alert('hid_scheduleclassmeetingIds='+document.getElementById('hid_scheduleclassmeetingIds').value);",'','');
+?>
+<div class="p" id="div_RemoveClassVerify">
+	Are you sure you want to remove <b><?=$courseInfo['departmentCode']?><?=$courseInfo['courseNumber']?> <?=$courseInfo['courseTitle']?> - <?=$f['scheduleclassSection']?></b> from the schedule?<div class="center">
+<?
+		button('Yes','Remove the class from the schedule',"ScheduleClass_RemoveClassVerify(true);",'','');
+		button('No','Do not remove the class from the schedule',"ScheduleClass_RemoveClassVerify(false);",'','');
+?>
+</div></div>
+<?
+	} else {
+		button('Add class','Add the class to the schedule',"SaveAutoscrollPosition(); formSubmit(this,'Add class');",'','small');
+	}
+?>
+</form>
+</fieldset>
+<?
+//require('Schedule/Department/Get_Department_Instructors.phpinc');
+?>
+</div>
+<div style="display:none;">Load OK</div>
+<?
+	
+t_End(); // End TRACKing ScheduleClassForm.phpinc.
+?>

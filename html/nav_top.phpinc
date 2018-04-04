@@ -1,0 +1,23 @@
+<?
+// nav_top.phpinc
+// Displays top navigation.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// include_filename_content_goes_here.
+?>
+<ul>
+<? if ( hasPermission('Admin') ) { ?>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/admin" data-toggle="modal"><span class="fa fa-lg fa-user-secret"></span> Admin</a></li>
+<? } ?>
+<? if ( isset($_SESSION['user']['userId']) && $_SESSION['user']['userId'] ) { ?>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/?Logout" data-toggle="modal"><span class="fa fa-lg fa-user"></span> Log out</a></li>
+<? } else { ?>
+	<li><a href="?Login" data-toggle="modal"><span class="fa fa-lg fa-user"></span> Log in</a></li>
+<? } ?>
+	<li><a href="#"> <span class="fa fa-lg fa-question-circle"></span> Help</a></li>
+</ul>
+<?
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

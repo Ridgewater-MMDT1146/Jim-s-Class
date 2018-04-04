@@ -1,0 +1,76 @@
+<?
+// admin/_info/infoPost.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+formValue('post');
+$postProcess = str_replace(array('$_GET[','$_POST['),array('$_POSTGET[','$_POSTGET['),$f['post']);
+#d_Var('$postProcess',$postProcess);
+$postProcess = split("[\n|\r]",$postProcess);
+#d_Var('$postProcess',$postProcess);
+$formValue_f = '';
+$formValue_value = '';
+$previous_formValueName = '';
+foreach ($postProcess as $thisIndex => $thisLine) {
+  $thisLine = trim($thisLine);
+  if (substr($thisLine,0,11) == '$_POSTGET[\'') {
+    $pStart = strpos($thisLine,"'")+1;
+    if ( $pStart ) {
+      $pLength = strpos($thisLine,"'",$pStart)-$pStart;
+      $formValueName = substr($thisLine,$pStart,$pLength);
+      if (substr($formValueName,0,2) == "") {
+        $f['formValueName'] = $formValueName; // formValueName with 
+        $formValueGet = substr($formValueName,2,strlen($formValueName)-2);
+        $formValuePrefix = "";
+      } else {
+        $f['formValueName'] = ''.$formValueName;
+        $formValueGet = $formValueName;
+        $formValuePrefix = ",''";
+      }
+      if ( $previous_formValueName != $f['formValueName'] ) {
+        $formValue_f .= "formValue('".$formValueGet."');\n";
+        $formValue_value .= "formValue('','".$formValueGet."','".$formValueGet."');\n";
+        $previous_formValueName = $f['formValueName'];
+        $isArray = false;
+      } else {
+        if ( !$isArray) {
+          #echo $f['formValueName']." is an array<br>\n";
+          $formValue_f = substr($formValue_f,0,strlen($formValue_f)-2) . " // $".$f['formValueName']." is an array.\n";
+          $formValue_value = substr($formValue_value,0,strlen($formValue_value)-2) . " // $".$f['formValueName']." is an array.\n";
+        }
+        $isArray = true;
+      }
+    }
+  }
+}
+?>
+<style type="text/css">
+  #id_post { height:20em; width:40em; }
+</style>
+<a name="post"></a>
+<form action="<?=php_self()?>#post" method="post" name="form_post" id="form_post" class="inline_info">
+<table><tr><td><fieldset class="left"><legend>$_POST text</legend>
+<input type="hidden" name="form" value="form_post">
+<input type="hidden" name="task" value="<?=$f['task']?>">
+<textarea class="code_info" name="post" id="id_post" wrap="off"><?=$f['post']?></textarea>
+</fieldset></td></tr></table>
+<input type="submit" name="subtask" value="Process"><br>
+<?
+if ( $f['post'] ) {
+?>
+<table><tr><td><fieldset class="left"><legend>$_POST formValue() to $f['index'] code</legend>
+<textarea class="code_info" wrap="off"><?=$formValue_f?></textarea>
+</fieldset></td></tr></table>
+</form>
+<?
+?>
+<table><tr><td><fieldset class="left"><legend>$_POST formValue() to $variable code</legend>
+<textarea class="code_info" wrap="off"><?=$formValue_value?></textarea>
+</fieldset></td></tr></table>
+</form>
+<?
+}
+?>
+<?
+t_End(); // End TRACKing included file.
+
+?>

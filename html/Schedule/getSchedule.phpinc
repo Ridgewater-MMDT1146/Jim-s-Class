@@ -1,0 +1,96 @@
+<?
+// Schedule/getSchedule.phpinc
+// include_purpose.
+
+#$DEBUG_getSchedule = true;
+if ( !isset($DEBUG_getSchedule) ) $DEBUG_getSchedule = false;
+t_Begin($DEBUG_getSchedule); // Begin TRACKing getSchedule.phpinc.
+
+f('departmentId',0);
+f('sessionId',0);
+
+d_V('departmentId');
+d_V('sessionId');
+if ( $f['departmentId'] && $f['sessionId'] ) {
+	// Get schedules for this session and department.
+	$query = "
+			SELECT departmentId
+					 , schedule.scheduleId
+					 , schedule.sessionId
+					 , scheduleName
+					 , YRTR
+				FROM `schedule`
+				JOIN `session` ON session.sessionId = schedule.sessionId
+			 WHERE departmentId = ".$f['departmentId']."
+				 AND session.sessionId = ".$f['sessionId']."
+	";
+	d_Var('scheduleInfo',$query,'q');
+	$scheduleInfo = query_info($query);
+	d_Var('$scheduleInfo',$scheduleInfo);
+	if ( !$scheduleInfo ) {
+		// INSERT new schedule.
+		$query = "
+			INSERT INTO `schedule` (
+					departmentId
+				, sessionId
+				, scheduleName
+			) VALUES (
+					".$f['departmentId']."
+				, ".$f['sessionId']."
+				, '".query_safe($f['scheduleName'])."'
+			)
+		";
+		d_Var('scheduleINSERT',$query,'q');
+		$scheduleINSERT = query_do($query);
+		d_Var('$scheduleINSERT',$scheduleINSERT,'l');
+		$_SESSION['user']['scheduleId'] = $GLOBALS['_QUERY']['insertId'];
+		d_Var("\$_SESSION['user']['scheduleId']",$_SESSION['user']['scheduleId']);
+	} else {
+		$_SESSION['user']['scheduleId'] = $scheduleInfo['scheduleId'];
+	}
+} else {
+	if ( $_SESSION['user']['scheduleId'] ) {
+		// Get sessionId and departmentId.
+		$query = "
+				SELECT departmentId
+						 , schedule.sessionId
+						 , scheduleName
+						 , YRTR
+					FROM `schedule`
+					JOIN `session` ON session.sessionId = schedule.sessionId
+				 WHERE scheduleId = ".$_SESSION['user']['scheduleId']."
+		";
+		d_Var('scheduleInfo',$query,'q');
+		$scheduleInfo = query_info($query);
+		d_Var('$scheduleInfo',$scheduleInfo);
+		$f['sessionId'] = $scheduleInfo['sessionId'];
+		$_SESSION['user']['sessionId'] = $scheduleInfo['sessionId'];
+		$f['departmentId'] = $scheduleInfo['departmentId'];
+		$_SESSION['user']['departmentId'] = $scheduleInfo['departmentId'];
+	} else {
+		$scheduleInfo = NULL;
+		$f['sessionId'] = NULL;
+		$_SESSION['user']['sessionId'] = NULL;
+		$f['departmentId'] = NULL;
+		$_SESSION['user']['departmentId'] = NULL;
+	}
+}
+d_V('sessionId');
+d_V('departmentId');
+d_Var("\$_SESSION['user']['scheduleId']",$_SESSION['user']['scheduleId']);
+
+include('Schedule/getSession.phpinc');
+
+// Get department.
+$query = "
+    SELECT *
+      FROM `department`
+			WHERE departmentId = ".$f['departmentId']."
+";
+d_Var('departmentInfo',$query,'q');
+$departmentInfo = query_info($query);
+d_Var('$departmentInfo',$departmentInfo);
+
+unset($DEBUG_getSchedule);
+t_End(); // End TRACKing getSchedule.phpinc.
+?>

@@ -1,0 +1,181 @@
+<?
+// admin/_info/infoNotes.phpinc
+// Hold code snippits for _info.
+t_Begin(); // Begin TRACKing included file.
+
+// form_code.
+if ( !isset($f['form_code_value']) ) $f['form_code_value'] = 0;
+?>
+<a name="form_code_name"></a>
+<input type="hidden" name="form_code_value" id="form_code_value_id" value="<?=$f['form_code_value']?>">
+<table><tr><td><fieldset><legend><a href="#form_code_name" name="form_code" onClick="return info_Set(this);"><div id="form_code_status" class="inline"><? if ( !$f['form_code_value']) { ?>+<? } else { ?>-<? } ?></div> form code</a></legend>
+<div id="form_code_show" class="<? if ( !$f['form_code_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off">
+?&gt;
+&lt;form name="change_to_form_name" action="&lt;?=php_self()?&gt;" class="inline_info" method="post"&gt;
+&lt;input type="hidden" name="form" value="change_to_form_name"&gt;
+&lt;input type="hidden" name="uuid" value="&lt;?=uuid()?&gt;"&gt;
+&lt;input type="hidden" name="table_name Id" value="&lt;?=$f['table_name Id']?&gt;"&gt;
+&lt;input type="hidden" name="task" value="&lt;?=$f['task']?&gt;"&gt;
+&lt;?
+if ( $f['table_name Id'] ) {
+?&gt;
+  &lt;input type="submit" name="task" value="Update table_name" onClick="formSubmit(this);"&gt;
+&lt;?
+} else {
+?&gt;
+  &lt;input type="submit" name="task" value="Add table_name"&gt;
+&lt;?
+}
+  if ( $f['form'] != 'change_to_form_name' || isset($formError) || isset($f['postId']) ) {
+?&gt;
+  &lt;input type="submit" name="task" value="Cancel"&gt;
+&lt;?
+} else {
+?&gt;
+  &lt;input type="submit" name="task" value="Done"&gt;
+&lt;?
+}
+?&gt;
+&lt;/form&gt;
+&lt;?
+</textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+/** /
+// Code for form_code is below:
+?>
+<form name="change_to_form_name" action="<?=php_self()?>" class="inline_info" method="post">
+<input type="hidden" name="form" value="change_to_form_name">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="table_name Id" value="<?=$f['table_name Id']?>">
+<input type="hidden" name="task" value="<?=$f['task']?>">
+<?
+if ( $f['table_name Id'] ) {
+?>
+  <input type="submit" name="task" value="Update table_name" onClick="formSubmit(this);">
+<?
+} else {
+?>
+  <input type="submit" name="task" value="Add table_name">
+<?
+}
+if ( $f['form'] != 'change_to_form_name' || isset($formError) || isset($f['postId']) ) {
+?>
+  <input type="submit" name="task" value="Cancel">
+<?
+} else {
+?>
+  <input type="submit" name="task" value="Done">
+<?
+}
+?>
+</form>
+<?
+/**/
+
+// show_hide_textarea_in_fieldset.
+if ( !isset($f['show_hide_textarea_in_fieldset_value']) ) $f['show_hide_textarea_in_fieldset_value'] = 0;
+?>
+<a name="show_hide_textarea_in_fieldset_name"></a>
+<input type="hidden" name="show_hide_textarea_in_fieldset_value" id="show_hide_textarea_in_fieldset_value_id" value="<?=$f['show_hide_textarea_in_fieldset_value']?>">
+<table><tr><td><fieldset><legend><a href="#show_hide_textarea_in_fieldset_name" name="show_hide_textarea_in_fieldset" onClick="return info_Set(this);"><div id="show_hide_textarea_in_fieldset_status" class="inline"><? if ( !$f['show_hide_textarea_in_fieldset_value']) { ?>+<? } else { ?>-<? } ?></div> show/hide textarea in fieldset</a></legend>
+This code can be used to create a show/hide div region. This region will keep show/hide status on form submit.<br>
+Simply replace 'replace_with_variable ' (including the space) with the variable name for the region. Then replace 'fieldset_legend' with the legend for the region.<br>
+Requires the div functions in <b>div.js</b> and the js function <b>info_Set()</b> below:
+<div id="show_hide_textarea_in_fieldset_show" class="<? if ( !$f['show_hide_textarea_in_fieldset_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off">
+// replace_with_variable .
+if ( !isset($f['replace_with_variable _value']) ) $f['replace_with_variable _value'] = 0; // Set to hide if unset.
+?&gt;
+&lt;a name="replace_with_variable _name"&gt;&lt;/a&gt;
+&lt;input type="hidden" name="replace_with_variable _value" id="replace_with_variable _value_id" value="&lt;?=$f['replace_with_variable _value']?&gt;"&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;&lt;fieldset&gt;&lt;legend&gt;&lt;a href="#replace_with_variable _name" name="replace_with_variable " onClick="return info_Set(this);"&gt;&lt;div id="replace_with_variable _status" class="inline"&gt;&lt;? if ( !$f['replace_with_variable _value']) { ?&gt;+&lt;? } else { ?&gt;-&lt;? } ?&gt;&lt;/div&gt; fieldset_legend&lt;/a&gt;&lt;input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'replace_with_variable _name');"&gt;&lt;/legend&gt;
+&lt;div id="replace_with_variable _show" class="&lt;? if ( !$f['replace_with_variable _value']) { ?&gt;d_s_h &lt;? } ?&gt;d_s_l"&gt;
+&lt;textarea class="code_info" wrap="off"&gt;&lt;?=$replace_with_variable ?&gt;&lt;/textarea&gt;
+&lt;/div&gt;
+&lt;/fieldset&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;?
+</textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+/** / // Code for replace_with_variable is below:
+// replace_with_variable .
+if ( !isset($f['replace_with_variable _value']) ) $f['replace_with_variable _value'] = 0; // Set to hide if unset.
+?>
+<a name="replace_with_variable _name"></a>
+<input type="hidden" name="replace_with_variable _value" id="replace_with_variable _value_id" value="<?=$f['replace_with_variable _value']?>">
+<table><tr><td><fieldset><legend><a href="#replace_with_variable _name" name="replace_with_variable " onClick="return info_Set(this);"><div id="replace_with_variable _status" class="inline"><? if ( !$f['replace_with_variable _value']) { ?>+<? } else { ?>-<? } ?></div> fieldset_legend</a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'replace_with_variable _name');"></legend>
+<div id="replace_with_variable _show" class="<? if ( !$f['replace_with_variable _value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$replace_with_variable ?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+/**/
+
+// js_function_info_Set.
+if ( !isset($f['js_function_info_Set_value']) ) $f['js_function_info_Set_value'] = 0;
+?>
+<a name="js_function_info_Set_name"></a>
+<input type="hidden" name="js_function_info_Set_value" id="js_function_info_Set_value_idx" value="<?=$f['js_function_info_Set_value']?>">
+<table><tr><td><fieldset><legend><a href="#js_function_info_Set_name" name="js_function_info_Set" onClick="return info_Set(this);"><div id="js_function_info_Set_status" class="inline"><? if ( !$f['js_function_info_Set_value']) { ?>+<? } else { ?>-<? } ?></div> js function info_Set()</a></legend>
+Used with <b>show/hide textarea in fieldset</b> above.
+<div id="js_function_info_Set_show" class="<? if ( !$f['js_function_info_Set_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off">
+// info_Set(e, returnValue)
+// Performs divShow, divHide, and other settings for fieldset div show/hide pairs.
+//           e = The &lt;a&gt; tag calling info_Set() (this).
+// returnValue = The value the function is to return. Default is true;
+function info_Set(e, returnValue) {
+  _value = document.getElementById(e.name+'_value_id'); // Get the _value hidden element id. This element need not exist.
+  _status = document.getElementById(e.name+'_status'); // Get the _status div id.
+  _show = document.getElementById(e.name+'_show'); // Get the _status div id.
+  status = _status.innerHTML; // Get the _status.innerHTML. This is either a + or a minus.
+  if ( status == '-' ) { // Status is expanded.
+    // hide field.
+    if ( _value ) _value.value = 0; // Set _value to 0 (means hidden). This hidden element retains status upon form load.
+    _status.innerHTML = '+'; // Set the _status.innerHTML to + (signifies can be expanded).
+    divHide(_show.id); // Hide the _show div.
+  } else {
+    // show field.
+    if ( _value ) _value.value = 1; // Set _value to 1 (means shown). This hidden element retains status upon form load.
+    _status.innerHTML = '-'; // Set the _status.innerHTML to - (signifies can be collapsed).
+    divShow(_show.id); // Show the _show div.
+  }
+  if ( returnValue == undefined ) returnValue = true;
+  return returnValue; // return returnValue.
+}
+</textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+/** // Code for js_function_info_Set is below:
+// info_Set(e, returnValue)
+// Performs divShow, divHide, and other settings for fieldset div show/hide pairs.
+//           e = The <a> tag calling info_Set() (this).
+// returnValue = The value the function is to return. Default is true;
+function info_Set(e, returnValue) {
+  _value = document.getElementById(e.name+'_value_id'); // Get the _value hidden element id. This element need not exist.
+  _status = document.getElementById(e.name+'_status'); // Get the _status div id.
+  _show = document.getElementById(e.name+'_show'); // Get the _status div id.
+  status = _status.innerHTML; // Get the _status.innerHTML. This is either a + or a minus.
+  if ( status == '-' ) { // Status is expanded.
+    // hide field.
+    if ( _value ) _value.value = 0; // Set _value to 0 (means hidden). This hidden element retains status upon form load.
+    _status.innerHTML = '+'; // Set the _status.innerHTML to + (signifies can be expanded).
+    divHide(_show.id); // Hide the _show div.
+  } else {
+    // show field.
+    if ( _value ) _value.value = 1; // Set _value to 1 (means shown). This hidden element retains status upon form load.
+    _status.innerHTML = '-'; // Set the _status.innerHTML to - (signifies can be collapsed).
+    divShow(_show.id); // Show the _show div.
+  }
+  if ( returnValue == undefined ) returnValue = true;
+  return returnValue; // return returnValue.
+}
+/**/
+
+t_End(); // End TRACKing included file.
+?>

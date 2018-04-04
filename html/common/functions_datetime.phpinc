@@ -1,0 +1,588 @@
+<?
+// common/functions_datetime.phpinc
+// Contains datetime functions.
+
+t_Begin();
+
+// currentDate($format, $flags)
+// Returns the current date. This is simply a shortcut for the php date() function.
+// $format = The date format. Default is 'ISO'.
+//             ISO, or Y-m-d = yyyy-mm-dd (E.G. 2012-05-06).
+//           ENG, US, USA, or n-j-Y = m/d/yyyy (E.G. 5/6/2012).
+//           See php date() function for custom formats. Note that flags are ignored for custom formats.
+//  $flags = Format modifiers to apply to the date returned.
+//           - uses a dash (-) to seperate y/m/d regardless of format (i.e., 5-6-2012 instead of 5/6/2012).
+//           / uses a slash (/) to seperate y/m/d regardless of format (i.e., 2012/05/06 instead of 2012-05-06).
+//           . uses a dot (.) to seperate y/m/d regardless of format (i.e., 2012.05.06 instead of 2012-05-06, 5.6.2012 instead of 5/6/2012).
+//           R remove the seperator (i.e., 20120506 instead of 2012/05/06). Note this applys the 0 flag as well.
+//           0 to force a two digit month and day (i.e., 05/06/2012 instead of 5/6/2012). Applies to US format only.
+//           2 to force a two digit year (i.e., 5/6/12 instead of 5/6/2012, 5/6/12 instead of 05/06/2012). Applies to US format only
+// Note: The case of named formats are ignored (i.e., iso is the same as ISO).
+function currentDate($format='ISO', $flags='') {
+  $datetime = getdate(); // Get the current year, mon, and mday.
+  $seperator = false;
+  if ( strpos($flags,'-') !== false ) $seperator = '-'; // Apply the - flag.
+  if ( strpos($flags,'/') !== false ) $seperator = '/'; // Apply the / flag.
+  if ( strpos($flags,'.') !== false ) $seperator = '.'; // Apply the . flag.
+  if ( strpos(strtoupper($flags),'R') !== false ) $seperator = ''; // Apply the R flag.
+  switch ( strtoupper($format )) {
+		case '':
+		case 'ISO':
+		case 'Y-M-D':
+		case '24': // Only here for currentDateTime() call.
+      if ( $seperator === false ) $seperator = '-';
+      $currentDate = date('Y'.$seperator.'m'.$seperator.'d');
+		break;
+		case 'ENG':
+		case 'US':
+		case 'USA':
+		case 'N-J-Y':
+      if ( $seperator === false ) $seperator = '/';
+      if ( strpos(strtoupper($flags),'0') === false || strpos(strtoupper($flags),'R') !== false ) {
+        $currentDate = date('n'.$seperator.'j'.$seperator.'Y');
+      } else {
+        $currentDate = date('m'.$seperator.'d'.$seperator.'Y'); // Apply the 0 flag.
+      }
+      if ( strpos($flags,'2') !== false ) $currentDate = substr($currentDate,2); // Apply the 2 flag.
+		break;
+    default:
+      $currentDate = date($format);
+		break;
+  }
+  return $currentDate;
+}
+
+// currentDateTime($format, $flags)
+// Returns the current date and time. This is simply a shortcut for the php date() function.
+// $format = The datetime format. Default is 'ISO'. See currentDate() and currentTime().
+function currentDateTime($format='ISO', $flags='') {
+  $currentDateTime = currentDate($format, $flags).' '.currentTime($format, $flags);
+  return $currentDateTime;
+}
+
+// currentTime($format, $flags)
+// Returns the current time. This is simply a shortcut for the php date() function.
+// $format = The time format. Default is 'ISO'.
+//                      ISO = hh:mm:ss (E.G. 03:42:15).
+//                       24 = hh:mm (E.G. 03:42).
+//           ENG, US or USA = h:mm AM/PM (E.G. 3:42 am).
+//           See php date() function for custom formats. Note that flags are ignored for custom formats.
+//  $flags = Format modifiers to apply to the time returned.
+//           _ to format the meridiem without the leading space (i.e., 3:42AM instead of 3:42 AM). Applies to US format only.
+//           A to format the meridiem in upper case (i.e., 3:42 AM instead of 3:42 am). Applies to US format only.
+//           P to format the meridiem with period notation (i.e., 3:42 A.M. instead of 3:42 AM). Applies to US format only.
+//           : to format the time without colon separators (i.e., 034215 instead of 3:42:15 or 03:42:15). Note this applys the Z flag as well.
+//           S to add seconds (i.e., 3:42:15 AM instead of 3:42 AM). Applies to US format only.
+//           Z to force a two digit hour (i.e., 03:42 AM instead of 3:42 AM). Applies to US format only.
+// Note: The case of $format or $flags is ignored (i.e., iso is the same as ISO, Z is the same as z).
+function currentTime($format='ISO', $flags='') {
+  $seperator = ':';
+  if ( strpos($flags,':') !== false )$seperator = ''; // Apply the : flag.
+  switch ( strtoupper($format) ) {
+		case '':
+		case 'ISO':
+      $currentTime = date('H'.$seperator.'i'.$seperator.'s');
+		break;
+		case '24':
+      $currentTime = date('H'.$seperator.'i');
+		break;
+		case 'ENG':
+		case 'US':
+		case 'USA':
+      if ( strpos(strtoupper($flags),'S') === false ) {
+        if ( strpos(strtoupper($flags),'Z') === false && strpos($flags,':') === false ) {
+          $currentTime = date('g'.$seperator.'i a');
+        } else {
+          $currentTime = date('h'.$seperator.'i a'); // Apply the Z flag.
+        }
+      } else { // Apply the S flag.
+        if ( strpos(strtoupper($flags),'Z') === false && strpos($flags,':') === false ) {
+          $currentTime = date('g'.$seperator.'i'.$seperator.'s a');
+        } else {
+          $currentTime = date('h'.$seperator.'i'.$seperator.'s a'); // Apply the Z flag.
+        }
+      }
+      if ( strpos($flags,'_') !== false ) $currentTime = str_replace(' ','',$currentTime); // Apply the _ flag.
+      if ( strpos(strtoupper($flags),'P') !== false ) $currentTime = str_replace(array('am','pm'),array('a.m.','p.m.'),$currentTime); // Apply the P flag.
+      if ( strpos(strtoupper($flags),'L') !== false ) $currentTime = str_replace(array('a','p','m'),array('A','P','M'),$currentTime); // Apply the A flag.
+		break;
+    default:
+      $currentTime = date($format);
+		break;
+  }
+  return $currentTime;
+}
+
+// dateDifference($start_date, $end_date, $workdays_only = false, $skip_holidays = false)
+// Calculates the number of days between 2 given dates.
+//    $start_date = First date.
+//      $end_date = Second date.
+// $workdays_only = Whether to count only work days (eg. Mon-Fri). default is false.
+// $skip_holidays = Whether to use the date__holidays() function to skip holiday days as well. default is false.
+function dateDifference($start_date, $end_date, $workdays_only=false, $skip_holidays=false) {
+  if ($start_date == '') { return 999999999; }
+  if ($end_date == '') { return 999999999; }
+  $start_date = strtotime($start_date);
+  $end_date = strtotime($end_date);
+  if ($start_date > 0 && $end_date > 0) {
+    $seconds_in_a_day = 86400;
+    $sunday_val = "0";
+    $saturday_val = "6";
+    $workday_counter = 0;
+    $holiday_array = array();
+    $ptr_year = intval(date("Y", $start_date));
+    $holiday_array[$ptr_year] = date__holidays(date("Y", $start_date));
+    for($day_val = $start_date; $day_val <= $end_date; $day_val+=$seconds_in_a_day) {
+        $pointer_day = date("w", $day_val);
+        if ($workdays_only == true) {
+            if (($pointer_day != $sunday_val) AND ($pointer_day != $saturday_val)) {
+                if ($skip_holidays == true) {
+                    if (intval(date("Y", $day_val))!=$ptr_year) {
+                        $ptr_year = intval(date("Y", $day_val));
+                        $holiday_array[$ptr_year] = date__holidays(date("Y", $day_val));
+                    }
+                    if (!in_array($day_val, $holiday_array[date("Y", $day_val)])) {
+                        $workday_counter++;
+                    }
+                } else {
+                    $workday_counter++;
+                }
+            }
+        } else {
+            if ($skip_holidays == true) {
+                if (intval(date("Y", $day_val))!=$ptr_year) {
+                    $ptr_year = intval(date("Y", $day_val));
+                    $holiday_array[$ptr_year] = date__holidays(date("Y", $day_val));
+                }
+                if (!in_array($day_val, $holiday_array[date("Y", $day_val)])) {
+                    $workday_counter++;
+                }
+            } else {
+                $workday_counter++;
+            }
+        }
+    }
+    $date_difference = $workday_counter;
+  } else {
+    $date_difference =  0;
+  }
+  return $date_difference;
+}
+
+// date__holidays($inc_year)
+// Internal functions_datetime only function. Called by dateDifference().
+// Looks through a lists of defined holidays and tells you which one is coming up next.
+// $inc_year The year we are looking for holidays in
+function date__holidays($inc_year) {
+  //$year = date("Y");
+  $year = $inc_year;
+  $holidays[] = new date__holiday_class("New Year's Day", strtotime("$year-1-1"));
+  //$holidays[] = new date__holiday_class("Australia Day", strtotime("$year-1-26"));
+  //$holidays[] = new date__holiday_class("Labour Day", date__ordinal_day(1, 'Mon', 3, $year));
+  //$holidays[] = new date__holiday_class("Anzac Day", strtotime("$year-4-25"));
+  //$holidays[] = new date__holiday_class("St. Patrick's Day", strtotime("$year-3-17"));
+  //$holidays[] = new date__holiday_class("Good Friday", easter_date($year)-86400*2);
+  $holidays[] = new date__holiday_class("Easter", easter_date($year));
+  //$holidays[] = new date__holiday_class("Easter Monday", easter_date($year)+86400);
+  //$holidays[] = new date__holiday_class("Foundation Day", date__ordinal_day(1, 'Mon', 6, $year));
+  //$holidays[] = new date__holiday_class("Queen's Birthday", date__ordinal_day(1, 'Mon', 10, $year));
+  $holidays[] = new date__holiday_class("Memorial Day", date__memorial_day($year));
+  $holidays[] = new date__holiday_class("Mother's Day", date__ordinal_day(2, 'Sun', 5, $year));
+  $holidays[] = new date__holiday_class("Father's Day", date__ordinal_day(3, 'Sun', 6, $year));
+  $holidays[] = new date__holiday_class("Independence Day", strtotime("$year-7-4"));
+  $holidays[] = new date__holiday_class("Labor Day", date__ordinal_day(1, 'Mon', 9, $year));
+  $holidays[] = new date__holiday_class("Veterans Day", strtotime("$year-11-11"));
+  $holidays[] = new date__holiday_class("Christmas", strtotime("$year-12-25"));
+  //$holidays[] = new date__holiday_class("Boxing Day", strtotime("$year-12-26"));
+  $numHolidays = count($holidays) - 1;
+  $holidayDatesOnly = array();
+  for ($i = 0; $i < $numHolidays; $i++) {
+      $holidayDatesOnly[] = $holidays[$i]->date;
+  }
+  unset($holidays);
+  return $holidayDatesOnly;
+}
+
+// date__holiday_class:class
+// Internal functions_datetime only function. Used by date__holidays().
+// Holds a holiday name and date.
+class date__holiday_class{
+  //var $name;
+  //var $date;
+  public $name;
+  public $date;
+  // Contructor to define the details of each holiday as it is created.
+  function holiday($name, $date) {
+      $this->name   = $name;   // Official name of holiday
+      $this->date   = $date;   // UNIX timestamp of date
+  }
+}
+
+// date__memorial_day($inc_year)
+// Internal functions_datetime only function. Called by date__holidays().
+// Returns the date of Memorial Day for a givven year.
+// $inc_year = The year to calc Memorial Day for.
+function date__memorial_day($inc_year) {
+  for($date_stepper = intval(date("t", strtotime("$inc_year-05-01"))); $date_stepper >= 1; $date_stepper--) {
+    if (date("l", strtotime("$inc_year-05-$date_stepper"))=="Monday") {
+      $memorial_day = strtotime("$inc_year-05-$date_stepper");
+  return $memorial_day;
+		break;
+    }
+  }
+}
+
+// date__ordinal_day($ord, $day, $month, $year)
+// Internal functions_datetime only function. Called by date__holidays().
+// Returns the date of the $ord $day of the $month.
+//   $ord = The week count.
+//   $day = The day of the week. Must be 3 char abbrev Mon, Tue, Wed, Thu, Fri, Sat, Sun.
+// $month = The month of the yeat.
+//  $year = The year.
+// Example: date__ordinal_day(3, 'Sun', 5, 2001) returns the date of the 3rd Sunday of May (ie. Mother's Day).
+function date__ordinal_day($ord, $day, $month, $year) {
+  $firstOfMonth = strtotime("$year-$month-01");
+  $lastOfMonth  = $firstOfMonth + date("t", $firstOfMonth) * 86400;
+  $dayOccurs = 0;
+  for ($i = $firstOfMonth; $i < $lastOfMonth ; $i += 86400) {
+    if (date("D", $i) == $day) {
+      $dayOccurs++;
+      if ($dayOccurs == $ord) {
+        $ordDay = $i;
+      }
+    }
+  }
+  return $ordDay;
+}
+
+// is_date($date, $format)
+// Returns an iso date string if the date is valid else false. Years BC in date is not supported. Negative year in date is treated as positive year. (i.e. 5/28/2012 returns 2012-05-08.
+//   $date = the date to parse. The date has a two digit year it is assumed to be in this century. If a time is included it is ignored.
+// $format = the date format. If format not is given an attempt is made to determine the format.
+//           d-m-Y = day month year.
+//             jul = julian day. Warning: yyyymmdd is treated as julian.
+//           m-d-Y = month day year.
+//           Y-m-d = year month day.
+//
+// Gregorian big-endian (Y-m-d), starting with year. 2003-11-09; 0813-03-01; 2003 November 9; 2003Nov9; 2003Nov09; 2003-Nov-9; 2003-Nov-09; 2003-Nov-9, Sunday; 2003. november 9.; 2003. nov. 9.; 2003. 11. 9.; or 2003. XI. 9; 2003.11.9.
+//    2003-11-09: the ISO 8601 international standard orders the components of a date like this, and additionally uses leading zeros, for example, 0813-03-01, to be easily read and sorted by computers. It is used with UTC in the Internet date/time format (see the external link below). This format is also favoured in certain Asian countries, mainly East Asian countries, as well as in some European countries. The big endian convention is also frequently used in Canada, but all three conventions are used there.[4]
+//    2003 November 9
+//    2003Nov9
+//    2003Nov09
+//    2003-Nov-9
+//    2003-Nov-09
+//    2003-Nov-9, Sunday
+//    2003. november 9. – The official format in Hungary, point after year and day, month name with small initial. Following shorter formats also can be used: 2003. nov. 9., 2003. 11. 9., 2003. XI. 9.
+//    2003.11.9 using dots and no leading zeros, common in China
+//    It is also extended through the universal big-endian format clock time: 9 November 2003, 18h 14m 12s, or 2003/11/9/18:14:12 or (ISO 8601) 2003-11-09T18:14:12.
+// Gregorian little-endian (d-m-Y), starting with day. 8 November 2003; 8. November 2003; 8/11/2003; 08.11.2003; 8-11-2003; 08-Nov-2003; 08Nov03; [The] 8th [of] November 2003; Sunday, 8 November 2003; 8/xi/03; 8.xi.03; 8-xi.03; 8.XI.2003; 8 November AD 2003.
+//    "8 November 2003" or "8. November 2003" (the latter is common in German-speaking regions)
+//    8/11/2003 or 08.11.2003 or 8-11-2003 (not common in the U.S.)
+//    08-Nov-2003
+//    08Nov03 – Used, even in the U.S., where space needs to be saved by skipping punctuation.
+//    [The] 8th [of] November 2003 (The 'of' and 'the' may be included in speech; they are omitted in all but the most formal writing.)
+//    Sunday, 8 November 2003
+//    8/xi/03, 8.xi.03, 8-xi.03, or 8.XI.2003 (using the Roman numeral for the month) – This is usually confined to handwriting only and is not put into any form of print. It is associated with a number of schools and universities. It has also been used by the Vatican as an alternative to using months named after Roman deities. It is used on Canadian postmarks as a bilingual form of the month.
+//    8 November AD 2003
+// Julian day, interval of time in days and fractions of a day since January 1, 4713 BC Greenwich noon.
+// Middle-endian (m-d-Y), starting with month. Sunday, November [the] 9, 2003; November 9, 2003; Nov. 9, 2003 or 11/9/2003; 11-9-2003, 11.9.2003, 11.09.03, or 11/09/03
+//    Sunday, November [the] 9, 2003
+//    November 9, 2003
+//    Nov. 9, 2003 or 11/9/2003
+//    11-9-2003, 11.9.2003, 11.09.03, or 11/09/03
+function is_date($date, $format=false) {
+  if ( is_numeric($date) ) {
+    $format = 'jul'; // Julian day.
+  }
+  if ( strpos(strtolower($date),'bc') !==false ) { $yearBC = true; } else { $yearBC = false; } // Remeber if BC. Years BC in dates are not supported and return false.
+  if ( !$format && !$yearBC ) {
+    $months = array('','january','february','march','april','may','june','july','august','september','october','november','december');
+    $mon = array('','jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec');
+    $roman = array('','iv','vi','vii','viii','v','ix','xi','xii','x','iii','ii','i');
+    $weekday = array('sunday','monday','tuesday','wednesday','thursday','friday','saturday');
+    $wday = array('sun','mon','tue','wed','thu','fri','sat');
+    $date = trim(strtolower($date));
+    $date = trim(str_replace(array('ad','of','the',' ',',','.','/'),array('-','-','-','-','-','-','-'),$date)); // Replace unwanted punctuation and text (AD, of, The, space( ), comma(,), dot(.), and slash(/) with dash(-).
+    foreach ( $weekday as $w ) {
+      $date = trim(str_replace(strtolower($w),'-',strtolower($date))); // Remove weekday.
+    }
+    foreach ( $wday as $w ) {
+      $date = trim(str_replace(strtolower($w),'-',strtolower($date))); // Remove wday.
+    }
+    while ( strpos($date,'--') !== false ) {
+      $date = trim(str_replace('--','-',$date)); // Replace '--' with '-'.
+    }
+    if ( substr($date,0,1) == '-' ) $date = substr($date,1); // Remove leading '-'.
+    if ( substr($date,strlen($date)-1,1) == '-' ) $date = substr($date,0,strlen($date)-1); // Remove trailing '-'.
+    if ( is_numeric(substr($date,0,4)) ) {
+      $format = 'Y-m-d'; // This is Gregorian big-endian (Y-m-d). It begins with a four-digit year.
+    } else {
+      foreach ( $mon as $m ) {
+        if ( !$format && $m && strtolower($m) == substr(trim($date),0,3) ) {
+          $format = 'm-d-Y'; // This is Middle-endian (m-d-Y). It begins with a month.
+        }
+      }
+      if ( !$format ) {
+        foreach ( $mon as $m ) {
+          if ( !$format && $m && strpos($date,strtolower($m)) !== false ) {
+            $format = 'd-m-Y'; // Gregorian little-endian (d-m-Y). It contains a month but did not begin with one.
+          }
+        }
+      }
+      if ( !$format ) {
+        foreach ( $roman as $m ) {
+          if ( !$format && $m && strpos(strtolower($date),$m) !== false ){
+            $format = 'd-m-Y'; // This is Gregorian little-endian (d-m-Y). It contains a roman numeral month.
+          }
+        }
+      }
+    }
+    if ( !$format ) {
+      // Try to decide if the date begins with a day or a month.
+      $datepart = explode('-',$date);
+      if ( $datepart[0] > 31 ) {
+          $format = 'Y-m-d'; // This is Gregorian big-endian (Y-m-d). The first part is above 31 - the first part must be a year.
+      } elseif ( $datepart[0] > 12 ) {
+          $format = 'd-m-Y'; // This is Gregorian little-endian (d-m-Y). The first part is above 12 - the first part must be a day.
+      } elseif ( isset($datepart[1]) && $datepart[1] > 12 ) {
+          $format = 'm-d-Y'; // This is Middle-endian (m-d-Y). The second part is above 12 - the second part must be a day.
+      } else {
+          $format = 'm-d-Y'; // Cannot determine endian. Assuming Middle-endian (m-d-Y).
+      }
+    }
+    $date = str_replace($months,array('','-01-','-02-','-03-','-04-','-05-','-06-','-07-','-08-','-09-','-10-','-11-','-12-'),$date); // Replace months with number.
+    $date = str_replace($mon,array('','-01-','-02-','-03-','-04-','-05-','-06-','-07-','-08-','-09-','-10-','-11-','-12-'),$date); // Replace mon with number.
+    $date = str_replace($roman,array('','-04-','-06-','-07-','-08-','-05-','-09-','-11-','-12-','-10-','-03-','-02-','-01-'),$date); // Replace roman with number.
+    $date = trim(str_replace(array('nd','rd','st','th'),array('','',''),$date)); // Remove ordinals.
+    $date = trim(str_replace('t','-',$date)); // Remove 'T' in time part to -.
+    while ( strpos($date,'--') !== false ) {
+      $date = trim(str_replace('--','-',$date)); // Replace '--' with '-'.
+    }
+    if ( substr($date,0,1) == '-' ) $date = substr($date,1); // Remove leading '-'.
+    if ( substr($date,strlen($date)-1,1) == '-' ) $date = substr($date,0,strlen($date)-1); // Remove trailing '-'.
+  }
+  if ( $format ) {
+    $year = 0;
+    $month = 0;
+    $day = 0;
+    $datePart = explode('-',$date);
+    switch ( $format ) {
+			case 'd-m-Y':
+        if ( isset($datePart[0]) ) $day = $datePart[0];
+        if ( isset($datePart[1]) ) $month = $datePart[1];
+        if ( isset($datePart[2]) ) $year = $datePart[2];
+			break;
+			case 'jul':
+        $date = jdtogregorian($date);
+        $date = trim(str_replace('/','-',$date)); // Replace '/' with '-'.
+        $datePart = explode('-',$date);
+			case 'm-d-Y':
+        if ( isset($datePart[0]) ) $month = $datePart[0];
+        if ( isset($datePart[1]) ) $day = $datePart[1];
+        if ( isset($datePart[2]) ) $year = $datePart[2];
+			break;
+			case 'Y-m-d':
+        if ( isset($datePart[0]) ) $year = $datePart[0];
+        if ( isset($datePart[1]) ) $month = $datePart[1];
+        if ( isset($datePart[2]) ) $day = $datePart[2];
+			break;
+      default:
+			break;
+    }
+    if ( strlen($year) == 2 ) {
+      $century = substr(date('Y'),0,2);
+      $year = $century.$year;
+    }
+    if ( !is_numeric($year) ) $year = 0;
+    if ( !is_numeric($month) ) $month = 0;
+    if ( !is_numeric($day) ) $day = 0;
+    $is_date = checkdate($month, $day, $year);
+    if ( $is_date ) $is_date = $year.'-'.twoDigit($month).'-'.twoDigit($day);
+  } else {
+    $is_date = false;
+  }
+  return $is_date;
+}
+
+// timeDifference($start, $end)
+/**
+ * Function to calculate date or time difference.
+ *
+ * Function to calculate date or time difference. Returns an array or
+ * false on error.
+ *
+ * @author       J de Silva                             <giddomains@gmail.com>
+ * @copyright    Copyright &copy; 2005, J de Silva
+ * @link         http://www.gidnetwork.com/b-16.html    Get the date / time difference with PHP
+ * @param        string                                 $start
+ * @param        string                                 $end
+ * @return       array
+ */
+function timeDifference($start, $end) {
+  $uts['start'] = strtotime($start);
+  $uts['end']   = strtotime($end);
+  if ($uts['start']!==-1 && $uts['end']!==-1) {
+    if ($uts['end'] >= $uts['start']) {
+      $diff    =    $uts['end'] - $uts['start'];
+      if ($days=intval((floor($diff/86400)))) $diff = $diff % 86400;
+      if ($hours=intval((floor($diff/3600)))) $diff = $diff % 3600;
+      if ($minutes=intval((floor($diff/60)))) $diff = $diff % 60;
+      $diff    =    intval($diff);        
+      $time_difference = array('days'=>$days, 'hours'=>$hours, 'minutes'=>$minutes, 'seconds'=>$diff);
+    } else {
+      trigger_error("Ending date/time is earlier than the start date/time", E_USER_WARNING);
+      $time_difference = false;
+    }
+  } else {
+    trigger_error("Invalid date/time data detected", E_USER_WARNING);
+    $time_difference = false;
+  }
+  return $time_difference;
+}
+
+// valid_date($date, $format)
+// Return the date in the format requested.
+//   $date = the date to be formatted.
+// $format = The date format. Default is 'ISO'.
+//           ISO, or Y-m-d = yyyy-mm-dd (E.G. 2012-05-06). Default is 'ISO'.
+//           ENG, US, USA, or n-j-Y = m/d/yyyy (E.G. 5/6/2012).
+//           See php date() function for custom formats. Note that flags are ignored for custom formats.
+// Note: The case of named formats are ignored (i.e., iso is the same as ISO).
+function valid_date($date, $format='ISO', $flags='') {
+  $valid_date = is_date($date); // Get the date in YYYY-mm-dd format.
+  if ( $valid_date ) {
+    $timestamp = strtotime($valid_date); // Convert it to a unix timestamp.
+    if ( strpos($flags,'0') !== false || strpos(strtoupper($flags),'N') !== false ) { $datetime['mon'] = twoDigit($datetime['mon']); $datetime['mday'] = twoDigit($datetime['mday']); } // Apply the 0 flag.
+    if ( strpos($flags,'2') !== false ) $datetime['year'] = substr($datetime['year'],2); // Apply the 2 flag.
+    $seperator = false;
+    if ( strpos($flags,'-') !== false ) $seperator = '-'; // Apply the - flag.
+    if ( strpos($flags,'/') !== false ) $seperator = '/'; // Apply the / flag.
+    if ( strpos($flags,'.') !== false ) $seperator = '.'; // Apply the . flag.
+    if ( strpos(strtoupper($flags),'R') !== false ) $seperator = ''; // Apply the R flag.
+    #d_Var('$format',$format);
+    switch ( strtoupper($format )) {
+			case 'ISO':
+			case 'Y-M-D':
+			case '24': // Only here for currentDateTime() call.
+        if ( $seperator === false ) $seperator = '-';
+        $valid_date = date('Y'.$seperator.'m'.$seperator.'d',$timestamp);
+			break;
+			case 'ENG':
+			case 'US':
+			case 'USA':
+			case 'N-J-Y':
+        if ( $seperator === false ) $seperator = '/';
+        $valid_date = date('n'.$seperator.'j'.$seperator.'Y',$timestamp);
+			break;
+      default:
+        $valid_date = date($format,$timestamp);
+			break;
+    }
+  }
+  return $valid_date;
+}
+
+// valid_datetime($datetime, $format)
+// Returns
+//             ISO, or Y-m-d = yyyy-mm-dd (E.G. 2012-05-06).
+//           ENG, US, USA, or n-j-Y = m/d/yyyy (E.G. 5/6/2012).
+//           See php date() function for custom formats. Note that flags are ignored for custom formats.
+function valid_datetime($datetime, $format='ISO') {
+  #d_Var('$date',$date);
+  $datetimeArray = explode(' ',$datetime); $date = $datetimeArray[0]; // Get $date.
+  $time = false; if ( isset($datetimeArray[1]) ) $time = $datetimeArray[1]; // Get time.
+  #d_Var('$date',$date);
+  if ( substr_count($date,'-') == 2 || substr_count($date,'/') == 2 || substr_count($date,'.') == 2 ) {
+    if (substr_count($date,'/') == 2 ) $date = str_replace("/","-",$date);
+    if (substr_count($date,'.') == 2 ) $date = str_replace(".","-",$date);
+    $dateArray = explode("-", $date);
+    if ( strlen($dateArray[0]) == 4 ) {
+      // yyyy-mm-dd format.
+      $Year = $dateArray[0]; $Month = $dateArray[1]; $Day = $dateArray[2];
+    } else {
+      // mm/dd/yyyy format.
+      $Year = $dateArray[2]; $Month = $dateArray[0]; $Day = $dateArray[1];
+    }
+    #d_Var('$Month',$Month);
+    #d_Var('$Day',$Day);
+    #d_Var('$Year',$Year);
+    #d_Var('is_numeric($Year)',is_numeric($Year));
+    if ( !is_numeric($Month) || !is_numeric($Day) || !is_numeric($Year) ) {
+      $valid_date = false;
+    } else {
+      $valid_date = checkdate($Month, $Day, $Year);
+    }
+  } else {
+    $valid_date = false;
+  }
+  if ( $valid_date ) {
+    switch (strtoupper($format)) {
+			case 'ISO':
+        $valid_date = $Year."-".twoDigit($Month)."-".twoDigit($Day);
+			break;
+			case 'US':
+			case 'USA':
+        $valid_date = twoDigit($Month)."/".twoDigit($Day)."/".$Year;
+			break;
+    }
+  }
+  if ( $valid_date && $time ) {
+		$timeArray = explode(':',$time);
+		$Hour = $timeArray[0]; $Min = str_ireplace(array('am','pm'),'',$timeArray[1]); $Sec = 0; if ( isset($timeArray[2]) ) $Sec = str_ireplace(array('am','pm'),'',$timeArray[2]);
+		if ( !is_numeric($Hour) || !is_numeric($Min) || !is_numeric($Sec) ) {
+			$valid_time = false;
+		} else {
+			switch (strtoupper($format)) {
+				case 'ISO':
+					$valid_time = date('H:i:s',strtotime($time));
+				break;
+				case 'US':
+				case 'USA':
+					$valid_time = date('g:ia',strtotime($time));
+				break;
+			}
+		}
+    if ( $valid_time ) {
+      $valid_datetime = $valid_date.' '.$valid_time;
+    } else {
+      $valid_datetime = false;
+    }
+  } else {
+    $valid_datetime = $valid_date;
+  }
+  return $valid_datetime;
+}
+
+// valid_time($time, $format)
+// Returns
+//   ISO hh:mm:ss in 24hr format.
+//   US or USA h:mm in 12hr format with am/pm.
+//   See php date() function for custom formats. Note that flags are ignored for custom formats.
+function valid_time($time, $format='ISO') {
+	if ( $time == '' ) return false;
+	$meridian = '';
+	if ( stripos($time,'a') !== false ) $meridian = ' am';
+	if ( stripos($time,'p') !== false ) $meridian = ' pm';
+	$time = str_ireplace(array(' ','a','m','p'),'',$time);
+	$timeArray = explode(':',$time);
+	#if ( !isset($timeArray[1]) ) d_var('$time',$time,'d');
+	$Hour = $timeArray[0]; $Min = $timeArray[1]; $Sec = 0; if ( isset($timeArray[2]) ) $Sec = $timeArray[2];
+	if ( !is_numeric($Hour) || !is_numeric($Min) || !is_numeric($Sec) ) {
+		$valid_time = false;
+	} else {
+		$time .= $meridian;
+		switch (strtoupper($format)) {
+			case 'ISO':
+				$valid_time = date('H:i:s',strtotime($time));
+			break;
+			case 'US':
+			case 'USA':
+				$valid_time = date('g:ia',strtotime($time));
+			break;
+		}
+	}
+  return $valid_time;
+}
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

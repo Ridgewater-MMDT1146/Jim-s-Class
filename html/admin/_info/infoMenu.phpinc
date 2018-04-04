@@ -1,0 +1,264 @@
+<?
+// admin/_info/infoMenu.phpinc
+// Display the _info menu.
+t_Begin(); // Begin TRACKing included file.
+?>
+<div class="left">
+Utilities:
+<?
+// tables
+#d_V('table');
+if ( isset($_SERVER['HTTP_REFERER']) && !isset($f['table']) ) { // Set $f['table'] only if not comming from _info.
+  #d_Var("\$_SERVER['HTTP_REFERER']",$_SERVER['HTTP_REFERER']);
+  $referer = explode('?',$_SERVER['HTTP_REFERER']); // Remove the URL query string.
+  #d_Var('$referer',$referer,'+');
+  preg_match('/http[s]*:\/\/'.$_SERVER['HTTP_HOST'].'(.*)/',str_replace('index.php','',$referer[0]),$referer); // Strip off http://server.domain and index.php.
+  #d_Var('$referer',$referer,'+');
+  if ( $referer[1] != '/admin/_info/' ) $f['table'] = false; // Set $f['table'] when not comming from _info page.
+} else {
+  if ( !isset($f['table']) ) $f['table'] = false; // Set $f['table'] when not comming from site.
+}
+#d_V('table');
+
+// tables
+if ( $f['task'] == '' ) {
+  $class = ' class="current"';
+  if ( $f['subtask'] != '' ) $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/_info/?task=&database=<?=$f['database']?>&table=#menuTop"<?=$class?> onMouseover="ttShow('tables');" onMouseOut="ttHide();">tables</a><?
+?> | <?
+
+// $_POST
+if ( $f['task'] == '$_POST' ) {
+  $class = ' class="current"';
+  if ( $f['subtask'] != '' ) $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/_info/?task=$_POST#menuTop"<?=$class?> onMouseover="ttShow('$_POST utility');" onMouseOut="ttHide();">$_POST</a><?
+?> | <?
+
+// Backup tables
+if ( $f['task'] == 'Backup tables' ) {
+  $class = ' class="current"';
+  if ( $f['subtask'] != '' ) $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/_info/?task=Backup tables&database=<?=$f['database']?>#menuTop"<?=$class?> onMouseover="ttShow('Backup table management');" onMouseOut="ttHide();">Backup tables</a><?
+?> | <?
+
+// Datatypes
+if ( $f['task'] == 'Datatypes' ) {
+  $class = ' class="current"';
+  if ( $f['subtask'] != '' ) $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/_info/?task=Datatypes&database=<?=$f['database']?>#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide('Show database datatypes');">Datatypes (<?=$f['database']?>)</a><?
+?> | <?
+
+// Parse
+if ( $f['task'] == 'Parse' ) {
+  $class = ' class="current"';
+  if ( $f['subtask'] != '' ) $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/_info/?task=Parse&database=<?=$f['database']?>#menuTop"<?=$class?> onMouseover="ttShow('Parse file utilities');" onMouseOut="ttHide();">Parse</a><?
+?> | <?
+
+// Notes
+if ( $f['task'] == 'Notes' ) {
+  $class = ' class="current"';
+  if ( $f['subtask'] != '' ) $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/_info/?task=Notes&database=<?=$f['database']?>#menuTop"<?=$class?> onMouseover="ttShow('Site notes');" onMouseOut="ttHide();">Notes</a><?
+?> | <?
+
+/** /
+// infoDir
+if ( $f['task'] == 'infoDir' ) {
+  $class = ' class="current"';
+  if ( $f['subtask'] != '' ) $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/_info/?task=infoDir#menuTop"<?=$class?>>infoDir</a><?
+?> | <?
+/**/
+
+// sql
+if ( $f['task'] == 'sql' ) {
+  $class = ' class="current"';
+  if ( $f['subtask'] != '' ) $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/_info/?task=sql&database=<?=$f['database']?>#menuTop"<?=$class?> onMouseover="ttShow('Run SQL statements');" onMouseOut="ttHide();">sql</a><?
+
+foreach ($_SESSION['DATABASE']['Names'] as $key => $database) {
+  $tableQuery="SHOW TABLES FROM ".$_SESSION['DB'][$database]['database'];
+  $ShowTables_QueryField = 'Tables_in_'.$_SESSION['DB'][$database]['database'];
+  $tableResult = query_do($tableQuery,$database,false);
+	#d_Var("\$GLOBALS['_QUERY']",$GLOBALS['_QUERY'],'',false,true);
+  $tableCount = $GLOBALS['_QUERY']['count'];
+	if ( $tableCount !== false ) {
+		$tableHTML = $tableCount.' table';
+		if ($tableCount != 1) $tableHTML .= 's';
+	} else {
+		$tableHTML = $GLOBALS['_QUERY']['error'];
+	}
+  #d_V('table');
+?>
+<div id="<?=$database?>Hide" class="<? if ( $database == $f['database'] && isset($f['table']) ) { ?>d_s_h <? } ?>d_s_l"><a href="javascript: divShow('<?=$database?>Show'); divHide('<?=$database?>Hide');"><span class="d_s_b"><?=$database?>:</span> <?=$tableHTML?> +</a></div>
+<div id="<?=$database?>Show" class="<? if ( $database != $f['database'] || !isset($f['table']) ) { ?>d_s_h <? } ?>d_s_l"><a href="javascript: divShow('<?=$database?>Hide'); divHide('<?=$database?>Show');"><span class="d_s_b"><?=$database?>:</span> <?=$tableHTML?> -</a><?
+  $databaseHas_ = false;
+  if ( $tableCount ) {
+		query_seek($tableResult, 0);
+		while ($row = query_row($tableResult)) {
+			if ( substr($row[$ShowTables_QueryField],0,1) != '_' ) {
+				if ( $f['database'] == $database && $f['table'] == $row[$ShowTables_QueryField] && $f['task'] == 'table' ) {
+					$class = ' class="current"';
+				} elseif ( $f['database'] == $database && $f['table'] == $row[$ShowTables_QueryField] && $f['task'] != 'table' ) {
+					$class = ' class="parent"';
+				} else {
+					$class = '';
+				}
+				?> &nbsp;<a href="<?=$_SERVER['PHP_SELF']?>?task=table&amp;database=<?=$database?>&amp;table=<?=$row[$ShowTables_QueryField]?>#menuTop"<?=$class?>><?=$row[$ShowTables_QueryField]?></a><?
+			} else {
+				$databaseHas_ = true;
+			}
+		}
+	}
+  if ( $databaseHas_ ) {
+?>
+<div id="<?=$database?>_Hide" class="<? if ( $database == $f['database'] && substr($f['table'],0,1) == '_' ) { ?>d_s_h <? } ?>d_s_l"><a href="javascript: divShow('<?=$database?>_Show'); divHide('<?=$database?>_Hide');"><span class="d_s_b"><?=$database?> backup tables:</span> +</a></div>
+<div id="<?=$database?>_Show" class="<? if ( $database != $f['database'] || substr($f['table'],0,1) != '_' ) { ?>d_s_h <? } ?> d_s_l"><a href="javascript: divShow('<?=$database?>_Hide'); divHide('<?=$database?>_Show');"><span class="d_s_b"><?=$database?> backup tables:</span> -</a><?
+    query_seek($tableResult, 0);
+    while ($row = query_row($tableResult)) {
+      if ( substr($row[$ShowTables_QueryField],0,1) == '_' ) {
+        if ( $f['database'] == $database && $f['table'] == $row[$ShowTables_QueryField] && $f['task'] == 'table' ) {
+          $class = ' class="current"';
+        } elseif ( $f['database'] == $database && $f['table'] == $row[$ShowTables_QueryField] && $f['task'] != 'table' ) {
+          $class = ' class="parent"';
+        } else {
+          $class = '';
+        }
+        ?> &nbsp;<a href="<?=$_SERVER['PHP_SELF']?>?task=table&amp;database=<?=$database?>&amp;table=<?=$row[$ShowTables_QueryField]?>#menuTop"<?=$class?>><?=$row[$ShowTables_QueryField]?></a><?
+      } else {
+        $databaseHas_ = true;
+      }
+    }
+?>
+  </div>
+<?
+  }
+?>
+  </div>
+<?
+}
+
+
+if ( $f['table'] ) {
+
+  // Fields.
+  if ( $f['task'] == 'Fields' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=Fields#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">Fields</a><?
+  ?> &nbsp; <?
+
+  // Data.
+  if ( $f['task'] == 'Data' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=Data#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">Data</a><?
+  ?> &nbsp; <?
+
+  // Form.
+  if ( $f['task'] == 'Form' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=Form#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">Form</a><?
+  ?> &nbsp; <?
+
+  // Reorder.
+  if ( $f['task'] == 'Reorder' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=Reorder#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">Reorder</a><?
+  ?> &nbsp; <?
+
+  // Set.
+  if ( $f['task'] == 'Set' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=Set#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">Set</a><?
+  ?> &nbsp; <?
+
+  // DELETE.
+  if ( $f['task'] == 'DELETE' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=DELETE#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">DELETE</a><?
+  ?> &nbsp; <?
+
+  // INSERT.
+  if ( $f['task'] == 'INSERT' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=INSERT#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">INSERT</a><?
+  ?> &nbsp; <?
+
+  // SELECT.
+  if ( $f['task'] == 'SELECT' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=SELECT#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">SELECT</a><?
+  ?> &nbsp; <?
+
+  // UPDATE.
+  if ( $f['task'] == 'UPDATE' ) {
+    $class = ' class="current"';
+    if ( $f['subtask'] != '' ) $class = ' class="parent"';
+  } else {
+    $class = '';
+  }
+  ?><a href="<?=$HTTP?>/admin/_info/?database=<?=$f['database']?>&table=<?=$f['table']?>&task=UPDATE#menuTop"<?=$class?> onMouseover="ttShow('');" onMouseOut="ttHide();">UPDATE</a><?
+  ?> &nbsp; <?
+}
+?>
+</div>
+<?
+
+t_End(); // End TRACKing included file.
+?>

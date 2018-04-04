@@ -1,0 +1,25 @@
+<?
+// admin/_info/infoFields.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+$fieldQuery="SHOW COLUMNS FROM `".$f['table']."`";
+$fieldResult = query_do($fieldQuery,$f['database']);
+$fieldCount = $GLOBALS['_QUERY']['count'];
+?>
+<table><tr><td><fieldset><legend><?=$f['database']?> <?=$f['table']?> Fields (<?=$fieldCount?>)</legend>
+<table><tr><td>
+<tr><th>Field</th><th>Type</th><th>Key</th><th>Extra</th><td>qc</td></tr>
+<?
+query_seek($fieldResult, 0);
+while ($row = query_row($fieldResult)) {
+  $fqc = info_fieldQC($row['Type']);
+?>
+  <tr><td><?=$row['Field']?></td><td><?=$row['Type']?></td><td><?=$row['Key']?></td><td><?=$row['Extra']?></td><td><?=$fqc[0]?><?=$fqc[1]?></td></tr>
+<?
+}
+?>
+</table>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

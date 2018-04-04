@@ -1,0 +1,87 @@
+<?
+// admin/course/courseFormPreset.phpinc
+// Get original data and preset the course form.
+t_Begin(); // Begin TRACKing included file.
+// Ensure primary key is set.
+if ( !isset($f['courseId']) ) { formValue('courseId'); if ( !$f['courseId'] ) $f['courseId'] = 0; }
+// Get original course data.
+if ( $f['courseId'] ) {
+  // $f['courseId'] is set. Load original data from database.
+  $query = "
+    SELECT * FROM `course`
+     WHERE courseId = ".$f['courseId']."
+  ";
+  $courseResult = query_do($query,'scheduler');
+  $courseCount = $GLOBALS['_QUERY']['count'];
+  if ( $courseCount == 1 ) {
+    // Load original data from record.
+    query_seek($courseResult, 0);
+    $courseInfo = query_row($courseResult);
+    $o['userId'] = $courseInfo['userId'];
+    $o['YRTR'] = $courseInfo['YRTR'];
+    $o['departmentId'] = $courseInfo['departmentId'];
+    $o['courseNumber'] = $courseInfo['courseNumber'];
+    $o['courseTitle'] = $courseInfo['courseTitle'];
+    $o['courseCredits'] = $courseInfo['courseCredits'];
+    $o['courseCreditsMax'] = $courseInfo['courseCreditsMax'];
+    $o['courseInactive'] = $courseInfo['courseInactive'];
+  } else {
+    // The record count was not 1. This is an error.
+    programmingError('Record count ('.$courseCount.') for courseId='.$f['courseId'].' was not 1.');
+  }
+} else {
+  // $f['courseId'] is 0. This is an add form. Set form_course data to default values.
+  $f['courseId'] = 0;
+  if ( !isset($o['userId']) ) $o['userId'] = $_SESSION['user']['trueId'];
+  if ( !isset($o['YRTR']) ) $o['YRTR'] = '';
+  $f['departmentId'] = 0;
+  if ( !isset($o['courseNumber']) ) $o['courseNumber'] = '';
+  if ( !isset($o['courseTitle']) ) $o['courseTitle'] = '';
+  $f['courseCredits'] = 0;
+  if ( !isset($o['courseCreditsMax']) ) $o['courseCreditsMax'] = NULL;
+  if ( !isset($o['courseInactive']) ) $o['courseInactive'] = '0';
+}
+// Preset course form data.
+if ( $f['form'] != 'form_course' ) {
+  // form_course not called by itself. Preload data for form.
+  if ( $f['courseId'] ) {
+    // $f['courseId'] is set. This is an edit form. Load form_course data from database.
+    /** / // Remove this section if original data is obtained above.
+    $query = "
+      SELECT * FROM `course`
+       WHERE courseId = ".$f['courseId']."
+    ";
+    $courseResult = query_do($query,'scheduler');
+    $courseCount = $GLOBALS['_QUERY']['count'];
+    /**/ // Remove this section if original data is obtained above.
+    if ( $courseCount == 1 ) {
+      // Load original data from record.
+      query_seek($courseResult, 0);
+      $courseInfo = query_row($courseResult);
+      $f['userId'] = $courseInfo['userId'];
+      $f['YRTR'] = $courseInfo['YRTR'];
+      $f['departmentId'] = $courseInfo['departmentId'];
+      $f['courseNumber'] = $courseInfo['courseNumber'];
+      $f['courseTitle'] = $courseInfo['courseTitle'];
+      $f['courseCredits'] = $courseInfo['courseCredits'];
+      $f['courseCreditsMax'] = $courseInfo['courseCreditsMax'];
+      $f['courseInactive'] = $courseInfo['courseInactive'];
+    } else {
+      // The record count was not 1. This is an error.
+      programmingError('Record count ('.$courseCount.') for courseId='.$f['courseId'].' was not 1.');
+  	}
+  } else {
+    // $f['courseId'] is 0. This is an add form. Set form_course data to default values.
+    $f['courseId'] = 0;
+    if ( !isset($f['userId']) ) $f['userId'] = $_SESSION['user']['trueId'];
+    if ( !isset($f['YRTR']) ) $f['YRTR'] = '';
+    $f['departmentId'] = 0;
+    if ( !isset($f['courseNumber']) ) $f['courseNumber'] = '';
+    if ( !isset($f['courseTitle']) ) $f['courseTitle'] = '';
+    $f['courseCredits'] = '';
+    if ( !isset($f['courseCreditsMax']) ) $f['courseCreditsMax'] = NULL;
+    if ( !isset($f['courseInactive']) ) $f['courseInactive'] = '0';
+  }
+}
+t_End(); // End TRACKing included file.
+?>

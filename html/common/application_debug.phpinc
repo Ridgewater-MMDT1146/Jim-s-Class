@@ -1,0 +1,539 @@
+<?
+// application_debug.phpinc
+// application DEBUG setup.
+// Version 2015.09.15.
+
+// ********** BEGIN DOCUMENTATION SECTION **********
+
+// Set $debuggingAvailable in application.phpinc line 8.
+// With $debuggingAvailable = true; This file, functions_debug.phpinc, and pageFooter_debug.phpinc pages are included in every page.
+// Note that debugging functions are not available until common/functions.phpinc is called. This is not called until after this file.
+
+// To clear all $_SESSION variables use the flag:
+// ?session
+
+// To enable or disable global debugging with a URL switch do:
+// ?debug=CodeOn     = Enables  code debugging display.
+// ?debug=CodeOff    = Disables code debugging display.
+// ?debug=FootOn     = Enables  page footer debugging display.
+// ?debug=FootOff    = Disables page footer debugging display.
+// ?debug=HeadOn     = Enables  header('Location') link debugging display.
+// ?debug=HeadOff    = Disables header('Location') link debugging display.
+// ?debug=LockOn     = Lock  TRACKing between pages.
+// ?debug=LockOff    = Reset TRACKing between pages.
+// ?debug=MemoryOn   = Enables  memory usage tracking.
+// ?debug=MemoryOff  = Disables memory usage tracking.
+// ?debug=QueryOn    = Enables  database debugging display.  ds() is true.
+// ?debug=QueryOff   = Disables database debugging display. ds() is false.
+
+// To enable or disable page debugging from php code do:
+// d_On()          = Turn on  code debugging display for this page only.
+// d_Off()         = Turn off code debugging display for this page only.
+// d_On('code')    = Turn on  code debugging display for this page only.
+// d_Off('code')   = Turn off code debugging display for this page only.
+// d_On('foot')    = Turn on  footer debugging display for this page only.
+// d_Off('foot')   = Turn off footer debugging display for this page only.
+// d_On('head')    = Turn on  header('Location') link debugging display for this page only.
+// d_Off('head')   = Turn off header('Location') link debugging display for this page only.
+// d_On('lock')    = Turn on  TRACK locking debugging display for this page only.
+// d_Off('lock')   = Turn off TRACK locking debugging display for this page only.
+// d_On('memory')  = Turn on  memory debugging display for this page only.
+// d_Off('memory') = Turn off memory debugging display for this page only.
+// d_On('query')   = Turn on  database debugging display for this page only.
+// d_Off('query')  = Turn off database debugging display for this page only.
+
+
+// SETUP display of errors.
+// To display PHP errors you need display_errors = On in the php.ini file or call ini_set('display_errors',1) if allowed by host provider.
+// To display PHP errors when display_errors = Off in the php.ini file; Create a .htaccess file with the following lines:
+// php_value display_errors 1
+// php_value display_startup_errors 1
+
+// *********** END DOCUMENTATION SECTION ***********
+
+// *********** The code below should not be changed ***********
+
+if ( $debuggingAvailable ) {
+	// *********** Note that DEBUG functions do not as yet exist.
+	// Functions for $_DEBUG['track']['calls'] and ['stack'].
+	function d_ad_begin($file,$line) {
+		if ( $GLOBALS['_DEBUG']['track']['caller'] ) {
+			if ( $GLOBALS['_DEBUG']['page']['code'] ) { $pageCode = '<span class="d_s_vt">true</span>'; } else { $pageCode = '<span class="d_s_vf">false</span>'; }
+			$GLOBALS['_DEBUG']['track']['calls'][] = 'BEGIN '.$file.': '.$line.': code='.$pageCode; // Add the file call.
+			array_unshift($GLOBALS['_DEBUG']['track']['stack'],$file); // Prepend file to the stack.
+		}
+	}
+	function d_ad_end($file,$line) {
+		if ( $GLOBALS['_DEBUG']['track']['caller'] ) {
+			if ( $GLOBALS['_DEBUG']['page']['code'] ) { $pageCode = '<span class="d_s_vt">true</span>'; } else { $pageCode = '<span class="d_s_vf">false</span>'; }
+			$GLOBALS['_DEBUG']['track']['calls'][] = 'END '.$file.': '.$line.': code='.$pageCode; // Add the file call.
+			array_shift($GLOBALS['_DEBUG']['track']['stack']);   // Remove the file from the stack.
+		}
+	}
+	// Functions for URL switch messaages.
+	// d_Message($type)
+	// Return debug message.
+	// $type = The debug= URL switch.
+	function d_Message($type='') {
+		$backtrace = debug_backtrace();
+		$pd = '<br>';
+		if ( $type != '') { $typeValue = $_GET[$type]; } else { $typeValue = ''; }
+		$pd .= "<div>\n";
+		switch ($type) {
+			case '':
+				$pd .= "<b>debug settings:</b>";
+				$pd .= ' <span class="d_s_fl">'.basename($backtrace['0']['file']).":".$backtrace['0']['line']."</span><br>\n";
+			break;
+			break;
+			case 'debugging':
+				switch ($typeValue) {
+					case 'on':
+					case 'off':
+						$pd .= "<b>$type=".$typeValue."</b>";
+					break;
+					default:
+						$pd .= "<b>$type settings:</b>";
+					break;
+				}
+				$pd .= ' <span class="d_s_i">(URL switches: ?'.$type.', ?'.$type.'=on, ?'.$type.'=off)</span>'.' <span class="d_s_fl">'.basename($backtrace['0']['file']).":".$backtrace['0']['line']."</span><br>\n";
+			break;
+			case 'code':
+			case 'query':
+				switch ($typeValue) {
+					case 'on':
+					case 'off':
+					case 'siteon':
+					case 'siteoff':
+						$pd .= "$type=".$typeValue;
+					break;
+					default:
+						$pd .= "$type settings:";
+					break;
+				}
+				$pd .= ' <span class="d_s_i">(URL switches: ?'.$type.', ?'.$type.'=on, ?'.$type.'=off, '.$type.'=siteon, ?'.$type.'=siteoff)</span>'.' <span class="d_s_fl">'.basename($backtrace['0']['file']).":".$backtrace['0']['line']."</span><br>\n";
+			break;
+		}
+		if ( isset($_GET['debugging']) ) { $pd .= d_mVar("\$_GET['debugging']",$_GET['debugging']); }
+		if ( isset($_GET['code']) )  { $pd .= d_mVar("\$_GET['code']=",$_GET['code']); }
+		if ( isset($_GET['query']) ) { $pd .= d_mVar("\$_GET['query']=",$_GET['query']); }
+		if ( isset($GLOBALS['debuggingAvailable']) ) { $pd .= d_mVar("\$debuggingAvailable",$GLOBALS['debuggingAvailable']); } else { $pd .= "\$debuggingAvailable is unset"."<br>\n"; }
+		if ( isset($GLOBALS['_DEBUG']['page']['code']) ) { $pd .= d_mVar("\$_DEBUG['page']['code']",$GLOBALS['_DEBUG']['page']['code']); } else { $pd .= "\$_DEBUG['page']['code'] is unset"."<br>\n"; }
+		if ( isset($GLOBALS['_DEBUG']['page']['query']) ) { $pd .= d_mVar("\$_DEBUG['page']['query']",$GLOBALS['_DEBUG']['page']['query']); } else { $pd .= "\$_DEBUG['page']['query'] is unset"."<br>\n"; }
+		if ( isset($_SESSION['DEBUG']['codeSite']) ) { $pd .= d_mVar("\$_SESSION['DEBUG']['codeSite']",$_SESSION['DEBUG']['codeSite']); } else { $pd .= "\$_SESSION['DEBUG']['codeSite'] is unset"."<br>\n"; }
+		if ( isset($_SESSION['DEBUG']['querySite']) ) { $pd .= d_mVar("\$_SESSION['DEBUG']['querySite']",$_SESSION['DEBUG']['querySite']); } else { $pd .= "\$_SESSION['DEBUG']['querySite'] is unset"."<br>\n"; }
+		$pd .= "</div>\n";
+		return 'x'.$pd;
+	}
+	// d_mVar($vn,$v)
+	// Return variable value.
+	// $vn = Variable name.
+	//  $v = Variable value.
+	function d_mVar($vn, $v) {
+		$pv = '';
+		$pv .= "$vn";
+		if (isset($v)) {
+			if ($v === false) {
+				$pv .= ' === <span class="d_s_vf">false</span>';
+			} else {
+				if ($v === true) {
+					$pv .= ' === <span class="d_s_vt">true</span>';
+				} else {
+					if ($v != '') {
+						$pv .= ' == '.$v;
+					} else {
+						$pv .= ' == <span class="d_s_fl">{empty string}</span>';
+					}
+				}
+			}
+		} else {
+			$pv .= ' is <span class="d_s_e">unset</span>';
+		}
+		$pv .= "<br>\n";
+		return $pv;
+	}
+	// DEBUGGING. Show debug changes.
+	if ( isset($type) ) $_SESSION['message']['info'] = d_Message($DEBUGtype);
+	
+	// t_Indent()
+	// Indent TRACKing line.
+	function t_Indent() {
+		if ( !isset($_SESSION['TRACK']['indent']) ) $_SESSION['TRACK']['indent'] = 0;
+		if ($_SESSION['TRACK']['indent'] > 0) {
+			#return $_SESSION['TRACK']['indent'].": ".str_repeat('  ', $_SESSION['TRACK']['indent']);
+			return str_repeat('  ', $_SESSION['TRACK']['indent']);
+		} else {
+			return '';
+		}
+	}
+
+	if ( !isset($GLOBALS['TRACK']) ) $GLOBALS['TRACK'] = true; // Allow tracking. Use $GLOBALS['TRACK'] = false; in the calling file to turn it off.
+	/** / // Uncomment to show $debuggingAvailable and $GLOBALS['TRACK'] status.
+	echo '<div class="d_s_l d_s_a">$debuggingAvailable is <span class="d_s_vt">true</span> in '.basename(__FILE__).':'.__LINE__.".<br>\n";
+	echo '$GLOBALS[\'TRACK\'] is <span class="d_s_vt">true</span> in '.basename(__FILE__).':'.__LINE__.".</div><br>\n";
+	/**/
+	// Display errors if debuggingAvailable.
+	ini_set('display_errors','1');
+	error_reporting(E_ALL | E_STRICT);
+	#error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+	// Set default debugging values.
+	#unset($_SESSION['DEBUG']); // *********** Uncomment this line to force reset of $_SESSION['DEBUG'].
+	// Uncomment lines below to set a default debugging state to on.
+	if ( !isset($_SESSION['DEBUG']) ) $_SESSION['DEBUG'] = array();
+	// Set default debugging states to off.
+	if ( !isset($_SESSION['DEBUG']['codeSite']) ) $_SESSION['DEBUG']['codeSite'] = false;
+	if ( !isset($_SESSION['DEBUG']['footSite']) ) $_SESSION['DEBUG']['footSite'] = false;
+	if ( !isset($_SESSION['DEBUG']['headSite']) ) $_SESSION['DEBUG']['headSite'] = false;
+	if ( !isset($_SESSION['DEBUG']['lockSite']) ) $_SESSION['DEBUG']['lockSite'] = false;
+	if ( !isset($_SESSION['DEBUG']['memorySite']) ) $_SESSION['DEBUG']['memorySite'] = false;
+	if ( !isset($_SESSION['DEBUG']['querySite']) ) $_SESSION['DEBUG']['querySite'] = false;
+	
+	$_DEBUG = array();
+	$_DEBUG['div'] = array();												// SHOW HIDE div data.
+	$_DEBUG['div']['count'] = 0;										// SHOW HIDE count of divs created.
+	$_DEBUG['div']['end'] = array();								// SHOW HIDE div end divIds.
+	$_DEBUG['div']['stack'] = array();							// SHOW HIDE stack of div ends still to be shown.
+	$_DEBUG['file'] = array();											// 
+	$_DEBUG['func'] = array();											// 
+	$_DEBUG['page'] = array();											// 
+	$_DEBUG['track'] = array();											// 
+	$_DEBUG['track']['index'] = 0;									// 
+	$_DEBUG['track']['caller'] = false;							// Set true to track all t_Begin and t_End calls and store in $_DEBUG['track']['calls'].
+	$_DEBUG['track']['calls'] = array();						// All tracked t_Begin and t_End calls.
+
+	$_DEBUG['code'] = array();											// code data.
+	$_DEBUG['code']['count'] = -1;									// count of codes created.
+	$_DEBUG['code']['save'] = array();							// codes saved.
+	$_DEBUG['code']['stack'] = array();							// stack of codes still to be popped.
+
+	#$_DEBUG['track']['code'] = array();							// Tracks $DEBUG['page']['code'] so it is reset to caller page code when returning from called page.
+	$_DEBUG['track']['divs'] = array();							// 
+	$_DEBUG['track']['stack'] = array();						// 
+	$_DEBUG['track']['status'] = array();						// 
+	$_DEBUG['track']['status']['Type'] = array();		// 
+	$_DEBUG['track']['status']['State'] = array();	// 
+	$_DEBUG['track']['status']['File'] = array();		// 
+	$_DEBUG['track']['status']['Line'] = array();		// 
+$backtrace = debug_backtrace();
+#echo '$backtrace=<pre>'; print_r($backtrace); echo "</pre>\n";
+// Add php file.
+$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>$backtrace[1]['file'],'line'=>$backtrace[1]['line'],'set'=>false);
+array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+
+#array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false)); // Push the caller code.
+#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.$backtrace['1']['file'].':'.$backtrace['1']['line'].' in '.basename(__FILE__).':'.__LINE__.' as t_Begin() does not exist'."<br>\n";
+// Add application.
+$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>basename($backtrace[0]['file']),'line'=>$backtrace[0]['line'],'set'=>false);
+array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+
+#array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false)); // Push the caller code.
+#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].' in '.basename(__FILE__).':'.__LINE__.' as t_Begin() does not exist'."<br>\n";
+// Add application_debug.
+$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false);
+array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+
+#array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false)); // Push the caller code.
+#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.basename(__FILE__).':'.__LINE__.' in '.basename(__FILE__).':'.__LINE__.' as t_Begin() does not exist'."<br>\n";
+	// Check for URL debug switch.
+	if ( isset($_GET['debug']) ) {
+		$DEBUGFlagOK = false;
+		$DEBUGtype = strtolower(substr($_GET['debug'],0,4));
+		switch ( $DEBUGtype ) {
+			case 'code':
+				switch ( strtolower($_GET['debug']) ) {
+					case 'codeon': // Turn on code debugging the site.
+						$_SESSION['DEBUG']['codeSite'] = true;
+						$_DEBUG['page']['code'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['codeSite'] is on.";
+						$DEBUGFlagOK = true;
+					break;
+					case 'codeoff': // Turn on code debugging the site.
+						$_SESSION['DEBUG']['codeSite'] = false;
+						$_DEBUG['page']['code'] = false;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['codeSite'] is off.";
+						$DEBUGFlagOK = true;
+					break;
+					default:
+					break;
+				} // switch ( strtolower($_GET['debug']) )
+			break;
+			case 'foot':
+				switch ( strtolower($_GET['debug']) ) {
+					case 'footon': // Turn on footer debugging debugging the site.
+						$_SESSION['DEBUG']['footSite'] = true;
+						$_DEBUG['page']['foot'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['footSite'] is on.";
+						$DEBUGFlagOK = true;
+					break;
+					case 'footoff': // Turn on footer debugging debugging the site.
+						$_SESSION['DEBUG']['footSite'] = false;
+						$_DEBUG['page']['foot'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['footSite'] is off.";
+						$DEBUGFlagOK = true;
+					break;
+					default:
+					break;
+				} // switch ( strtolower($_GET['debug']) )
+			break;
+			case 'head':
+				switch ( strtolower($_GET['debug']) ) {
+					case 'headon': // Turn on header('Location') link debugging the site.
+						$_SESSION['DEBUG']['headSite'] = true;
+						$_DEBUG['page']['head'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['headSite'] is on.";
+						$DEBUGFlagOK = true;
+					break;
+					case 'headoff': // Turn on header('Location') link debugging the site.
+						$_SESSION['DEBUG']['headSite'] = false;
+						$_DEBUG['page']['head'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['headSite'] is off.";
+						$DEBUGFlagOK = true;
+					break;
+					default:
+					break;
+				} // switch ( strtolower($_GET['debug']) )
+			break;
+			case 'lock':
+				switch ( strtolower($_GET['debug']) ) {
+					case 'lockon': // Turn on track lock.
+						$_SESSION['DEBUG']['lockSite']= true;
+						$_DEBUG['page']['lock'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['lockSite'] is on.";
+						$DEBUGFlagOK = true;
+					break;
+					case 'lockoff': // Turn off track lock.
+						$_SESSION['DEBUG']['lockSite']= false;
+						$_DEBUG['page']['lock'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['lockSite'] is off.";
+						$DEBUGFlagOK = true;
+					break;
+					default:
+					break;
+				} // switch ( strtolower($_GET['debug']) )
+			break;
+			case 'memo':
+				switch ( strtolower($_GET['debug']) ) {
+					case 'memoryon': // Turn on memory debugging the site.
+						$_SESSION['DEBUG']['memorySite'] = true;
+						$_DEBUG['page']['memory'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['memorySite'] is on.";
+						$DEBUGFlagOK = true;
+					break;
+					case 'memoryoff': // Turn on memory debugging the site.
+						$_SESSION['DEBUG']['memorySite'] = false;
+						$_DEBUG['page']['memory'] = false;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['memorySite'] is off.";
+						$DEBUGFlagOK = true;
+					break;
+					default:
+					break;
+				} // switch ( strtolower($_GET['debug']) )
+			break;
+			case 'mysq':
+				switch ( strtolower($_GET['debug']) ) {
+					case 'QueryOn': // Turn on database debugging the site.
+						$_SESSION['DEBUG']['querySite'] = true;
+						$_DEBUG['page']['query'] = true;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['querySite'] is on.";
+						$DEBUGFlagOK = true;
+					break;
+					case 'QueryOff': // Turn on database debugging the site.
+						$_SESSION['DEBUG']['querySite'] = false;
+						$_DEBUG['page']['query'] = false;
+						$_SESSION['message']['info'] = "\$_SESSION['DEBUG']['querySite'] is off.";
+						$DEBUGFlagOK = true;
+					break;
+					default:
+					break;
+				} // switch ( strtolower($_GET['debug']) )
+			break;
+			default:
+			break;
+		} // switch ( strtolower(substr($_GET['debug']),0,4) )
+		if ( !$DEBUGFlagOK ) {
+			if ( !isset($_SESSION['message']) ) { $_SESSION['message'] = array(); if ( !isset($_SESSION['message']['error']) ) $_SESSION['message']['error'] = ''; }
+			$_SESSION['message']['error'] .= 'The debug flag (debug='.$_GET['debug'].') is incorrect!';
+			$_SESSION['message']['error'] .= '<br><div class="left normal smaller">
+			debug=codeOn  = Enables code debugging display.<br>
+			debug=codeOff = Disables code debugging display.<br>
+			debug=footOn  = Enables page footer debugging display.<br>
+			debug=footOff = Disables page footer debugging display.<br>
+			debug=lockOn  = Lock TRACKing between pages.<br>
+			debug=lockOff = Reset TRACKing between pages.<br>
+			debug=memoryOn   = Enables memory usage tracking.<br>
+			debug=memoryOff  = Disables memory usage tracking.<br>
+			debug=QueryOn   = Enables sql debugging display. ds() is true.<br>
+			debug=QueryOff  = Disables sql debugging display. ds() is false.<br>
+			</div>';
+		}
+	}
+	// Turn on page debugging if it is on for the session.
+	if ( $_SESSION['DEBUG']['codeSite'] ) {
+		$_DEBUG['page']['code'] = true;
+		$_DEBUG['track']['status']['Type'][] = 'codeSite';
+		$_DEBUG['track']['status']['State'][] = $_DEBUG['page']['code'];
+		$_DEBUG['track']['status']['File'][] = __FILE__;
+		$_DEBUG['track']['status']['Line'][] = __LINE__;
+	} else {
+		$_DEBUG['page']['code'] = false;
+	}
+	if ( $_SESSION['DEBUG']['footSite'] ) {
+		$_DEBUG['page']['foot'] = true;
+		$_DEBUG['track']['status']['Type'][] = 'footSite';
+		$_DEBUG['track']['status']['State'][] = $_DEBUG['page']['foot'];
+		$_DEBUG['track']['status']['File'][] = __FILE__;
+		$_DEBUG['track']['status']['Line'][] = __LINE__;
+	} else {
+		$_DEBUG['page']['foot'] = false;
+	}
+	if ( $_SESSION['DEBUG']['headSite'] ) {
+		$_DEBUG['page']['head'] = true;
+		$_DEBUG['track']['status']['Type'][] = 'headSite';
+		$_DEBUG['track']['status']['State'][] = $_DEBUG['page']['head'];
+		$_DEBUG['track']['status']['File'][] = __FILE__;
+		$_DEBUG['track']['status']['Line'][] = __LINE__;
+	} else {
+		$_DEBUG['page']['head'] = false;
+	}
+	if ( $_SESSION['DEBUG']['lockSite'] ) {
+		$_DEBUG['page']['lock'] = true;
+		$_DEBUG['track']['status']['Type'][] = 'lockSite';
+		$_DEBUG['track']['status']['State'][] = $_DEBUG['page']['lock'];
+		$_DEBUG['track']['status']['File'][] = __FILE__;
+		$_DEBUG['track']['status']['Line'][] = __LINE__;
+	} else {
+		$_DEBUG['page']['lock'] = false;
+	}
+	if ( $_SESSION['DEBUG']['memorySite'] ) {
+		$_DEBUG['page']['memory'] = true;
+		$_DEBUG['track']['status']['Type'][] = 'debugMemory';
+		$_DEBUG['track']['status']['State'][] = $_DEBUG['page']['memory'];
+		$_DEBUG['track']['status']['File'][] = __FILE__;
+		$_DEBUG['track']['status']['Line'][] = __LINE__;
+	} else {
+		$_DEBUG['page']['memory'] = false;
+	}
+	if ( $_SESSION['DEBUG']['querySite'] ) {
+		$_DEBUG['page']['query'] = true;
+		$_DEBUG['track']['status']['Type'][] = 'querySite';
+		$_DEBUG['track']['status']['State'][] = $_DEBUG['page']['query'];
+		$_DEBUG['track']['status']['File'][] = __FILE__;
+		$_DEBUG['track']['status']['Line'][] = __LINE__;
+	} else {
+		$_DEBUG['page']['query'] = false;
+	}
+	// DEBUG functions do not as yet exist.
+	// Setup @_DEBUG']['track'] for ititiating file, ,application.phpinc and application_debug.phpinc.
+	$backtrace = debug_backtrace();
+	#echo "\$backtrace()=<pre>"; print_r($backtrace); echo "</pre>\n";
+	if ( $GLOBALS['TRACK'] ) {
+		d_ad_begin($backtrace[1]['file'],$backtrace[1]['line']); // Begin TRACKing ititiating file call.
+		d_ad_begin($backtrace[0]['file'],$backtrace[0]['line']); // Begin TRACKing application.phpinc call.
+		d_ad_begin(__FILE__,__LINE__); // Begin TRACKing application_debug.phpinc call.
+	}
+	
+	// Begin TRACKing.
+	if (!isset($_SESSION['TRACK'])) $_SESSION['TRACK'] = array();   // Array to track DEBUG information.
+	if (!isset($_SESSION['TRACK']['data'])) $_SESSION['TRACK']['data'] = ''; // The TRACKing lines are stored here.
+	if (!isset($_SESSION['TRACK']['count'])) { $_SESSION['TRACK']['count'] = 0; } else { $_SESSION['TRACK']['count'] += 1; } // The TRACKing count. When javascript ajax is used this count may go past 0.
+	if (!isset($_SESSION['TRACK']['indent'])) $_SESSION['TRACK']['indent'] = 0; // How far to indent the line because of <ol>/<li> count.
+	if (!isset($_SESSION['TRACK']['number'])) $_SESSION['TRACK']['number'] = 0; // Unique div id number.
+	if (!isset($_SESSION['TRACK']['ol'])) $_SESSION['TRACK']['ol'] = 0; // The number of <ol> added minus the number of </ol>.
+	if ( $GLOBALS['TRACK'] ) {
+		// TRACK the original calling file.
+		/** / // Uncomment to pervor $TRACK debugging.
+		$_SESSION['TRACK']['data'] .= 'TRACKing begun in '.basename(__FILE__).' line '.__LINE__.'.<br>';
+		/**/
+		$backtrace = debug_backtrace(); // Get caller information.
+		if (!isset($_SESSION['TRACK']['firstFile']) || $_SESSION['TRACK']['firstFile'] == '') $_SESSION['TRACK']['firstFile'] = $backtrace['1']['file'];
+		// Start original file TRACKing.
+		$_SESSION['TRACK']['data'] .= t_Indent()."<b>".basename($_SESSION['TRACK']['firstFile']).'</b> <span class="d_s_fp">('.$_SESSION['TRACK']['firstFile'].")</span>\n";
+		// Start calling file TRACKing.
+		// Start <ol>.
+		$_SESSION['TRACK']['ol'] += 1; $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent().'<ol class="d_s_ot">'."\n";
+		// Start file <li>.
+		$_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent()."<li>";
+		// application.phpinc
+		// Display filename, line, show/hide divs, filepath, and included by.
+		$_SESSION['TRACK']['number']++;
+		$_SESSION['TRACK']['data'] .= '<b>'.basename($backtrace['0']['file']).'</b> :'.$backtrace['0']['line'].' <div id="TRACK_HIDE_'.$_SESSION['TRACK']['number'].'" class="d_s_il d_s_l"><a href="javascript: '."divShowInline('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divShow('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('TRACK_HIDE_".$_SESSION['TRACK']['number']."'".');" class="d_s_vt">Expand +</a></div><div id="TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l"><a href="javascript: '."divShowInline('TRACK_HIDE_".$_SESSION['TRACK']['number']."'); divHide('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'".');" class="d_s_w">Collapse -</a></div> <span class="d_s_fp">('.$backtrace['0']['file'].')</span> <span class="d_s_fi">(included by '.$backtrace['1']['file'].":".$backtrace['1']['line'].")</span>\n";
+		// Include show div.
+		$_SESSION['TRACK']['data'] .= '<div id="BEGIN_TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l">'."\n";
+		// Start <ol>.
+		$_SESSION['TRACK']['ol'] += 1; $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent().'<ol class="d_s_op">'."\n";
+		// Start this file TRACKing.
+		// Start file <li>.
+		$_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent()."<li>";
+		// TRACK file begin.
+		// application_debug.phpinc
+		// Display filename, line, show/hide divs, filepath, and included by.
+		$_SESSION['TRACK']['number']++;
+		$_SESSION['TRACK']['data'] .= '<b>'.basename(__FILE__).'</b> :'.__LINE__.' <div id="TRACK_HIDE_'.$_SESSION['TRACK']['number'].'" class="d_s_il d_s_l"><a href="javascript: '."divShowInline('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divShow('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('TRACK_HIDE_".$_SESSION['TRACK']['number']."'".');" class="d_s_vt">Expand +</a></div><div id="TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l"><a href="javascript: '."divShowInline('TRACK_HIDE_".$_SESSION['TRACK']['number']."'); divHide('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'".');" class="d_s_w">Collapse -</a></div> <span class="d_s_fp">('.__FILE__.')</span> <span class="d_s_fi">(included by '.$backtrace['0']['file'].":".$backtrace['0']['line'].")</span>\n";
+		// Include show div.
+		$_SESSION['TRACK']['data'] .= '<div id="BEGIN_TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l">'."\n";
+		// Start <ol>.
+		$_SESSION['TRACK']['ol'] += 1; $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent().'<ol class="d_s_op">'."\n";
+		// End file <ol>.
+		$_SESSION['TRACK']['ol'] -= 1; $_SESSION['TRACK']['data'] .= t_Indent()."</ol>\n";
+		// TRACK file end.
+		$_SESSION['TRACK']['data'] .= t_Indent()."End ".basename(__FILE__).":".__LINE__."\n"; $_SESSION['TRACK']['indent'] -= 1;
+		// End file <li>.
+		$_SESSION['TRACK']['indent'] -= 1; $_SESSION['TRACK']['data'] .= t_Indent()."</li>\n";
+		// End this file TRACKing.  Use this code when the function t_End() is unavailable.
+	}
+} else {
+  $debuggingAvailable = false;
+	$GLOBALS['TRACK'] = false; // Stop tracking.
+	/** / // Uncomment to show $debuggingAvailable and $GLOBALS['TRACK'] status.
+	echo '<div class="left attention">$GLOBALS[\'TRACK\'] is <span class="error">false</span> in '.basename(__FILE__).':'.__LINE__.".<br>\n";
+	echo '$debuggingAvailable is <span class="error">false</span> in '.basename(__FILE__).':'.__LINE__.".</div><br>\n";
+	/**/
+	unset($_SESSION['DEBUG']);
+	// Display no errors if not debuggingAvailable.
+	#ini_set('display_errors','0');
+	#error_reporting(0);
+	ini_set('display_errors','0');
+	error_reporting(0);
+}
+
+/** / // This is copied here in case you create other files that are included before application_debug.phpinc. You can copy this code to track the file.
+// Code to BEGIN tracking a file when function t_Begin() is not available.
+if ( $GLOBALS['TRACK'] && $GLOBALS['debuggingAvailable'] ) { // Start this file TRACKing. Use this code when the function t_Begin is unavailable.
+  // Start file <li>.
+  $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent()."<li>";
+  // TRACK file begin.
+  $_SESSION['TRACK']['data'] .= "<b>".basename(__FILE__)."</b>:".__LINE__.'<span class="d_s_fp"> ('.__FILE__.')</span> <span class="d_s_fi">(included by '.$backtrace['0']['file'].":".$backtrace['0']['line'].")</span>\n";
+  // Start <ol>.
+  $_SESSION['TRACK']['ol'] += 1; $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent().'<ol class="d_s_op">'."\n";
+}
+
+// Code to END tracking a file when function t_End() is not available.
+if ( $GLOBALS['TRACK'] && $GLOBALS['debuggingAvailable'] ) { // End this file TRACKing.  Use this code when the function t_End() is unavailable.
+  // End file <ol>.
+  $_SESSION['TRACK']['ol'] -= 1; $_SESSION['TRACK']['data'] .= t_Indent()."</ol>\n";
+    // TRACK file end.
+  $_SESSION['TRACK']['data'] .= t_Indent()."End ".basename(__FILE__).":".__LINE__."\n"; $_SESSION['TRACK']['indent'] -= 1;
+  // End file <li>.
+  $_SESSION['TRACK']['indent'] -= 1; $_SESSION['TRACK']['data'] .= t_Indent()."</li>\n";
+}
+/**/
+
+// DEBUG functions do not as yet exist.
+// Close @_DEBUG']['track'] application_debug.phpinc.
+
+$pop = count($GLOBALS['_DEBUG']['code']['stack']);
+$pageCodeIndex = array_shift($GLOBALS['_DEBUG']['code']['stack']);
+$GLOBALS['_DEBUG']['page']['code'] = $GLOBALS['_DEBUG']['code']['save'][$pageCodeIndex]['set'];
+
+#$pop = count($GLOBALS['_DEBUG']['track']['code']);
+#$shift = array_shift($GLOBALS['_DEBUG']['track']['code']); // Pop the current page code.
+#$GLOBALS['_DEBUG']['page']['code'] = $GLOBALS['_DEBUG']['track']['code'][0]['set'];
+#pop##pushpop#echo str_repeat('&nbsp; &nbsp;',$pop).'shift file='.$shift['file'].' line='.$shift['line'].' set=';
+#pop##pushpop#if ( $shift['set'] ) { echo '<span class="d_s_vt">true</span>'; } else { echo '<span class="d_s_vf">false</span>'; }
+#pop##pushpop#echo ':'.__LINE__."<br>\n";
+#pop##pushpop#echo str_repeat('&nbsp; &nbsp;',$pop).'pop &nbsp; cp #'.$pop.' '.basename(__FILE__).':'.__LINE__.' in '.basename(__FILE__).':'.__LINE__.' as t_End() does not exist'."<br>\n";
+#$GLOBALS['_DEBUG']['page']['code'] = $GLOBALS['_DEBUG']['track']['code'][0]['set']; // Set to the caller page code
+d_ad_end(__FILE__,__LINE__); // End TRACKing application_debug.phpinc call.
+?>

@@ -1,0 +1,43 @@
+<?
+// admin/user/userGroupProcess.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+formValue('userId');
+formValue('inGroup');
+formValue('notGroup');
+#d_V('inGroup');
+#d_V('notGroup');
+if ($f['inGroup']) {
+  foreach ($f['inGroup'] as $index => $f['userpermissionId'])  {
+    #d_Var('$userpermissionId',$f['userpermissionId']);
+    if ( $f['userId'] != 1 || $f['userpermissionId'] != 1 ) {
+      $query = "
+        DELETE
+          FROM user_userpermission
+         WHERE userpermissionId = ".$f['userpermissionId']."
+           AND userId = ".$f['userId']."
+      ";
+      $user_userpermissionDelete = query_do($query);
+      #d_Var('$query',$query,'q');
+    }
+  }
+}
+if ($f['notGroup']) {
+  foreach ($f['notGroup'] as $index => $f['userpermissionId'])  {
+  $query = "
+    INSERT
+      INTO user_userpermission (
+      userpermissionId,
+      userId
+    ) VALUES (
+      ".$f['userpermissionId'].",
+      ".$f['userId']."
+    )
+  ";
+  $user_userpermissionInsert = query_do($query);
+}
+
+}
+t_End(); // End TRACKing included file.
+?>

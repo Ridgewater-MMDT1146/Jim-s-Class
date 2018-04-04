@@ -1,0 +1,57 @@
+<?
+// common/postdata/pageReturn.phpinc
+// Contains the pageReturn function.
+#t_Begin(); // Begin TRACKing included file.
+// pageReturn($queryAdd)
+// Return to the page in $_SESSION['pageFrom']. If there is no $_SESSION['pageFrom'] then return to $HTTP.'/'.
+// $queryAdd = UNUSED?
+function pageReturn($queryAdd='') {
+  t_FuncBegin();
+  $backtrace = debug_backtrace(); // Get caller information.
+  if ( $queryAdd && substr($queryAdd,0,1) != '?' ) $queryAdd = '?'.$queryAdd;
+  if ( $_SESSION['pageFrom']['index'] ) {
+    // Get the return page and query.
+    $fromPage = $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['page'];
+    #$fromQuery = $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['query'];
+    #echo "\$fromPage == ".$fromPage,' '.basename(__FILE__).':'.__LINE__."<br>\n";
+    #echo "\$fromQuery == ".$fromQuery,' '.basename(__FILE__).':'.__LINE__."<br>\n";
+    #echo "\$queryAdd == ".$queryAdd," ",basename(__FILE__),":",__LINE__,"<br>\n";
+    $_SESSION['pageFrom']['triggered'] =
+    '<br>'.
+    "pageReturn($queryAdd) Called by ".$backtrace['0']['file'].":".$backtrace['0']['line'].'<br>'.
+    "\$_SESSION['pageFrom'][".$_SESSION['pageFrom']['index']."]['page'] == ".$_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['page'].'<br>'.
+    "\$_SESSION['pageFrom'][".$_SESSION['pageFrom']['index']."]['query'] == ".$_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['query'].'<br>'.
+    "\$_SESSION['pageFrom'][".$_SESSION['pageFrom']['index']."]['file'] == ".$_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['file'].'<br>'.
+    "\$_SESSION['pageFrom'][".$_SESSION['pageFrom']['index']."]['line'] == ".$_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['line'].'<br>'.
+    '$queryAdd == '."'".$queryAdd."'".'<br>'.
+    "headerLocation(".$fromPage.",".$queryAdd.");".'<br>'.
+    '<span class="d_s_an">$backtrace == </span><span class="d_s_ad">'.print_r($backtrace,true).'</span>'.
+    "";
+    // Clear this 'from' info.
+    unset($_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]);
+    $_SESSION['pageFrom']['index']--;
+  } else {
+    $fromPage = $HTTP.'/';
+    #$fromQuery = '';
+  }
+  if ( false ) {
+    pageHeader("pageReturn");
+    d_Line('','l');
+    d_Line("DEBUG pageReturn($queryAdd)");
+    d_Line('','l');
+    d_Line("Called by ".$backtrace['0']['file'],'l');
+    d_Line('','l');
+    d_Var("\$_SESSION['pageFrom'][".$_SESSION['pageFrom']['index']."]",$_SESSION['pageFrom'],'l');
+    d_Var('$queryAdd',$queryAdd,'l');
+    d_Line("headerLocation(".$fromPage.",".$queryAdd.");",'f');
+    d_Var('$backtrace',$backtrace,'l');
+    pageFooter();
+  } else {
+    #echo "headerLocation($fromPage.",".$queryAdd.$fromQuery);","<br>\n";
+    #require('common/pageFooter.phhpinc');
+    headerLocation($fromPage,$queryAdd);
+  }
+  t_FuncEnd();
+}
+#t_End(); // End TRACKing included file.
+?>

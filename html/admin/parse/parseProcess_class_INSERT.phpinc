@@ -1,0 +1,36 @@
+<?
+// parseProcess_class_INSERT.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing parseProcess_class_INSERT.phpinc.
+
+$query = "
+	INSERT INTO `class` (
+			YRTR
+		, classQId
+		, courseId
+		, classSection
+		, classEnr
+		, classMax
+		, classStartDate
+		, classEndDate
+	) VALUES (
+			'".query_safe($thisClass['YRTR'])."'
+		, '".query_safe($thisClass['classQId'])."'
+		, ".$thisClass['courseId']."
+		, '".query_safe($thisClass['classSection'])."'
+		, ".$thisClass['classEnr']."
+		, ".$thisClass['classMax']."
+		, '".query_safe(valid_date($thisClass['classStartDate']))."'
+		, '".query_safe(valid_date($thisClass['classEndDate']))."'
+	)
+";
+d_Var('classINSERT',$query,'q');
+$classINSERT = query_do($query);
+d_Var('$classINSERT',$classINSERT,'l');
+d_Var("\$GLOBALS['_QUERY']",$GLOBALS['_QUERY']);
+$thisClass['classId'] = $GLOBALS['_QUERY']['insertId'];
+d_Var("\$thisClass['classId']",$thisClass['classId']);
+
+t_End(); // End TRACKing parseProcess_class_INSERT.phpinc.
+?>

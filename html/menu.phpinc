@@ -1,0 +1,27 @@
+<?
+// menu.phpinc
+// Display the top menu.
+t_Begin(); // Begin TRACKing included file.
+$menuLoaded = true;
+
+// Home
+menuItem('Home','/','Home page');
+
+// User
+// Make sure $_SESSION['user']['Fullname'] has a value.
+if ( !isset($_SESSION['user']['Fullname']) ) $_SESSION['user']['Fullname'] = 'UNKNOWN';
+menuItem('User','/User/','User settings for '.$_SESSION['user']['Fullname']);
+
+// Admin
+if ( isset($_SESSION['user']['userId']) && in_array('Admin',$_SESSION['user']['permission']) ) { menuItem('Admin','/admin/','Administration tasks'); }
+
+// Login/Logout
+if ( isset($_SESSION['user']['userId']) && $_SESSION['user']['userId'] ) {
+	menuItem('Logout','/?Logout','Logout of '.$_SESSION['APP']['longname'],'button');
+} else {
+	menuItem('Login','/?Login','Login to '.$_SESSION['APP']['longname'],'button');
+}
+
+t_End(); // End TRACKing included file.
+
+?>

@@ -1,0 +1,91 @@
+<?
+// classFormPreset.phpinc
+// Get original data and preset the class form.
+t_Begin(); // Begin TRACKing included file.
+// Ensure primary key is set.
+if ( !isset($f['classId']) ) { formValue('classId'); if ( !$f['classId'] ) $f['classId'] = 0; }
+// Get original class data.
+if ( $f['classId'] ) {
+  // $f['classId'] is set. Load original data from database.
+  $query = "
+    SELECT * FROM `class`
+     WHERE classId = ".$f['classId']."
+  ";
+  $classResult = query_do($query,'scheduler');
+  $classCount = $GLOBALS['_QUERY']['count'];
+  if ( $classCount == 1 ) {
+    // Load original data from record.
+    query_seek($classResult, 0);
+    $classInfo = mysql_fetch_assoc($classResult);
+    $o['YRTR'] = $classInfo['YRTR'];
+    $o['classQId'] = $classInfo['classQId'];
+    $o['courseId'] = $classInfo['courseId'];
+    $o['classSection'] = $classInfo['classSection'];
+    $o['classEnr'] = $classInfo['classEnr'];
+    $o['classMax'] = $classInfo['classMax'];
+    $o['classStartDate'] = $classInfo['classStartDate'];
+    $o['classEndDate'] = $classInfo['classEndDate'];
+    $o['courseinsttypeId'] = $classInfo['courseinsttypeId'];
+  } else {
+    // The record count was not 1. This is an error.
+    programmingError('Record count ('.$classCount.') for classId='.$f['classId'].' was not 1.');
+  }
+} else {
+  // $f['classId'] is 0. This is an add form. Set form_class data to default values.
+  $f['classId'] = 0;
+  if ( !isset($o['YRTR']) ) $o['YRTR'] = '';
+  if ( !isset($o['classQId']) ) $o['classQId'] = '';
+  $f['courseId'] = 0;
+  if ( !isset($o['classSection']) ) $o['classSection'] = NULL;
+  if ( !isset($o['classEnr']) ) $o['classEnr'] = NULL;
+  if ( !isset($o['classMax']) ) $o['classMax'] = NULL;
+  if ( !isset($o['classStartDate']) ) $o['classStartDate'] = NULL;
+  if ( !isset($o['classEndDate']) ) $o['classEndDate'] = NULL;
+  if ( !isset($o['courseinsttypeId']) ) $o['courseinsttypeId'] = NULL;
+}
+// Preset class form data.
+if ( $f['form'] != 'form_class' ) {
+  // form_class not called by itself. Preload data for form.
+  if ( $f['classId'] ) {
+    // $f['classId'] is set. This is an edit form. Load form_class data from database.
+    /** / // Remove this section if original data is obtained above.
+    $query = "
+      SELECT * FROM `class`
+       WHERE classId = ".$f['classId']."
+    ";
+    $classResult = query_do($query,'scheduler');
+    $classCount = $GLOBALS['_QUERY']['count'];
+    /**/ // Remove this section if original data is obtained above.
+    if ( $classCount == 1 ) {
+      // Load original data from record.
+      query_seek($classResult, 0);
+      $classInfo = mysql_fetch_assoc($classResult);
+      $f['YRTR'] = $classInfo['YRTR'];
+      $f['classQId'] = $classInfo['classQId'];
+      $f['courseId'] = $classInfo['courseId'];
+      $f['classSection'] = $classInfo['classSection'];
+      $f['classEnr'] = $classInfo['classEnr'];
+      $f['classMax'] = $classInfo['classMax'];
+      $f['classStartDate'] = $classInfo['classStartDate'];
+      $f['classEndDate'] = $classInfo['classEndDate'];
+      $f['courseinsttypeId'] = $classInfo['courseinsttypeId'];
+    } else {
+      // The record count was not 1. This is an error.
+      programmingError('Record count ('.$classCount.') for classId='.$f['classId'].' was not 1.');
+  }
+  } else {
+    // $f['classId'] is 0. This is an add form. Set form_class data to default values.
+    $f['classId'] = 0;
+    if ( !isset($f['YRTR']) ) $f['YRTR'] = '';
+    if ( !isset($f['classQId']) ) $f['classQId'] = '';
+    $f['courseId'] = 0;
+    if ( !isset($f['classSection']) ) $f['classSection'] = NULL;
+    if ( !isset($f['classEnr']) ) $f['classEnr'] = NULL;
+    if ( !isset($f['classMax']) ) $f['classMax'] = NULL;
+    if ( !isset($f['classStartDate']) ) $f['classStartDate'] = NULL;
+    if ( !isset($f['classEndDate']) ) $f['classEndDate'] = NULL;
+    if ( !isset($f['courseinsttypeId']) ) $f['courseinsttypeId'] = NULL;
+  }
+}
+t_End(); // End TRACKing included file.
+?>

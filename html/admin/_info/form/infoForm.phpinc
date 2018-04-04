@@ -1,0 +1,143 @@
+<?
+// admin/_info/form/infoForm.phpinc
+// Display the Form Definition.
+
+t_Begin(); // Begin TRACKing included file.
+// Populate fieldResult array.
+include('admin/_info/form/infoForm_Query.phpinc');
+switch ($f['subtask']) {
+  case '':
+  case 'Collapse code':
+  case 'Collapse settings':
+  case 'Expand settings':
+  case 'Expand code':
+  case 'Update form':
+  break;
+  case '_Save form':
+  include ('admin/_info/form/infoForm_Save.phpinc');
+  break;
+  default:
+    programmingError("The task [".$f['task']."], subtask [".$f['subtask']."], form [".$f['form']."] is not programmed.");    
+  break;
+}
+d_Var('$fieldArray',$fieldArray,'k');
+// BEGIN form definition.
+?>
+<form name="form_definition" action="<?=php_self()?>" class="inline_info" method="post">
+<input type="hidden" name="form" value="form_definition">
+<input type="hidden" name="table" value="<?=$f['table']?>">
+<input type="hidden" name="task" value="<?=$f['task']?>">
+<table><tr><td><fieldset><legend>Form Definition <input type="submit" name="subtask" value="Expand settings" onClick="info_gotoName(this,'form_selection_settings_name');"><input type="submit" name="subtask" value="Collapse settings" onClick="info_gotoName(this,'form_selection_settings_name');"></legend>
+<?
+include('admin/_info/form/infoForm_Form_Selection.phpinc');
+d_Var('$fieldArray',$fieldArray,'k');
+if ( $f['formType'] != 'form' ) {
+  $hideFormBegin = "\n".'<div class="hidden"> <!-- Form hidden -->';
+  $hideFormEnd = "\n".'</div> <!-- Form hidden -->';
+  $hideListBegin = "\n".'<!-- List shown -->'."\n";
+  $hideListEnd = "\n".'<!-- List shown -->'."\n";
+} else {
+  $hideFormBegin = "\n".'<!-- Form shown -->'."\n";
+  $hideFormEnd = "\n".'<!-- Form shown -->'."\n";
+  $hideListBegin = "\n".'<div class="hidden"> <!-- List hidden -->';
+  $hideListEnd = "\n".'</div> <!-- List hidden -->';
+}
+
+/**/  
+// Display the file and query settings form.
+include('admin/_info/form/infoForm_Form_FileAndQuerySettings.phpinc');
+d_Var('$fieldArray',$fieldArray,'k');
+  
+
+// Add/Edit Form sections.
+/**/
+echo $hideFormBegin; // Hide if not form.
+  // Display the Add/Edit form settings form.
+  include('admin/_info/form/infoForm_Form_AddEditForm_Settings.phpinc');
+  d_Var('$fieldArray',$fieldArray,'k');
+echo $hideFormEnd; // Hide if not form.
+/**/
+echo $hideFormBegin; // Hide if not form.
+  // Display the field settings form.
+  include('admin/_info/form/infoForm_Form_AddEditForm_FieldSettings.phpinc');
+  d_Var('$fieldArray',$fieldArray,'k');
+echo $hideFormEnd; // Hide if not form.
+/**/
+echo $hideFormBegin; // Hide if not form.
+  // Display the conditional settings form.
+  include('admin/_info/form/infoForm_Form_AddEditForm_ConditionalSettings.phpinc');
+  d_Var('$fieldArray',$fieldArray,'k');
+echo $hideFormEnd; // Hide if not form.
+
+// List Form sections.
+/**/
+echo $hideListBegin; // Hide if not list.
+  // Display the list settings form.
+  include('admin/_info/form/infoForm_Form_ListFormSettings.phpinc');
+  d_Var('$fieldArray',$fieldArray,'k');
+echo $hideListEnd; // Hide if not list.
+/**/
+?>
+</fieldset></td></tr></table> <!-- END Form Definition -->
+<!--<table><tr><td><fieldset><legend>Form Preview</legend>-->
+<?
+
+// Add/Edit Form sections.
+/**/
+echo $hideFormBegin; // Hide if not form.
+  // Display the add/edit form preview.
+  include('admin/_info/form/infoForm_Preview_AddEditForm.phpinc');
+echo $hideFormEnd; // Hide if not form.
+
+// List Form sections.
+/**/
+echo $hideListBegin; // Hide if not list.
+  // Display the list form preview.
+  include('admin/_info/form/infoForm_Preview_ListForm.phpinc');
+echo $hideListEnd; // Hide if not list.
+
+?>
+<!--</fieldset></td></tr></table>--> <!-- END Form Preview -->
+<table><tr><td><fieldset><legend>Code Output <input type="submit" name="subtask" value="Expand code" onClick="info_gotoName(this,'form_code_name');"><input type="submit" name="subtask" value="Collapse code" onClick="info_gotoName(this,'form_code_name');"></legend>
+<?
+
+// Add/Edit Form sections.
+/**/
+echo $hideFormBegin; // Hide if not form.
+  // Display the add/edit form code.
+  include('admin/_info/form/infoForm_Code_AddEditForm.phpinc');
+echo $hideFormEnd; // Hide if not form.
+/**/
+echo $hideFormBegin; // Hide if not form.
+  // Display the add/edit formPreset code.
+  include('admin/_info/form/infoForm_Code_AddEditFormPreset.phpinc');
+echo $hideFormEnd; // Hide if not form.
+/**/
+echo $hideFormBegin; // Hide if not form.
+  // Display the add/edit formVerify code.
+  include('admin/_info/form/infoForm_Code_AddEditFormVerify.phpinc');
+echo $hideFormEnd; // Hide if not form.
+/**/
+echo $hideFormBegin; // Hide if not form.
+  // Display the add/edit formProcess code.
+  include('admin/_info/form/infoForm_Code_AddEditFormProcess.phpinc');
+echo $hideFormEnd; // Hide if not form.
+
+// List Form sections.
+/**/
+echo $hideListBegin; // Hide if not list.
+  // Display the control code.
+  include('admin/_info/form/infoForm_Code_ControlCode.phpinc');
+echo $hideListEnd; // Hide if not list.
+/**/
+echo $hideListBegin; // Hide if not list.
+  // Display the list form code.
+  include('admin/_info/form/infoForm_Code_ListCode.phpinc');
+echo $hideListEnd; // Hide if not list.
+
+?>
+</fieldset></td></tr></table> <!-- END Code Output -->
+</form>
+<?
+t_End(); // End TRACKing included file.
+?>

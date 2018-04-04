@@ -1,0 +1,526 @@
+// site.js
+
+// _Initialize_Tooltip() ................. Attach document.onmousemove function to ttPosition().
+// formSubmit(e, formTask, formAction) .. Disable any "button" or "submit" that uses this function. This is to help stop multiple form submissions.
+// getElementTopLeft(e) .................. Get top and left for an element.
+// getForm(e) ............................ Get form from element.
+// Help(evt) ............................. Control help button onClick, onMouseDown, onMouseOut, and onMouseOver.
+// HelpDisplay(evt, helpName) ............ Display help.
+// mouseXY(evt) .......................... Set mX and mY to the mouse position.
+// SoundOnOffShowStatus() ................ Show sound on/off status.
+// SoundOnOffToggle() .................... Turn sound on or off.
+// SoundPlay(soundfile) .................. Play the soundfile.
+
+var form; // Form object.
+
+// Avoid `console` errors in browsers that lack a console.
+(function() {
+	var noop = function noop() {};
+	var methods = [ 'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error', 'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log', 'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd', 'timeStamp', 'trace', 'warn' ];
+	var console = ( window.console = window.console || {} );
+	for ( var i=0; i<methods.length; i++ ) {
+			var method = methods[i];
+			// Only stub undefined methods.
+			if ( !console[method] ) {
+					console[method] = noop;
+			}
+	}
+}());
+
+// BEGIN Custom tooltip settings.
+var DEBUG_hPosition = false;
+var DEBUG_vPosition = false;
+var ttDiv = 'tooltipDiv'; // The id of the div that will contain the tooltip.
+var ttOffsetX = 15; 		  // Customize x offset of the tooltip.
+var ttOffsetY = -25; 		  // Customize y offset of the tooltip.
+var ttMoveOffsetY = 0;	  // Move menu y offset.	
+var ie = document.all;
+var ns6 = document.getElementById && !document.all;
+var ttEnable=false; // Hide the tooltip.
+var ttDebugMessage = '';
+var ttinnerHTML = '';
+var ttObj;
+var ttClasses = [];
+var mvOffsetX = 5;         // X offset from mouse position.
+var mvOffsetY = 20;        // Y offset from mouse position.
+var mX; // Mouse X position.
+var mY; // Mouse Y position.
+var Initialize_Tooltip_Count = 0;
+
+// _Initialize_Tooltip()
+// Attach document.onmousemove function to ttPosition().
+// Waits for div with id=tooltipDiv is in the DOM and the sets document.onmousemove to the ttPosition function.
+function _Initialize_Tooltip() {
+	Initialize_Tooltip_Count++;
+	console.warn('_Initialize_Tooltip['+Initialize_Tooltip_Count+']');
+	if ( document.getElementById(ttDiv) ) {
+		ttObj=document.getElementById(ttDiv);
+		document.onmousemove=ttPosition;
+	} else {
+		if ( Initialize_Tooltip_Count < 10 ) { setTimeout(_Initialize_Tooltip,100); }
+	}
+} // END _Initialize_Tooltip.
+// END Custom tooltip settings.
+
+// formSubmit(e, formTask, formAction)
+// Disable any "button" or "submit" that uses this function. This is to help stop multiple form submissions.
+// Because the button is disabled the value is not sent when the form is submitted. This function fixes that.
+// A hidden form element is created with the name and value of the button.
+// Additionally, you can set a new value or even create many name/value pairs. See examples below.
+//					e = the element calling formSubmit.
+//	 formTask = Create task or other hidden form elements.
+//							undefined = Create a hidden element with the name and value of the e element.
+//								 string = Create a hidden element with the name 'task' and the value of formTask.
+//									 array = Create hidden elements for each associative array pair. The index is the name and the value is the value.
+//													 If e is of type button or submit and the array does not contain the button name a hidden element with the name and value of the e element is also created.
+// formAction = The new form action. If formAction is undefined the form action is unchanged.
+//
+// 1) i.e. Call w/o formTask.
+// formSubmit(this) or formSubmit(this,'','/new_form_action/')
+// <input type="submit" name="task" value="ClickMe" onClick="formSubmit(this);">
+// Will disable submit button and create a hidden element with the name "task" and the value "ClickMe" then submit the form.
+//
+// 2) i.e. Call with formTask value.
+// formSubmit(this,'County select') or formSubmit(this,'County select','/new_form_action/')
+// <input type="radio" name="county" value="McLeod" onChange="formSubmit(this,'County select');">McLeod
+// Will create a hidden element with the name "task" and the value "County select" then submit the form.
+//
+// 3) i.e. Call with formTask as an array of name/value pairs.
+// formSubmit(this,{'name1':'value1','name2':'value2'}) or formSubmit(this,{'name1':'value1','name2':'value2'},'/new_form_action/')
+// <input type="submit" name="task" value="ClickMe" onClick="formSubmit(this,{'name1':'value1','name2':'value2'});">
+// Will disable submit button and create 3 hidden elements with the names "name1", "name2", and "task" with the values "value1", "value2", and "ClickMe" then submit the form.
+function formSubmit(e, formTask, formAction, DEBUG_formSubmit) {
+	//DEBUG_formSubmit = true; // ***** Uncomment to turn on DEBUGing. *****
+	if ( typeof DEBUG_formSubmit === 'undefined' ) { DEBUG_formSubmit = false; }
+	console.warn('formSubmit[e.id='+e.id+', formTask='+formTask+', formAction='+formAction+', DEBUG_formSubmit='+DEBUG_formSubmit+']');
+	var defaultName = 'task'; // Set default form element name.
+	ttHide(); // Hide any tooltip.
+  UpdateAutoOff(); // Turn off the updateAuto timer.
+	//if ( document.getElementById('pageContent') ) document.getElementById('pageContent').style.visibility = 'hidden'; // Hide the map.
+	var el; // Used to hold elements.
+	var i; // Used as index loops.
+	var index; // Used to loop thru objects.
+	var tags; // Used to hold tag elements.
+	// Hide all divs.
+	tags = document.getElementsByTagName('div');
+	for ( i=0; i<tags.length; i++ ) {
+		tags[i].style.display = 'none';
+	}
+	// Hide all imgs.
+	tags = document.getElementsByTagName('img');
+	for ( i=0; i<tags.length; i++ ) {
+		tags[i].style.display = 'none';
+	}
+	// Show page loading.
+	if ( document.getElementById('pageContentLoading') ) { document.getElementById('pageContentLoading').style.display = 'block'; }
+	if ( e ) { // Is e defined?
+		if ( DEBUG_formSubmit ) { // Is DEBUGing on?
+			if ( typeof(formTask) === 'object' && formTask !== null ) {
+				formTaskText = '{';
+				prefix = '';
+				for ( index in formTask ) { if(formTask.hasOwnProperty(index)){ // Loop thru formTask object skipping inherited prototype elements.
+					formTaskText += prefix+'\''+index+'\':'+formTask[index];
+					prefix = ',';
+				}} // Loop thru formTask object skipping inherited prototype elements.
+				formTaskText += '}';
+			} else {
+				formTaskText = formTask;
+			}
+			console.warn('formSubmit[e='+e.id+', formTask='+formTask+', formAction='+formAction+', DEBUG_formSubmit='+DEBUG_formSubmit+']');
+			console.log('e.id='+e.id+' e.name='+e.name+' e.type='+e.type);
+			console.log('typeof(formTask)='+typeof(formTask));
+			console.log('typeof(formAction)='+typeof(formAction));
+		} // Is DEBUGing on?
+		if ( e.type === 'button' || e.type === 'submit' ) { e.className = "wait"; e.disabled = true; } // If e is a button, change the class of the button to wait and disable it.
+		form = getForm(e); // Get form.
+		if ( DEBUG_formSubmit ) { console.info('form.name='+form.name); }
+		if ( typeof formAction !== 'undefined' ) { // Was formAction set?
+			form.action = formAction; // If formAction then change the form action.
+			if ( DEBUG_formSubmit ) { console.info('form.action changed to '+form.action); }
+		} // Was formAction set?
+		if ( ( typeof formTask  === 'object' ) && formTask !== null ) { // Is formTask an object?
+			// formTask is an object so create elements for each array item.
+			if ( DEBUG_formSubmit ) { // Is DEBUGing on?
+				console.info('formTask is an object so create elements for each array item.\nformTask=');
+				for( index in formTask ) { if(formTask.hasOwnProperty(index)){ // Loop thru formTask object skipping inherited prototype elements.
+					console.log(index+' = '+formTask[index]);
+				}} // Loop thru formTask object skipping inherited prototype elements.
+			} // Is DEBUGing on?
+			if ( e.type === 'button' || e.type === 'submit' || e.type === 'click' ) { eFound = false; } else { eFound = true; } // Setup for addition of hidden element if e is a button, submit, or click.
+			if ( DEBUG_formSubmit ) { console.log('eFound='+eFound); }
+			for( index in formTask ) { if(formTask.hasOwnProperty(index)){ // Loop thru formTask object skipping inherited prototype elements.
+				if ( DEBUG_formSubmit ) { console.log('formTask index='+index); }
+				el = document.createElement("input"); // Create the input element.
+				el.type = "hidden"; // Set element type to hidden.
+				el.name = index; // Set element name to formTask index.
+				if ( el.name === e.name ) { eFound = true; }
+				el.value = formTask[index]; // Set element value to formTask[index] value.
+				if ( DEBUG_formSubmit ) { console.log('el.type='+el.type+' el.name='+el.name+' el.value='+el.value); }
+				form.appendChild(el); // Add the element to the form.
+			}} // Loop thru formTask object skipping inherited prototype elements.
+			if ( !eFound && ( e.type === 'button' || e.type === 'submit' ) ) { // The button name was not in the array, add hidden element for button.
+				if ( DEBUG_formSubmit ) { console.log('The button name was not in the array, check for button name to add.'); }
+				if ( e.name ) {
+					el = document.createElement("input"); // Create the input element.
+					el.type = "hidden"; // Set element type to hidden.
+					el.name = e.name; // Set element name to e.name.
+					el.value = e.value;	// Set element value to e.value.
+					if ( DEBUG_formSubmit ) { console.log('Add '+el.type+' element '+el.name+' value='+el.value+' using button or submit name and value'); }
+					form.appendChild(el); // Add the element to the form.
+				} else {
+					if ( DEBUG_formSubmit ) { console.log('The button or submit did not have a name, so do not add form element.'); }
+				}
+			}
+		} else if ( typeof formTask === 'string' ) { // Is formTask a string?
+			// formTask is a string so add task with formTask value.
+			if ( DEBUG_formSubmit ) { console.log('formTask is a string so create task with the value \''+formTask+'\'.'); }
+			el = document.createElement("input"); // Add the input element.
+			el.type = "hidden"; // Set element type to hidden.
+			el.name = defaultName; // Set element name to task.
+			el.value = formTask;	// Set element value to formTask value.
+			if ( DEBUG_formSubmit ) { console.log('Add '+el.type+' element '+el.name+' value='+el.value); }
+			form.appendChild(el); // Add the element to the form.
+		} else if ( e.name && ( ( typeof formTask === 'undefined' ) || formTask === '' ) ) { // Is the form named and is formTask not defined?
+			// No formTask was set so use the e.name and value.
+			el = document.createElement("input"); // Create the input element.
+			el.type = "hidden"; // Set element type to hidden.
+			el.name = e.name; // Set element name to e.name.
+			el.value = e.value;	// Set element value to e.value.
+			if ( DEBUG_formSubmit ) { console.log('Add '+el.type+' element '+el.name+' value='+el.value+' using e name and value.'); }
+			form.appendChild(el); // Add the element to the form.
+		} else if ( !e.name && ( ( typeof formTask === 'undefined' ) || formTask === '' ) ) {
+			// Unnamed button with no formTask or formAction. Simply submit the form.
+		} else {
+			// Error.
+			var eType = typeof e;
+			var formActionType = typeof formAction;
+			var formTaskType = typeof formTask;
+			if ( eType === 'object' ) { ename = ' e.name='+e.name; } else { ename = ''; }
+			if ( formActionType === 'string' ) { aname = ' formAction='+formAction; } else { aname = ''; }
+			alert('formSubmit() is not programmed for typeof e='+eType+ename+' typeof formTask='+formTaskType+' typeof formAction='+formActionType+aname);
+			return false;
+		}
+		if ( DEBUG_formSubmit ) { alert('Submit form '+form.name); }
+		form.submit();
+		return false;
+	} else { // Is e defined?
+		if ( DEBUG_formSubmit ) {
+			alert('e is undefined in call to formSubmit().');
+		} // Is e defined?
+	}
+} // END formSubmit.
+
+// getElementTopLeft(e)
+// Get top and left for an element.
+// e = element to check.
+function getElementTopLeft(eTag) {
+  //console.info('getElementTopLeft['+eTag.id+']');
+  var left = 0;
+  var top = 0;
+  if (eTag) {
+    while( eTag.tagName !== "BODY" ) {
+      left += eTag.offsetLeft;
+      top += eTag.offsetTop;
+      eTag = eTag.offsetParent;
+    }
+  }
+  return { left: left, top: top };
+} // END getElementTopLeft.
+
+// getForm(e)
+// Get form from element.
+// e = Form element to get form from.
+// If e is not a form element return last form.
+function getForm(e) {
+	if ( e.form && e.form.name ) {
+		return e.form;
+	} else {
+		return document.forms[document.forms.length-1];
+	}
+}
+
+// Help(evt)
+// Control help button onClick, onMouseDown, onMouseOut, and onMouseOver.
+function Help(evt) {
+	DEBUG_Help = true;
+	//if ( typeof event != 'undefined' ) { evt = event; } else { evt = window.event; }
+	evt = evt || window.event;
+	//evt = event;
+	if ( DEBUG_Help ) { console.warn('Help[evt.type='+evt.type+', evt.target.id='+evt.target.id+']'); }
+	switch ( evt.type ) {
+		case 'click':
+			ttHide();
+			evt.target.src=HTTP_ROOT+'/images/help_hover.png';
+			document.getElementById('id_Help_Title').innerHTML = evt.target.alt;
+			var helpName = evt.target.id.substr(5);
+			if ( DEBUG_Help ) { console.log('helpName='+helpName); }
+			HelpDisplay(evt,helpName);
+		break;
+		case 'mousedown':
+			evt.target.src=HTTP_ROOT+'/images/help_dn.png';
+		break;
+		case 'mouseout':
+			ttHide();
+			evt.target.src=HTTP_ROOT+'/images/help.png';
+		break;
+		case 'mouseover':
+			ttShow(evt.target.alt+'.');
+			evt.target.src=HTTP_ROOT+'/images/help_hover.png';
+		break;
+	}
+} // END Help.
+
+// HelpDisplay(evt, helpName)
+// Display help.
+function HelpDisplay(evt, helpName) {
+	var DEBUG_HelpDisplay = true;
+	if ( DEBUG_HelpDisplay ) { console.warn('HelpDisplay[helpName='+helpName+']'); }
+	//if ( typeof event != 'undefined' ) { evt = event; } else { evt = window.event; }
+	//evt = evt || window.event;
+	mouseXY(evt);
+	if ( DEBUG_HelpDisplay ) { console.log('mX='+mX+' mY='+mY); }
+	MenuIdBegin = 'id_Help';
+	eMapMenu = document.getElementById(MenuIdBegin);
+	if ( ( typeof MenuShownLast !== 'undefined' ) && MenuShownLast ) { menuHide(); } // Hide the last menu.
+	MenuShownLast = MenuIdBegin;
+	// Load help contents.
+	var URI = HTTP_ROOT+'/help/'+helpName+'.php';
+	UpdateInclude(URI, 'id_Help_Contents', true, evt.target.alt);
+	var targetLeft = mX;
+	var targetTop = mY;
+	if ( DEBUG_HelpDisplay ) { console.log('targetLeft='+targetLeft+' targetTop='+targetTop); }
+	// Get windowScrollLeft and windowScrollTop.
+	var windowScrollLeft = ie? ietruebody().scrollLeft : window.pageXOffset;
+	var windowScrollTop = ie? ietruebody().scrollTop : window.pageYOffset;
+	if ( DEBUG_HelpDisplay ) { console.log('windowScrollLeft='+windowScrollLeft+' windowScrollTop='+windowScrollTop); }
+	var root = document.compatMode === 'BackCompat'? document.body : document.documentElement;
+	var isHorizScroll = root.scrollWidth>root.clientWidth;
+	var isVertScroll = root.scrollHeight>root.clientHeight;
+	if ( DEBUG_HelpDisplay ) { console.log('isHorizScroll='+isHorizScroll+' isVertScroll='+isVertScroll); }
+	document.body.style.overflow = 'hidden';
+	var scrollbarSize = document.body.clientWidth;
+	document.body.style.overflow = 'scroll';
+	scrollbarSize -= document.body.clientWidth;
+	if ( !scrollbarSize ) { scrollbarSize = document.body.offsetWidth - document.body.clientWidth; }
+	document.body.style.overflow = '';
+	if ( DEBUG_HelpDisplay ) { console.log('scrollbarSize='+scrollbarSize); }
+	// Get winWidth and winHeight.
+	var winWidth = 630;
+	var winHeight = 460;
+	var winSizeChanged = false;
+	if (document.body && document.body.offsetWidth) {
+	 winWidth = document.body.offsetWidth;
+	 winHeight = document.body.offsetHeight;
+	}
+	if (document.compatMode === 'CSS1Compat' && document.documentElement && document.documentElement.offsetWidth ) {
+	 winWidth = document.documentElement.offsetWidth;
+	 winHeight = document.documentElement.offsetHeight;
+	}
+	if (window.innerWidth && window.innerHeight) {
+	 winWidth = window.innerWidth;
+	 winHeight = window.innerHeight;
+	}if ( DEBUG_HelpDisplay ) { console.log('winWidth='+winWidth+' winHeight='+winHeight); }
+	if ( isHorizScroll ) {
+		winHeight -= scrollbarSize;
+		winSizeChanged = true;
+		if ( DEBUG_HelpDisplay ) { console.log('winHeight changed to '+winHeight+' because of horizontal scroll bar'); }
+	}
+	if ( isVertScroll ) {
+		winWidth -= scrollbarSize;
+		if ( DEBUG_HelpDisplay ) { console.log('winWidth changed to '+winWidth+' because of vertical scroll bar'); }
+		winSizeChanged = true;
+	}
+	if ( winSizeChanged && DEBUG_HelpDisplay ) { console.log('winWidth='+winWidth+' winHeight='+winHeight); }
+	// Set starting locationLeft and locationTop.
+	var locationLeft = mX;
+	var locationTop = mY;
+	if ( DEBUG_HelpDisplay ) { console.log('Starting position: locationLeft='+locationLeft+' locationTop='+locationTop); }
+	// Display so menuWidth and menuHeight can be determined.
+	eMapMenu.style.left = locationLeft+'px';
+	eMapMenu.style.top = locationTop+'px';
+	eMapMenu.style.display = 'block';
+	//eMapMenu.style.visibility = 'visible';
+	// Get menuWidth and menuHeight.
+	var menuWidth = eMapMenu.offsetWidth + 2;
+	var menuHeight = eMapMenu.offsetHeight + 2;
+	if ( DEBUG_HelpDisplay ) { console.log('menuWidth='+menuWidth); }
+	if ( DEBUG_HelpDisplay ) { console.log('menuHeight='+menuHeight); }
+	// Center the menu on mouseX and place Y above mouse.
+	locationLeft -= Math.round(menuWidth / 2);
+	locationTop -= menuHeight;
+	if ( DEBUG_HelpDisplay ) { console.log('Centered position: locationLeft='+locationLeft+' locationTop='+locationTop); }
+	// Make sure window is not too far left.
+	var Xchanged = false;
+	if ( locationLeft < windowScrollLeft ) {
+		Xchanged = true;
+		locationLeft = windowScrollLeft;
+		if ( DEBUG_HelpDisplay ) { console.warn('Menu is too far left.'); }
+		if ( DEBUG_HelpDisplay ) { console.log('Moved to left: locationLeft='+locationLeft); }
+	}
+	// Make sure window is not too high.
+	var Ychanged = false;
+	if ( locationTop < windowScrollTop ) {
+		Ychanged = true;
+		locationTop = windowScrollTop;
+		if ( DEBUG_HelpDisplay ) { console.warn('Menu is too high.'); }
+		if ( DEBUG_HelpDisplay ) { console.log('Moved to top: locationTop='+locationTop); }
+	}
+	if ( !Xchanged ) {
+		// Make sure window is not too far right.
+		var menuRight = locationLeft + menuWidth - windowScrollLeft; // Get right side of menu.
+		if ( DEBUG_HelpDisplay ) { console.log('menuRight='+menuRight); }
+		if ( menuRight > winWidth) {
+			locationLeft = locationLeft - menuRight + winWidth;
+			if ( DEBUG_HelpDisplay ) { console.warn('Menu is too far right.'); }
+			if ( DEBUG_HelpDisplay ) { console.log('Moved to left: locationLeft='+locationLeft); }
+		}
+	}
+	if ( !Ychanged ) {
+		// Make sure window is not too low. This should never happen as you did click on it.
+		var menuBottom = locationTop + menuHeight - windowScrollTop; // Get bottom of menu.
+		if ( DEBUG_HelpDisplay ) { console.log('menuBottom='+menuBottom); }
+		if ( menuBottom > winHeight) {
+			locationTop = locationTop - menuBottom + winHeight;
+			if ( DEBUG_HelpDisplay ) { console.warn('Menu is too low.'); }
+			if ( DEBUG_HelpDisplay ) { console.log('Moved to top: locationTop='+locationTop); }
+		}
+	}
+	eMapMenu.style.left = locationLeft+'px';
+	eMapMenu.style.top = locationTop+'px';
+} // END HelpDisplay.
+
+// menuDrag()
+// Allows player to drag the MapMenu to another location.
+var menuDrag = function() {
+	var DEBUG_menuDrag = true;
+	//if ( DEBUG_menuDrag ) { console.warn('menuDrag[]'); }
+	return {
+		startMoving : function(evt) { // The function that sets up the div coordinates to make it move. Executed on the onmousedown event on the div.
+			if ( DEBUG_menuDrag ) { console.info('menuDrag.startMoving[] Getting target...'); }
+			evt = evt || window.event;
+			if ( DEBUG_menuDrag ) { console.log('evt='+evt); }
+			var eTarget = evt.target;
+			if ( DEBUG_menuDrag ) { console.warn('eTarget.id='+eTarget.id); }
+			var XYsplit = eTarget.id.split('_'); // Split the target id to get XY.
+			if ( DEBUG_menuDrag ) { console.log('XYsplit='+XYsplit); }
+			if ( XYsplit[0] !== 'MapMenuHeader' ) { menuDrag.stopMoving(); }
+			XY = XYsplit[1]; // Set XY.
+			var eMapMenu = document.getElementById(MenuIdBegin); // Set element to move.
+			if ( DEBUG_menuDrag ) { console.info('startMoving('+eMapMenu.id+')'); }
+			mouseXY(evt); // Set mx and my to the mouse position.
+			divTop = eMapMenu.style.top; // We need the initial position of the div so that we can determine its final position on dragging.
+			divLeft = eMapMenu.style.left; // We need the initial position of the div so that we can determine its final position on dragging.
+			divTop = divTop.replace('px',''); // Remove px so that we can perform calculations on divTop.
+			divLeft = divLeft.replace('px',''); // Remove px so that we can perform calculations on divLeft.
+			var diffX = mX - divLeft, // We keep this value so that we can calculate the final position of the element.
+			diffY = mY - divTop; // We keep this value so that we can calculate the final position of the element.
+			if ( DEBUG_menuDrag ) { console.info('document.onmousemove = function menuDrag.move;'); }
+			/** /
+			document.onmousemove = function(evt) { // Whenever the mouse moves, this function is executed.
+				evt = evt || window.event;
+				mouseXY(evt);
+				aX = mX - diffX; // The current x-coordinate of the element.
+				aY = mY - diffY; // The current y-coordinate of the element.
+				menuDrag.move(MenuIdBegin,aX,aY); // Function to actually move the element.
+			};
+			/**/
+		},
+		stopMoving : function(){ // This function gets executed when the user leaves the div alone.
+			if ( DEBUG_menuDrag ) { console.info('menuDrag.stopMoving[]'); }
+			//if ( DEBUG_doc_on ) { console.log('document.onmousemove = canvasMouseMove;'); }
+			//doc_onmousemove = 'canvasMouseMove';
+			//document.onmousemove = canvasMouseMove; // Return onmousemove to the ttControl function.
+			//if ( DEBUG_doc_on ) { console.log('document.onmouseup = function() { };'); }
+			//doc_onmouseup = '';
+			//document.onmouseup = function() { }; // Stop mouseup.
+			//e = false; // Make sure a new click starts with a fresh element.
+		},
+		move : function(divid,xpos,ypos){ // Function to assign the style rules to the element.
+			if ( DEBUG_menuDrag ) { console.info('menuDrag.move['+divid+','+xpos+','+ypos+']'); }
+			var eMapMenu = document.getElementById(divid);
+			eMapMenu.style.left = xpos + 'px';
+			eMapMenu.style.top = ypos + 'px';
+			//if ( DEBUG_doc_on ) { console.info('document.onmouseup = menuDrag.stopMoving;'); }
+			//doc_onmouseup = 'menuDrag.stopMoving';
+			//document.onmouseup = menuDrag.stopMoving; // Set the mou
+		}
+	};
+}(); // END menuDrag.
+
+// menuHide()
+// Hide the XY menu.
+function menuHide() {
+  var DEBUG_menuHide = false;
+	if ( DEBUG_menuHide ) { console.warn('menuHide('+MenuShownLast+')'); }
+	if ( document.getElementById(MenuShownLast) ) {
+	  document.getElementById(MenuShownLast).style.display = 'none';
+	} else {
+		console.warn('In call to menuHide('+MenuShownLast+') element '+MenuShownLast+' does not exist.');
+	}
+	ttHide();
+	MenuShownLast = false;
+  return false;
+} // END menuHide.
+
+// mouseXY(evt)
+// Set mX and mY to the mouse position.
+function mouseXY(evt) {
+	//console.warn('mouseXY[evt.target.id='+evt.target.id+']');
+	if (evt.pageX) { mX = evt.pageX; } else { if (evt.clientX) { mX = evt.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft); } else { mX = 0; } }
+	if (evt.pageY) { mY = evt.pageY; } else { if (evt.clientY) { mY = evt.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop); } else { mY = 0; } }
+	//console.log('mX='+mX+' mY='+mY);
+} // END mouseXY.
+
+// SoundOnOffShowStatus()
+// Show sound on/off status.
+function SoundOnOffShowStatus() {
+	if ( document.getElementById('DEBUG_SoundOnOff') ) {
+		if ( SoundOffSetting ) {
+			document.getElementById('DEBUG_SoundOnOff').innerHTML = ' off';
+		} else {
+			document.getElementById('DEBUG_SoundOnOff').innerHTML = ' on';
+		}
+	}
+}	// END SoundOnOffShowStatus.
+
+// SoundOnOffToggle()
+// Turn sound on or off.
+function SoundOnOffToggle() {
+	DEBUG_SoundOnOffToggle = false;
+	if ( DEBUG_SoundOnOffToggle ) { console.log('SoundOnOffToggle[]'); }
+	if ( SoundOffSetting ) {
+		SoundOffSetting = 0;
+		SoundOffSettingImage = HTTP_ROOT+'/images/sound_on.png';
+		SoundOffSettingTooltip = 'Turn sound off';
+		if ( DEBUG_SoundOnOffToggle ) { console.log('SoundOffSetting is now false. This turns sound on.'); }
+	} else {
+		SoundOffSetting = 1;
+		SoundOffSettingImage = HTTP_ROOT+'/images/sound_off.png';
+		SoundOffSettingTooltip = 'Turn sound on';
+		if ( DEBUG_SoundOnOffToggle ) { console.log('SoundOffSetting is now true. This turns sound off.'); }
+	}
+	URLget(HTTP_ROOT+'/site/SoundOffSettingChange.php?SoundOffSetting='+SoundOffSetting); // Call SoundOffSettingChange.php.
+	if ( document.getElementById('SoundSettingMenu') ) {
+		document.getElementById('SoundSettingMenu').innerHTML = '<abbr class="nodot" onMouseOver="ttShow(\''+SoundOffSettingTooltip+'\')" onMouseOut="ttHide();"><img src="'+SoundOffSettingImage+'" width="24" height="21" alt="Turn sound on/off"></abbr>';
+	} else {
+		if ( DEBUG_SoundOnOffToggle ) { console.error('document.getElementById(\'SoundSettingMenu\') does not exist'); }
+		alert('document.getElementById(\'SoundSettingMenu\') does not exist');
+	}
+	SoundOnOffShowStatus();
+}
+
+// SoundPlay(soundfile)
+// Play the soundfile.
+function SoundPlay(soundfile) {
+	var DEBUG_SoundPlay = false; // false = No debug alerts, true = turn on DEBUG alerts.
+	if ( DEBUG_SoundPlay ) {
+		console.warn('SoundPlay['+soundfile+']');
+		console.log('SoundOffSetting='+SoundOffSetting);
+	}
+	soundfilempeg = soundfile.replace(".wav",".mp3");
+	if ( !SoundOffSetting ) {
+		if ( DEBUG_SoundPlay ) { console.log("<audio autoplay><source src=\""+soundfile+"\" type=\"audio/wav\"><source src=\""+soundfilempeg+"\" type=\"audio/mpeg\"><img src=\""+HTTP_ROOT+"/images/sound_off.png\" alt=\"Your browser does not support the &lt;audio&gt; element.\" title=\"Your browser does not support the &lt;audio&gt; element.\"></audio>"); }
+		document.getElementById("soundDiv").innerHTML=
+	"<audio autoplay><source src=\""+soundfile+"\" type=\"audio/wav\"><source src=\""+soundfilempeg+"\" type=\"audio/mpeg\"><img src=\""+HTTP_ROOT+"/images/sound_off.png\" alt=\"Your browser does not support the &lt;audio&gt; element.\" title=\"Your browser does not support the &lt;audio&gt; element.\"></audio>";
+	}
+} // END SoundPlay.

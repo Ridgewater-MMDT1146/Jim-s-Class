@@ -1,0 +1,249 @@
+<?
+// admin/_info/form/infoForm_Preview_AddEditForm_Table.phpinc
+// Display the form preview.
+t_Begin(); // Begin TRACKing included file.
+// Fields without visable form elements.
+$fieldBeforeForm = array("hidden");
+$fieldAfterForm = array("default","skip");
+if ( $f['buttonType'] == 'button' ) { $buttonTypeButtonOnClick = ' onClick=""'; } else  { $buttonTypeButtonOnClick = ''; }
+// Display before form fields.
+foreach ($fieldArray as $fieldName => $fieldValue) {
+	d_Var('$fieldName',$fieldName);
+	d_Var('$fieldValue',$fieldValue);
+	d_Var("\$fieldInfo[".$fieldName."]",$fieldInfo[$fieldName]);
+  if ( in_array($fieldValue['type'],$fieldBeforeForm) ) {
+?>
+  <tr>
+    <td class="right_info small_info"><?=$fieldName?></td>
+    <td></td>
+    <td></td>
+    <td class="<?=$fieldValue['type']?>_info"><?=$fieldValue['type']?></td>
+    <td class="<?=$fieldValue['type']?>_info"><?=$fieldValue['value']?></td>
+  </tr>
+<?
+  }
+}
+foreach ($fieldArray as $fieldName => $fieldValue) {
+  if ( !in_array($fieldValue['type'],$fieldBeforeForm) && !in_array($fieldValue['type'],$fieldAfterForm) ) {
+?>
+  <tr>
+    <td class="right_info small_info"><?=$fieldName?></td>
+<?
+  if ($fieldValue['type'] == 'default' || $fieldValue['type'] == 'hidden' || $fieldValue['type'] == 'skip') {
+?>
+    <td class="right_info"></td>
+<?
+  //echo $fieldValue['class'];
+  } else {
+?>
+    <td class="right_info"><?=$fieldValue['label']?>:</td>
+<?
+  }
+	d_Var("\$fieldInfo[$fieldName]['type']",$fieldInfo[$fieldName]['type']);
+  //switch ($fieldInfo[$fieldName]['type']) {
+  switch ($fieldValue['type']) {
+   case 'button':
+?>
+    <td><input type="<?=$fieldValue['type']?>" class="<?=$fieldValue['class']?>" name="<?=$fieldName?>" id="<?=$fieldName?>_form_<?=$f['table']?>" value="<?=$fieldValue['value']?>" disabled></td>
+<?
+    break;
+    case 'checkbox':
+    case 'radio':
+      if ($fieldValue['value'] == '') {
+        $valueArray = array();
+      } else {
+        if ($fieldValue['fieldtable'] == '') {
+          $valueArray = explode(",",$fieldValue['value']);
+        } else {
+          $valueArray = info_SelectField($fieldValue['fieldtable'],$fieldValue['value']);
+        }
+      }
+      if ($fieldValue['options'] == '') {
+        $optionsArray = array();
+      } else {
+        if ($fieldValue['fieldtable'] == '') {
+          $optionsArray = explode(",",$fieldValue['options']);
+        } else {
+          $optionsArray = info_SelectField($fieldValue['fieldtable'],$fieldValue['options']);
+        }
+      }
+      if ($fieldValue['value'] == '') {
+?>
+    <td><input type="<?=$fieldValue['type']?>" class="<?=$fieldValue['class']?>" name="<?=$fieldName?>" id="<?=$fieldName?>_form_<?=$f['table']?>" value=""></td><?
+      } else {?>
+    <td><?
+        for ($index=0; $index<min(count($valueArray),count($optionsArray)); $index++) {
+?>
+    <input type="<?=$fieldValue['type']?>" class="<?=$fieldValue['class']?>" name="<?=$fieldName?>" id="<?=$fieldName?>_form_<?=$f['table']?>_<?=$index?>" value="<?=htmlSafe($valueArray[$index])?>"><?=$optionsArray[$index]?>
+<?
+        }
+?>
+    </td><?
+      }
+    break;
+    case 'file':
+?>
+    <td><input type="<?=$fieldValue['type']?>" name="<?=$fieldName?>" value="<?=htmlSafe($fieldValue['value'])?>"></td>
+<?
+    break;
+    case 'image':
+?>
+    <td><input type="<?=$fieldValue['type']?>" class="<?=$fieldValue['class']?>" name="<?=$fieldName?>" src="<?=$fieldValue['src']?>" alt="" title="" onClick="<?=stripslashes($fieldValue['onclick'])?> return false;"></td>
+<?
+    break;
+    case 'password':
+      if ($fieldValue['maxlength'] == '' && ($fieldValue['type'] == 'password' || $fieldValue['type'] == 'text')) {
+        $maxlength = '';
+      } else {
+        $maxlength = ' maxlength="'.$fieldValue['maxlength'].'"';
+      }
+      if ($fieldValue['width'] != '') {
+        $style = ' style="width:'.$fieldValue['width'].';'.'"';
+      } else {
+        $style = '';
+      }
+?>
+    <td><input name="<?=$fieldName?>" class="<?=$fieldValue['class']?>" type="text" value=""<?=$style?><?=$maxlength?>></td>
+<?
+    break;
+    case 'select':
+    #d_Var('$fieldValue',$fieldValue);
+      if ($fieldValue['value'] == '') {
+        $valueArray = array();
+      } else {
+        if ($fieldValue['fieldtable'] == '') {
+          $valueArray = explode(",",$fieldValue['value']);
+        } else {
+					d_Var('$fieldValue',$fieldValue);
+          $valueArray = info_SelectField($fieldValue['fieldtable'],$fieldValue['value']);
+        }
+      }
+      if ($fieldValue['options'] == '') {
+        $optionsArray = array();
+      } else {
+        if ($fieldValue['fieldtable'] == '') {
+          $optionsArray = explode(",",$fieldValue['options']);
+        } else {
+          $optionsArray = info_SelectField($fieldValue['fieldtable'],$fieldValue['options']);
+        }
+      }
+?>
+    <td><select class="<?=$fieldValue['class']?>" name="<?=$fieldName?>" id="<?=$fieldName?>_form_<?=$f['table']?>">
+        <option value=""></option>
+<?
+      if ($fieldValue['value'] != '') {
+        for ($index=0; $index<min(count($valueArray),count($optionsArray)); $index++) {
+?>
+        <option value="<?=htmlSafe($valueArray[$index])?>"><?=$optionsArray[$index]?></option>
+<?
+        }
+      }
+?>
+      </select>
+    </td>
+<?
+    break;
+    case 'text':
+      if ( $fieldValue['maxlength'] == '' ) {
+        $maxlength = '';
+      } else {
+        $maxlength = ' maxlength="'.$fieldValue['maxlength'].'"';
+      }
+      if ($fieldValue['width'] != '') {
+        $style = ' style="width:'.$fieldValue['width'].';'.'"';
+      } else {
+        $style = '';
+      }
+      if ($fieldValue['class'] != '') {
+        $class = ' class="'.$fieldValue['class'].'"';
+      } else {
+        $class = '';
+      }
+?>
+    <td><input type="<?=$fieldValue['type']?>" name="<?=$fieldName?>" value=""<?=$class?><?=$style?><?=$maxlength?>></td>
+<?
+    break;
+    case 'textarea':
+      if ($fieldValue['height'].$fieldValue['width'] != '') {
+        $style = ' style="';
+        if ($fieldValue['height'] != '') { $style .= 'height:'.$fieldValue['height'].';'; }
+        if ($fieldValue['width'] != '') { $style .= 'width:'.$fieldValue['width'].';'; }
+        $style .= '"';
+      } else {
+        $style = '';
+      }
+?>
+    <td><textarea name="<?=$fieldName?>"<?=$class?><?=$style?>></textarea></td>
+<?
+    break;
+    default:
+?>
+    <td></td>
+<?
+    break;
+  }
+?>
+    <td class="<?=$fieldValue['type']?>_info"><?=$fieldValue['type']?></td>
+    <td class="<?=$fieldValue['type']?>_info"><?=$fieldValue['value']?></td>
+  </tr>
+<?
+  }
+}
+?>
+  <tr>
+    <td colspan="4" class="center_info">
+<?
+if ( $f['defaultButtons'] ) {
+// Add standard buttons.
+if ( $f['buttonType'] == 'submit' ) {
+  $buttonName = 'task';
+} else {
+  $buttonName = 'button';
+}
+?>
+      <input type="<?=$f['buttonType']?>" name="<?=$buttonName?>" value="Update <?=basename($f['filenameBase'])?>"<?=$buttonTypeButtonOnClick?> disabled>
+      <input type="<?=$f['buttonType']?>" name="<?=$buttonName?>" value="Add <?=basename($f['filenameBase'])?>"<?=$buttonTypeButtonOnClick?> disabled>
+      <input type="<?=$f['buttonType']?>" name="<?=$buttonName?>" value="Cancel"<?=$buttonTypeButtonOnClick?> disabled>
+      <input type="<?=$f['buttonType']?>" name="<?=$buttonName?>" value="Done"<?=$buttonTypeButtonOnClick?> disabled>
+      <br>
+<?
+}
+// Add buttons.
+for ($i=1; $i<=$maximumSubmitButtonPairs*2; $i++) {
+  if ( $f['submit'][$i]['name'] != '' ) {
+    if ( $f['buttonType'] != 'button' ) $buttonName = $f['submit'][$i]['name'];
+?>
+      <input type="<?=$f['buttonType']?>" name="<?=$buttonName?>" value="<?=htmlSafe($f['submit'][$i]['value'])?>"<?=$buttonTypeButtonOnClick?> disabled>
+<?
+  }
+}
+?>
+    </td>
+  </tr>
+<?
+// Display after form fields.
+foreach ($fieldArray as $fieldName => $fieldValue) {
+  if ( in_array($fieldValue['type'],$fieldAfterForm) ) {
+?>
+  <tr>
+    <td class="right_info small_info"><?=$fieldName?></td>
+    <td></td>
+    <td></td>
+    <td class="<?=$fieldValue['type']?>_info"><?=$fieldValue['type']?></td>
+<?
+    if ( $fieldValue['type'] != 'default' ) {
+?>
+    <td class="<?=$fieldValue['type']?>_info"></td>
+<?
+    } else {
+?>
+    <td class="<?=$fieldValue['type']?>_info"><?=$fieldValue['value']?></td>
+<?
+    }
+?>
+  </tr>
+<?
+  }
+}
+t_End(); // End TRACKing included file.
+?>

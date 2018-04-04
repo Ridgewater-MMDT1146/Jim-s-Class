@@ -1,0 +1,173 @@
+// Schedule/schedule3.js
+// For use by Cody Kurowski
+
+// ScheduleClassDrop(evt)
+// handle schedule class drop.
+function ScheduleClassDrop(evt) {
+	var DEBUG_ScheduleClassDrop = true;
+	evt = (evt) ? evt : window.event;
+	if ( DEBUG_ScheduleClassDrop ) { console.warn('ScheduleClassDrop[] evt.currentTarget.id='+evt.currentTarget.id); }
+	dragElement.style.zIndex = 10;
+	var redrawCalendarOK = true;
+	// BEGIN Find where class meeting was dropped.
+	// Get mouse position.
+	var mX = mouseX(evt);
+	var mY = mouseY(evt);
+	//console.log('mX='+mX+' mY='+mY);
+	dragElementTLNow = elementBounds(dragElement.id,1153); // Calculate upper left corner position of class meeting.
+	//console.log('dragElementTLNow left='+dragElementTLNow.left+' top='+dragElementTLNow.top);
+	// Loop thru schedule tds.
+	var daysOfWeek = ['U','M','T','W','H','F','S']; // This should come from Weekdays.
+	var dayIndexMin; // Min day index in the schedule view.
+	var dayIndexMax; // Max day index in the schedule view.
+	var dayMovedTo = '';
+	var droppedInCalendarDayTime = false;
+	var timeMovedTo = '';
+	var m1 = 0;
+	if ( ScheduleDayView === 'Work week' ) {
+		dayIndexMin = 1;
+		dayIndexMax = 5;
+	} else {
+		dayIndexMin = 0;
+		dayIndexMax = 6;
+	}
+	var minTimeBegin = ScheduleTimeBegin * 60; // The beginning time in the schedule view.
+	var minTimeEnd = ScheduleTimeEnd * 60; // The ending time in the schedule view.
+	daysOfWeekLoop:
+	for ( var d=dayIndexMin; d<=dayIndexMax; d++ ) { // Loop thru the days in the schedule view.
+		//console.log('d='+d+' daysOfWeek[d]='+daysOfWeek[d]);
+		dayMovedTo = daysOfWeek[d];
+		for ( timeMovedTo=minTimeBegin; timeMovedTo<=minTimeEnd; timeMovedTo+=ScheduleTimeIncrement ) { // Loop thru the times in the schedule view.
+			var tdId = dayMovedTo + timeMovedTo;
+			//console.log('tdId='+tdId);
+			var eTD = document.getElementById(tdId); // The td we are testing.
+			var tdTL = elementBounds(tdId,1178);
+			var tdWidth = eTD.offsetWidth;
+			var tdHeight = eTD.offsetHeight;
+			var tdRight = tdTL.left + tdWidth;
+			var tdBottom = tdTL.top + tdHeight;
+			//console.log('left='+tdTL.left+' top='+tdTL.top+' right='+tdRight+' bottom='+tdBottom+' width='+tdWidth+' height='+tdHeight);
+			if ( dragElementTLNow.left >= tdTL.left &&  dragElementTLNow.left <= tdRight && dragElementTLNow.top >= tdTL.top &&  dragElementTLNow.top <= tdBottom ) { // Did the class meeting get dropped here?
+				droppedInCalendarDayTime = true;
+				console.log('Dropped in '+tdId);
+				// Snap class meeting to left top of schedule td.
+				var tdBounds = elementBounds(tdId,1188);
+				if ( DEBUG_ScheduleClassDrop ) { console.log('tdBounds left='+tdBounds.left+' top='+tdBounds.top+' width='+tdBounds.width); }
+				dragElement.style.left = tdBounds.left + 1 + 'px';
+				dragElement.style.top = tdBounds.top + 2 + 'px';
+				var newBounds = elementBounds(dragElement.id,1192);
+				if ( DEBUG_ScheduleClassDrop ) { console.log('newBounds left='+newBounds.left+' top='+newBounds.top); }
+				break daysOfWeekLoop; // Found where it was dropped so we can stop looping.
+			} // Did the class meeting get dropped here?
+		} // Loop thru the times in the schedule view.
+	} // Loop thru the days in the schedule view.
+	// END Find where class meeting was dropped.
+	var meetingMovedId;
+	var scmId = 0;
+	console.log('dayMovedTo='+dayMovedTo+' timeMovedTo='+timeMovedTo);
+	if ( droppedInCalendarDayTime ) { // Was the class meeting was dropped in a valid schedule day time?
+		// BEGIN Check if it was OK to move the class meeting here.
+		// Find old day of class meeting.
+		var idParts = dragElement.id.split('_');
+		meetingMovedId = parseInt(idParts[2]);
+		var meetingMovedDay = idParts[3].substr(0,1);
+		var meetingMovedTime = idParts[3].substr(1);
+		console.log('ClassMeeting['+meetingMovedId+']='+JSON.stringify(ClassMeeting[meetingMovedId]));
+		console.log('meetingMovedId='+meetingMovedId+' meetingMovedDay='+meetingMovedDay+' meetingMovedTime='+meetingMovedTime);
+		// Find out which day we moved to.
+		var meetingDay;
+		var mdi;
+		var dayFound = false;
+		var mTimeBefore = 0;
+		console.log('ClassMeeting[meetingMovedId].length='+ClassMeeting[meetingMovedId].length);
+		console.log('dayMovedTo='+dayMovedTo);
+		console.log('Search for meetingMovedDay='+meetingMovedDay+' meetingMovedTime='+meetingMovedTime);
+		loopMeeting:
+		for ( m1=0; m1<ClassMeeting[meetingMovedId].length; m1++ ) { // Loop thru meetings.
+			console.log('ClassMeeting['+meetingMovedId+']['+m1+'].days='+ClassMeeting[meetingMovedId][m1].days);
+			// Change bTime to mTime
+			var mTime = parseInt(ConvertTimeToMinutes(ClassMeeting[meetingMovedId][m1].bTime)/ScheduleTimeIncrement)*ScheduleTimeIncrement;			
+			console.log('mTime='+mTime+' meetingMovedTime='+meetingMovedTime);
+			if ( parseInt(mTime) >= parseInt(meetingMovedTime) ) {
+				for ( mdi=0; mdi<ClassMeeting[meetingMovedId][m1].days.length; mdi++ ) {
+					meetingDay = ClassMeeting[meetingMovedId][m1].days[mdi];
+					if ( meetingMovedDay === meetingDay ) { dayFound = true; break loopMeeting; }
+				}
+			}
+		}
+		console.log('dayFound='+dayFound);
+		if ( dayFound ) {
+			scmId = ClassMeeting[meetingMovedId][m1].scmId;
+			console.log('m1='+m1+' meetingDay='+meetingDay+' mdi='+mdi);
+			console.log('Moved ClassMeeting['+meetingMovedId+']['+mdi+'] meeting from day '+meetingDay+' to '+dayMovedTo);
+			// Find the day diff.
+			var mIndexFrom = daysOfWeek.indexOf(meetingDay);
+			var mIndexTo = daysOfWeek.indexOf(dayMovedTo);
+			var dayDiff = mIndexTo - mIndexFrom;
+			console.log('mIndexFrom='+mIndexFrom+' mIndexTo='+mIndexTo+' dayDiff='+dayDiff);
+			var daysOK = true;
+			for ( mdi=0; mdi<ClassMeeting[meetingMovedId][m1].days.length; mdi++ ) {
+				meetingDay = ClassMeeting[meetingMovedId][m1].days[mdi];
+				var thisDayIndex = daysOfWeek.indexOf(ClassMeeting[meetingMovedId][m1].days[mdi]);
+				console.log('meetingDay='+meetingDay+' thisDayIndex='+thisDayIndex);
+				var newDayIndex = thisDayIndex + dayDiff;
+				if ( newDayIndex < dayIndexMin || newDayIndex > dayIndexMax ) {
+					console.log('newDayIndex '+newDayIndex+' out of range '+dayIndexMin+'-'+dayIndexMax);
+					daysOK = false;
+					break;
+				}
+			}
+			if ( daysOK ) {
+				// Snap class meeting to left top of 
+			}
+		}
+		// END Check if it was OK to move the class meeting here.
+	} else { // Was the class meeting was dropped in a valid schedule day time?
+		redrawCalendarOK = false;
+	} // Was the class meeting was dropped in a valid schedule day time?
+	if ( redrawCalendarOK ) {
+		// document.getElementById(divIdOriginal).id = divIdNew;
+		// The drop was OK and has been positioned on the calendar.
+		// Need to: Set the ClassMeeting[scId] bTime, eTime, and days to the new values.
+		//          Change div id to reflect new mTime. I.E. alendar_class_18_T780 (meetingMovedTime) becomes alendar_class_18_720 (timeMovedTo).
+		//          Tell the database that the class has been moved.
+		//          Change the div contents to display the new day and times. Will be done by UpdateInclude().
+		//          Redraw the calendar.
+		console.log('timeMovedTo='+timeMovedTo);
+		console.log('ClassMeeting['+meetingMovedId+']='+JSON.stringify(ClassMeeting[meetingMovedId]));
+		URI = '/Schedule/ScheduleClass/ScheduleClassUpdate.php?';
+		URI += 'task=MoveClassMeeting';
+		URI += '&scId='+meetingMovedId;
+		URI += '&scmId='+scmId;
+		URI += '&bTime='+ClassMeeting[meetingMovedId].bTime;
+		URI += '&eTime='+ClassMeeting[meetingMovedId].eTime;
+		console.log('m1='+m1);
+		var days = '';
+		if ( typeof ClassMeeting[meetingMovedId][m1].days !== 'undefined' ) { // Are days set?
+			console.log('ClassMeeting['+meetingMovedId+'].days.length='+ClassMeeting[meetingMovedId][m1].days.length);
+			for ( var di=0; di<ClassMeeting[meetingMovedId][m1].days.length; di++) {
+				days += ClassMeeting[meetingMovedId][m1].days[di];
+			}
+		} // Are days set?
+		URI += '&days='+days;
+		UpdateInclude(URI, dragElement.id, 'updated class meeting'); // dragElement.id = calendar_class_21_T510
+		
+		//DisplaySchedule();
+	} else {
+		// Put the class meeting back.
+		console.info(dragElement.id+' not dropped in schedule td. dragElementOriginalTL left='+dragElementOriginalTL.left+' top='+dragElementOriginalTL.top);
+		dragElement.style.left = dragElementOriginalTL.left + 'px';
+		dragElement.style.top = dragElementOriginalTL.top + 'px';
+	}
+	//console.log('tdIds='+tdIds);
+	//console.log('evt.target.id='+evt.target.id+' evt.type='+evt.type);
+	//evt.target.className = evt.target.className.replace(' drag_cursor','');
+	//evt.target.removeEventListener('mousedown',ScheduleClassDragBegin);
+	evt.preventDefault();
+	//evt.target.addEventListener('click',ScheduleClass_OpenEdit);
+	document.body.removeEventListener('mouseup',ScheduleClassDrop);
+	document.body.removeEventListener('mousemove',ScheduleClassDragMove);
+	document.body.removeEventListener('keydown',ScheduleClassDragMoveAbortCheck);
+	evt.preventDefault();
+} // END ScheduleClassDrop.
+

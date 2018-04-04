@@ -1,0 +1,76 @@
+<?
+// parseProcess_Get_courseId.phpinc
+// Get courseId.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+d_Var('$thisClass',$thisClass);
+
+$query = "
+		SELECT courseId
+			FROM `course`
+		 WHERE departmentId = ".$departmentId[$thisClass['departmentCode']]."
+       AND courseNumber = '".query_safe($thisClass['courseNumber'])."'
+			 AND YRTR = (
+				SELECT max(YRTR)
+					FROM `course`
+				 WHERE departmentId = ".$departmentId[$thisClass['departmentCode']]."
+					 AND courseNumber = '".query_safe($thisClass['courseNumber'])."'
+			)
+";
+d_Var('courseInfo',$query,'q');
+$courseInfo = query_info($query);
+d_Var('$courseInfo',$courseInfo);
+if ( !$courseInfo ) {
+	d_Var('$departmentId['.$thisClass['departmentCode'].']',$departmentId[$thisClass['departmentCode']]);
+	// Check for variable course credits.
+	#d_Var("is_numeric(\$thisClass['classCredits'])",is_numeric($thisClass['classCredits']),'d');
+	if ( is_numeric($thisClass['classCredits']) ) {
+		$thisClass['classCredits'] = $thisClass['classCredits']+0;
+		$thisClass['courseCreditsMax'] = NULL;
+	} else {
+		$thisClass['classCredits'] = explode('-',$thisClass['classCredits']);
+		$thisClass['courseCreditsMax'] = $thisClass['classCredits'][1]+0;
+		$thisClass['classCredits'] = $thisClass['classCredits'][0]+0;
+	}
+	// INSERT course.
+	$query = "
+		INSERT INTO `course` (
+				userId
+			, YRTR
+			, departmentId
+			, courseNumber
+			, courseTitle
+			, courseCredits";
+		if ( $thisClass['courseCreditsMax'] !== NULL ) {
+			$query .= "
+				, courseCreditsMax";
+		}
+		$query .= "
+		) VALUES (
+				".$_SESSION['user']['trueId']."
+			, '".query_safe($thisClass['YRTR'])."'
+			, ".$departmentId[$thisClass['departmentCode']]."
+			, '".query_safe($thisClass['courseNumber'])."'
+			, '".query_safe($thisClass['courseTitle'])."'
+			, ".$thisClass['classCredits'];
+		if ( $thisClass['courseCreditsMax'] !== NULL ) {
+			$query .= "
+			, ".$thisClass['courseCreditsMax'];
+		}
+		$query .= "
+		)
+	";
+	d_Var('courseINSERT',$query,'q');
+	$courseINSERT = query_do($query);
+	d_Var('$courseINSERT',$courseINSERT,'l');
+	$courseInfo['courseId'] = $GLOBALS['_QUERY']['insertId'];
+	d_Var("\$courseInfo['courseId']",$courseInfo['courseId']);
+?>
+	<article>New <?=$thisClass['campus']?> course found on line <?=$thisClass['!line']?> of </article>
+<?
+}
+$thisClass['courseId'] = $courseInfo['courseId'];
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

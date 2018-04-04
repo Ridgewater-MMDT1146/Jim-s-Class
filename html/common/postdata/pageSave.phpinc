@@ -1,0 +1,52 @@
+<?
+// common/postdata/pageSave.phpinc
+// Contains the pageSave function.
+
+#t_Begin(); // Begin TRACKing included file.
+
+// pageSave($callTask, $callQuery)
+// Stores the $_SESSION['pageFrom'] and postdata for the returnFrom.
+// Call this function to save the current form data so it can be loaded when returning to this page.
+//  $callTask = The $f['task'] value to use when returning to the page.
+// $callQuery = The URL query string to append to the URL.
+function pageSave($callTask='', $callQuery='') {
+  t_FuncBegin();
+  $backtrace = debug_backtrace(); // Get caller information.
+  if ( false) {
+    pageHeader("pageSave");
+    d_Line("DEBUG pageSave()");
+    d_Line("Called by ".$backtrace['0']['file'].":".$backtrace['0']['line'],'l');
+    d_Var("\$_COOKIE['PHPSESSID']",$_COOKIE['PHPSESSID'],'l');
+    d_Var('php_self()',php_self(),'l');
+    d_Var('$_GET',$_GET,'l');
+    d_Var('$_POST',$_POST,'l');
+    d_Var('$callTask',$callTask,'l');
+    d_Var('$callQuery',$callQuery,'l');
+    d_Var('$backtrace',$backtrace,'l');
+    pageFooter();
+  }
+  // Only save info if not a page reload.
+  if ( $_SESSION['pageFrom']['index'] == 0 || php_self() != $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['page'] ) {
+  #if ( true ) {
+    // Save the from info so we can return.
+    $_SESSION['pageFrom']['index'] += 1;
+    $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']] = array();
+    $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['page'] = php_self();
+    $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['query'] = $callQuery;
+    $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['file'] = str_replace("\\","/",$backtrace[0]['file']);
+    $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['line'] = $backtrace[0]['line'];
+    $pageSaveDataArray = array();
+    if ( isset($_GET) && count($_GET) ) $pageSaveDataArray = $_GET;
+    if ( isset($_POST) && count($_POST) ) $pageSaveDataArray = array_merge($pageSaveDataArray,$_POST);
+    if ( $callTask && isset($pageSaveDataArray['task']) ) { $pageSaveDataArray['task'] = $callTask; $callTask = ''; }
+    pageSaveData(php_self(),$pageSaveDataArray,$callTask,$callQuery,$backtrace);
+  } else {
+     d_Var("\$_SESSION['pageFrom']['index']",$_SESSION['pageFrom']['index']);
+     d_Var("\$_SESSION['pageFrom'][".$_SESSION['pageFrom']['index']."]['page']",$_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['page']);
+     d_Var("php_self()",php_self());
+  }
+  t_FuncEnd();
+}
+
+#t_End(); // End TRACKing included file.
+?>

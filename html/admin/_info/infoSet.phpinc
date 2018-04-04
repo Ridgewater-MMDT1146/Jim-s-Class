@@ -1,0 +1,208 @@
+<?
+// admin/_info/infoSet.phpinc
+// Display various code to set variable values.
+
+t_Begin(); // Begin TRACKing included file.
+$fieldQuery="SHOW COLUMNS FROM `".$f['table']."`";
+$fieldResult = query_do($fieldQuery,$f['database']);
+$fieldCount = $GLOBALS['_QUERY']['count'];
+
+// getDefaultValue($fieldType)
+// Returns the default value based on the fieldType.
+function getDefaultValue($fieldArray) {
+  if ( $fieldArray['Null'] == 'YES' ) {
+    $defaultValue='NULL';
+  } else {
+    $qc = info_fieldQC($fieldArray['Type']);
+    if ($qc[0] == "\".") {
+      $defaultValue=0;
+    } else {
+      $defaultValue="''";
+    }
+  }
+  return $defaultValue;
+}
+$to_formValue_f = '';
+$to_formValue_f_plus_default = '';
+$to_formValue_value = '';
+$to_formValue_value_plus_default = '';
+$to_query_row = '';
+$query_row_to_f = '';
+$to_default_value = '';
+$to_null = '';
+$not_isset_to_default = '';
+$SESSION_to_f = '';
+$SESSION_to_row = '';
+$to_SESSION = '';
+query_seek($fieldResult, 0);
+while ($row = query_row($fieldResult)) {
+  #d_Var('$row',$row);
+  $to_formValue_f .= "formValue('".$row['Field']."');
+";
+  $to_formValue_f_plus_default .= "formValue('".$row['Field']."'); if ( !\$f['".$row['Field']."'] ) \$f['".$row['Field']."'] = ".getDefaultValue($row).";
+";
+  $to_formValue_value .= "formValue('','".$row['Field']."','".$row['Field']."');
+";
+  $to_formValue_value_plus_default .= "formValue('','".$row['Field']."','".$row['Field']."'); if ( !\$f['".$row['Field']."'] ) \$f['".$row['Field']."'] = ".getDefaultValue($row).";
+";
+  $to_query_row .= "\$f['".$row['Field']."'] = \$".$f['table']."Info['".$row['Field']."'];
+";
+  $query_row_to_f .= "\$".$f['table']."Info['".$row['Field']."'] = \$f['".$row['Field']."'];
+";
+  $to_default_value .= "\$f['".$row['Field']."'] = ".getDefaultValue($row).";
+";
+  $to_null  .= "\$f['".$row['Field']."'] = NULL;
+";
+  $not_isset_to_default .= "if ( !isset(\$f['".$row['Field']."']) ) \$f['".$row['Field']."'] = ".getDefaultValue($row).";
+";
+  $SESSION_to_f .= "\$_SESSION['".$row['Field']."'] = \$f['".$row['Field'].";
+";
+  $SESSION_to_row .= "\$_SESSION['".$row['Field']."'] = \$".$f['table']."Info['".$row['Field']."'];
+";
+  $to_SESSION .= "\$f['".$row['Field']."'] = \$_SESSION['".$row['Field']."'];
+";
+}
+?>
+<form>
+<table><tr><td><fieldset style="text-align:left;"><legend><?=$f['table']?> Set</legend>
+<?
+// to_formValue_f
+if ( !isset($f['to_formValue_f_value']) ) $f['to_formValue_f_value'] = 1;
+?>
+<a name="to_formValue_f_name"></a>
+<input type="hidden" name="to_formValue_f_value" id="to_formValue_f_value_id" value="<?=$f['to_formValue_f_value']?>">
+<table><tr><td><fieldset><legend><a href="#to_formValue_f_name" name="to_formValue_f" onClick="return info_Set(this);"><div id="to_formValue_f_status" class="inline"><? if ( !$f['to_formValue_f_value']) { ?>+<? } else { ?>-<? } ?></div> Set to formValue() $f['index']</a></legend>
+<div id="to_formValue_f_show" class="<? if ( !$f['to_formValue_f_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$to_formValue_f?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// to_formValue_f_plus_default
+if ( !isset($f['to_formValue_f_plus_default_value']) ) $f['to_formValue_f_plus_default_value'] = 1;
+?>
+<a name="to_formValue_f_plus_default_name"></a>
+<input type="hidden" name="to_formValue_f_plus_default_name" id="to_formValue_f_plus_default_value_id" value="<?=$f['to_formValue_f_plus_default_value']?>">
+<table><tr><td><fieldset><legend><a href="#to_formValue_f_plus_default_name" name="to_formValue_f_plus_default" onClick="return info_Set(this);"><div id="to_formValue_f_plus_default_status" class="inline"><? if ( !$f['to_formValue_f_plus_default_value']) { ?>+<? } else { ?>-<? } ?></div> Set to formValue() $f['index'] plus default</a></legend>
+<div id="to_formValue_f_plus_default_show" class="<? if ( !$f['to_formValue_f_plus_default_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$to_formValue_f_plus_default?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// to_formValue_value
+if ( !isset($f['to_formValue_value_value']) ) $f['to_formValue_value_value'] = 1;
+?>
+<a name="to_formValue_value_name"></a>
+<input type="hidden" name="to_formValue_value_value" id="to_formValue_value_value_id" value="<?=$f['to_formValue_value_value']?>">
+<table><tr><td><fieldset><legend><a href="#to_formValue_value_name" name="to_formValue_value" onClick="return info_Set(this);"><div id="to_formValue_value_status" class="inline"><? if ( !$f['to_formValue_value_value']) { ?>+<? } else { ?>-<? } ?></div> Set to formValue() $variable</a></legend>
+<div id="to_formValue_value_show" class="<? if ( !$f['to_formValue_value_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$to_formValue_value?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// to_formValue_value_plus_default
+if ( !isset($f['to_formValue_value_plus_default_value']) ) $f['to_formValue_value_plus_default_value'] = 1;
+?>
+<a name="to_formValue_value_plus_default_name"></a>
+<input type="hidden" name="to_formValue_value_plus_default_value" id="to_formValue_value_plus_default_value_id" value="<?=$f['to_formValue_value_plus_default_value']?>">
+<table><tr><td><fieldset><legend><a href="#to_formValue_value_plus_default_name" name="to_formValue_value_plus_default" onClick="return info_Set(this);"><div id="to_formValue_value_plus_default_status" class="inline"><? if ( !$f['to_formValue_value_plus_default_value']) { ?>+<? } else { ?>-<? } ?></div> Set to formValue() $variable plus default</a></legend>
+<div id="to_formValue_value_plus_default_show" class="<? if ( !$f['to_formValue_value_plus_default_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$to_formValue_value_plus_default?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// to_query_row
+if ( !isset($f['to_query_row_value']) ) $f['to_query_row_value'] = 1;
+?>
+<a name="to_query_row_name"></a>
+<input type="hidden" name="to_query_row_value" id="to_query_row_value_id" value="<?=$f['to_query_row_value']?>">
+<table><tr><td><fieldset><legend><a href="#to_query_row_name" name="to_query_row" onClick="return info_Set(this);"><div id="to_query_row_status" class="inline"><? if ( !$f['to_query_row_value']) { ?>+<? } else { ?>-<? } ?></div> Set to <?=$f['table']?>Info[]</a></legend>
+<div id="to_query_row_show" class="<? if ( !$f['to_query_row_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$to_query_row?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// query_row_to
+if ( !isset($f['query_row_to_value']) ) $f['query_row_to_value'] = 1;
+?>
+<a name="query_row_to_name"></a>
+<input type="hidden" name="query_row_to_value" id="query_row_to_value_id" value="<?=$f['query_row_to_value']?>">
+<table><tr><td><fieldset><legend><a href="#query_row_to_name" name="query_row_to" onClick="return info_Set(this);"><div id="query_row_to_status" class="inline"><? if ( !$f['query_row_to_value']) { ?>+<? } else { ?>-<? } ?></div> Set <?=$f['table']?>Info[] to $f[]</a></legend>
+<div id="query_row_to_show" class="<? if ( !$f['query_row_to_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$query_row_to_f?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+
+// to_default_value.
+if ( !isset($f['to_default_value_value']) ) $f['to_default_value_value'] = 1;
+?>
+<a name="to_default_value_name"></a>
+<input type="hidden" name="to_default_value_value" id="to_default_value_value_id" value="<?=$f['to_default_value_value']?>">
+<table><tr><td><fieldset><legend><a href="#to_default_value_name" name="to_default_value" onClick="return info_Set(this);"><div id="to_default_value_status" class="inline"><? if ( !$f['to_default_value_value']) { ?>+<? } else { ?>-<? } ?></div> Set to default value</a></legend>
+<div id="to_default_value_show" class="<? if ( !$f['to_default_value_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$to_default_value?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// not_isset_to_default
+if ( !isset($f['not_isset_to_default_value']) ) $f['not_isset_to_default_value'] = 1;
+?>
+<a name="not_isset_to_default_name"></a>
+<input type="hidden" name="not_isset_to_default_value" id="not_isset_to_default_value_id" value="<?=$f['not_isset_to_default_value']?>">
+<table><tr><td><fieldset><legend><a href="#not_isset_to_default_name" name="not_isset_to_default" onClick="return info_Set(this);"><div id="not_isset_to_default_status" class="inline"><? if ( !$f['not_isset_to_default_value']) { ?>+<? } else { ?>-<? } ?></div> if !isset() set to default value</a></legend>
+<div id="not_isset_to_default_show" class="<? if ( !$f['not_isset_to_default_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$not_isset_to_default?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// to_null.
+if ( !isset($f['to_null_value']) ) $f['to_null_value'] = 1;
+?>
+<a name="to_null_name"></a>
+<input type="hidden" name="to_null_value" id="to_null_value_id" value="<?=$f['to_null_value']?>">
+<table><tr><td><fieldset><legend><a href="#to_null_name" name="to_null" onClick="return info_Set(this);"><div id="to_null_status" class="inline"><? if ( !$f['to_null_value']) { ?>+<? } else { ?>-<? } ?></div> Set to NULL</a></legend>
+<div id="to_null_show" class="<? if ( !$f['to_null_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$to_null?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// SESSION_to_f.
+if ( !isset($f['SESSION_to_f_value']) ) $f['SESSION_to_f_value'] = 1;
+?>
+<a name="SESSION_to_f_name"></a>
+<input type="hidden" name="SESSION_to_f_value" id="SESSION_to_f_value_id" value="<?=$f['SESSION_to_f_value']?>">
+<table><tr><td><fieldset><legend><a href="#SESSION_to_f_name" name="SESSION_to_f" onClick="return info_Set(this);"><div id="SESSION_to_f_status" class="inline"><? if ( !$f['SESSION_to_f_value']) { ?>+<? } else { ?>-<? } ?></div> Set $_SESSION[] to $f[]</a></legend>
+<div id="SESSION_to_f_show" class="<? if ( !$f['SESSION_to_f_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$SESSION_to_f?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// SESSION_to_row.
+if ( !isset($f['SESSION_to_row_value']) ) $f['SESSION_to_row_value'] = 1;
+?>
+<a name="SESSION_to_row_name"></a>
+<input type="hidden" name="SESSION_to_row_value" id="SESSION_to_row_value_id" value="<?=$f['SESSION_to_row_value']?>">
+<table><tr><td><fieldset><legend><a href="#SESSION_to_row_name" name="SESSION_to_row" onClick="return info_Set(this);"><div id="SESSION_to_row_status" class="inline"><? if ( !$f['SESSION_to_row_value']) { ?>+<? } else { ?>-<? } ?></div> Set $_SESSION[] to <?=$f['table']?>Info[]</a></legend>
+<div id="SESSION_to_row_show" class="<? if ( !$f['SESSION_to_row_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$SESSION_to_row?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+// to_SESSION.
+if ( !isset($f['to_SESSION_value']) ) $f['to_SESSION_value'] = 1;
+?>
+<a name="to_SESSION_name"></a>
+<input type="hidden" name="to_SESSION_value" id="to_SESSION_value_id" value="<?=$f['to_SESSION_value']?>">
+<table><tr><td><fieldset><legend><a href="#to_SESSION_name" name="to_SESSION" onClick="return info_Set(this);"><div id="to_SESSION_status" class="inline"><? if ( !$f['to_SESSION_value']) { ?>+<? } else { ?>-<? } ?></div> Set to $_SESSION[]</a></legend>
+<div id="to_SESSION_show" class="<? if ( !$f['to_SESSION_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$to_SESSION?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+?>
+</fieldset></td></tr></table>
+</form>
+<?
+t_End(); // End TRACKing included file.
+
+?>

@@ -1,0 +1,42 @@
+<?
+// parseProcess_Get_departmentId.phpinc
+// Get departmentId.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+$query = "
+		SELECT departmentId
+			FROM `department`
+		 WHERE departmentCode = '".query_safe($thisClass['departmentCode'])."'
+";
+d_Var('departmentInfo',$query,'q');
+$departmentInfo = query_info($query);
+d_Var('$departmentInfo',$departmentInfo);
+if ( !$departmentInfo ) {
+	// INSERT department.
+	$query = "
+		INSERT INTO `department` (
+				departmentCode
+			, departmentName
+			, departmenttypeId
+			, AddedOn
+			, AddedBy
+		) VALUES (
+				'".query_safe($thisClass['departmentCode'])."'
+			, '".query_safe($department[$thisClass['departmentCode']])."'
+			, 179
+			, '".currentDateTime()."'
+			, ".$_SESSION['user']['trueId']."
+		)
+	";
+	d_Var('departmentINSERT',$query,'q');
+	$departmentINSERT = query_do($query);
+	d_Var('$departmentINSERT',$departmentINSERT,'l');
+	$departmentInfo['departmentId'] = $GLOBALS['_QUERY']['insertId'];
+	d_Var("\$departmentInfo['departmentId']",$departmentInfo['departmentId']);
+}
+$departmentId[$thisClass['departmentCode']] = $departmentInfo['departmentId'];
+d_Var('$departmentId['.$thisClass['departmentCode'].']',$departmentId[$thisClass['departmentCode']],'');
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

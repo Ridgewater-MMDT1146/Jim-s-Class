@@ -1,0 +1,27 @@
+<?
+// BEGIN Process classmeeting days.
+#d_Var('$thisClassmeeting',$thisClassmeeting,'d');
+for( $i=0; $i<strlen($thisClassmeeting['DAYS']); $i++ ) 
+{
+	$weekdayD = substr( $thisClassmeeting['DAYS'], $i, 1 );
+	if ( $weekdayD != ' ' ) {
+		if ( isset($weekdayIds[$weekdayD]) ) {
+			$query = "
+			INSERT INTO `classmeetingweekday` (
+					classmeetingId
+				, weekdayId
+			) VALUES (
+					".$thisClassmeeting['classmeetingId']."
+				, ".$weekdayIds[$weekdayD]."
+			)
+		";
+		d_Var('classmeetingweekdayINSERT',$query,'q');
+		$classmeetingweekdayINSERT = query_do($query);
+		d_Var('$classmeetingweekdayINSERT',$classmeetingweekdayINSERT,'l');
+		} else {
+			programmingError("There are no weekday with a abbr of [".$weekdayD."]!");
+		}
+	}
+}
+// END Process classmeeting days.
+?>

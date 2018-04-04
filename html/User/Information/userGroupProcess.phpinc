@@ -1,0 +1,43 @@
+<?
+// admin/user/userGroupProcess.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+formValue('userId');
+formValue('inGroup');
+formValue('notGroup');
+#d_V('inGroup');
+#d_V('notGroup');
+if ($f['inGroup']) {
+  foreach ($f['inGroup'] as $index => $f['groupId'])  {
+    #d_Var('$groupId',$f['groupId']);
+    if ( $_SESSION['user']['userId'] != 1 || $f['groupId'] != 1 ) {
+      $query = "
+        DELETE
+          FROM user_group
+         WHERE groupId = ".$f['groupId']."
+           AND userId = ".$_SESSION['user']['userId']."
+      ";
+      $user_groupDelete = query_do($query);
+      #d_Var('$query',$query,'q');
+    }
+  }
+}
+if ($f['notGroup']) {
+  foreach ($f['notGroup'] as $index => $f['groupId'])  {
+  $query = "
+    INSERT
+      INTO user_group (
+      groupId,
+      userId
+    ) VALUES (
+      ".$f['groupId'].",
+      ".$_SESSION['user']['userId']."
+    )
+  ";
+  $user_groupInsert = query_do($query);
+}
+
+}
+t_End(); // End TRACKing included file.
+?>

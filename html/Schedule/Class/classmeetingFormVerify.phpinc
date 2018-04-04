@@ -1,0 +1,44 @@
+<?
+// classmeetingFormVerify.phpinc
+// Verify the classmeeting form.
+t_Begin(); // Begin TRACKing included file.
+unset($formError); // Begin with no errors.
+
+// Verify classmeetingId.
+f('classmeetingId'); $is_valid = is_valid('classmeetingId',$f['classmeetingId'],'classmeetingId','classmeeting',true);
+if ( $is_valid !== true ) { $formError['classmeetingId'] = $is_valid; } // ENTRY ERROR! The classmeetingId is not valid.
+
+// Verify classId.
+f('classId'); $is_valid = is_valid('classId',$f['classId'],'classId','classmeeting');
+if ( $is_valid !== true ) { $formError['classId'] = $is_valid; } // ENTRY ERROR! The classId is not valid.
+
+// Verify classmeetingStartDate.
+f('classmeetingStartDate'); $is_valid = is_valid('classmeetingStartDate',$f['classmeetingStartDate'],'classmeetingStartDate','classmeeting');
+if ( $is_valid !== true ) { $formError['classmeetingStartDate'] = $is_valid; } // ENTRY ERROR! The classmeetingStartDate is not valid.
+
+// Verify classmeetingEndDate.
+f('classmeetingEndDate'); $is_valid = is_valid('classmeetingEndDate',$f['classmeetingEndDate'],'classmeetingEndDate','classmeeting');
+if ( $is_valid !== true ) { $formError['classmeetingEndDate'] = $is_valid; } // ENTRY ERROR! The classmeetingEndDate is not valid.
+
+// Verify weekdayId.
+f('weekdayId'); $is_valid = is_valid('weekdayId',$f['weekdayId'],'weekdayId','classmeeting');
+if ( $is_valid !== true ) { $formError['weekdayId'] = $is_valid; } // ENTRY ERROR! The weekdayId is not valid.
+
+// Verify classmeetingBeginTime.
+f('classmeetingBeginTime'); $is_valid = is_valid('classmeetingBeginTime',$f['classmeetingBeginTime'],'classmeetingBeginTime','classmeeting');
+if ( $is_valid !== true ) { $formError['classmeetingBeginTime'] = $is_valid; } // ENTRY ERROR! The classmeetingBeginTime is not valid.
+
+// Verify classmeetingEndTime.
+f('classmeetingEndTime'); $is_valid = is_valid('classmeetingEndTime',$f['classmeetingEndTime'],'classmeetingEndTime','classmeeting');
+if ( $is_valid !== true ) { $formError['classmeetingEndTime'] = $is_valid; } // ENTRY ERROR! The classmeetingEndTime is not valid.
+
+// Verify roomId.
+f('roomId'); $is_valid = is_valid('roomId',$f['roomId'],'roomId','classmeeting');
+if ( $is_valid !== true ) { $formError['roomId'] = $is_valid; } // ENTRY ERROR! The roomId is not valid.
+
+// Verify userId.
+f('userId'); $is_valid = is_valid('userId',$f['userId'],'userId','classmeeting');
+if ( $is_valid !== true ) { $formError['userId'] = $is_valid; } // ENTRY ERROR! The userId is not valid.
+
+t_End(); // End TRACKing included file.
+?>

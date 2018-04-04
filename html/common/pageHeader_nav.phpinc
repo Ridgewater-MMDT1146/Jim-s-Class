@@ -1,0 +1,56 @@
+<?
+// common/pageHeader_nav.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing pageHeader_nav.phpinc.
+#d_Line('','/');
+
+//  Load nav_top (Loads first nav_top.phpinc found starting in the current directory and working up to the root directory).
+$currentDirectory = dirname($_SERVER['SCRIPT_FILENAME']);
+d_Var('$currentDirectory',$currentDirectory);
+d_Var("\$_SESSION['ROOT']['directory']",$_SESSION['ROOT']['directory']);
+
+?>
+<nav class="navbar navbar-default navbar-fixed-top "><!-- Begin Fixed nav bar   -->
+	<div class="container-fluid">  <!--Begin container-fluid in Fixed nav bar-->
+<?
+if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] && $GLOBALS['DEBUG_Show_menu'] ) require('common/pageHeader_nav_DEBUG.phpinc');
+$nav_top_not_found = true;
+while ( $nav_top_not_found ) {
+	if (file_exists($currentDirectory."/nav_top.phpinc")) {
+		d_Line("$currentDirectory/nav_top.phpinc found.",'a');
+		$nav_top_not_found = false;
+		require($currentDirectory."/nav_top.phpinc");
+	} else {
+		d_Line("$currentDirectory/nav_top.phpinc not found.",'e');
+		if ( $currentDirectory == $_SESSION['ROOT']['directory'] ) $nav_top_not_found = false;
+		d_Var('strrpos',strrpos($currentDirectory,'/'));
+		$currentDirectory = substr($currentDirectory,0,strrpos($currentDirectory,'/'));
+		d_Var('$currentDirectory',$currentDirectory);
+	}
+}
+?>
+	</div>  <!-- End container-fluid in Fixed nav bar-->
+</nav> <!-- End Fixed nav bar-->      
+<?
+//  Load side nav (Loads first nav.phpinc found starting in the current directory and working up to the root directory).
+$currentDirectory = dirname($_SERVER['SCRIPT_FILENAME']);
+d_Var('$currentDirectory',$currentDirectory);
+d_Var("\$_SESSION['ROOT']['directory']",$_SESSION['ROOT']['directory']);
+$nav_not_found = true;
+while ( $nav_not_found ) {
+	if (file_exists($currentDirectory."/nav.phpinc")) {
+		d_Line("$currentDirectory/nav.phpinc found.",'a');
+		$nav_not_found = false;
+		require($currentDirectory."/nav.phpinc");
+	} else {
+		d_Line("$currentDirectory/nav.phpinc not found.",'e');
+		if ( $currentDirectory == $_SESSION['ROOT']['directory'] ) $nav_not_found = false;
+		d_Var('strrpos',strrpos($currentDirectory,'/'));
+		$currentDirectory = substr($currentDirectory,0,strrpos($currentDirectory,'/'));
+		d_Var('$currentDirectory',$currentDirectory);
+	}
+}
+
+t_End(); // End TRACKing pageHeader_nav.phpinc.
+?>

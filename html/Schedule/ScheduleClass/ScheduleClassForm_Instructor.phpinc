@@ -1,0 +1,101 @@
+<?
+// Schedule/ScheduleClassForm_Instructor.phpinc
+// Display instructor choices.
+
+t_Begin(); // Begin TRACKing ScheduleClassForm_Instructor.phpinc.
+
+// Get instructor data.
+$query = "
+    SELECT user.userId
+         , userFirstname
+         , userMiddlename
+         , userLastname
+         , userNickname
+				 , CONCAT(IFNULL(userNickname,userFirstname),IF (ISNULL(userMiddlename),'',CONCAT(' ',userMiddlename)),IF (ISNULL(userLastname),'',CONCAT(' ',userLastname))) AS instructorName
+      FROM `user`
+			JOIN `user_department` ON user_department.userId = user.userId
+     WHERE userInactive = 0
+       AND user_department.departmentId = ".$f['departmentId']."
+  ORDER BY instructorName
+";
+#d_Var('instructorResult',$query,'dq');
+$instructorResult = query_do($query);
+$instructorCount = $GLOBALS['_QUERY']['count'];
+#d_Var('$instructorResult',$instructorResult,'d');
+if ( !$instructorCount ) programmingError('No instructors found.');
+// Store instructorIds.
+query_seek($instructorResult, 0);
+$instructorIds = array();
+while ($thisInstructor = query_row($instructorResult)) {
+	$instructorIds[] = $thisInstructor['userId'];
+}
+#d_Var('$instructorIds',$instructorIds,'d');
+?>
+<?
+$instructorSelectedIds = array();
+for ( $instructorIndex=0; $instructorIndex<count($instructorIds); $instructorIndex++ ) { // Loop thru $instructorIds.
+	$instructorId = $instructorIds[$instructorIndex];
+	if ( isset($thisMeeting['Instructor'][$instructorIndex]) ) {
+		$f['Instructor'] = $thisMeeting['Instructor'][$instructorIndex];
+	} else {
+		$f['Instructor'] = 0;
+	}
+	if ( !$f['Instructor'] && $instructorIndex > 0 ) {
+		$instructorClass = ' hidden';
+	} else {
+		$instructorClass = '';
+	}
+	#d_Var('$instructorId',$instructorId,'d');
+?>
+<div id="divInstructor_<?=$instructorIndex?>"<? if ( $instructorIndex > 0 ) { ?> class="<?=$instructorClass?>"<? } ?>>
+<?
+// Instructor
+?>
+<label for="selInstructor_<?=$scmId?>_<?=$instructorIndex?>">Instructor:
+	<select name="instructorId_<?=$scmId?>_<?=$instructorIndex?>" id="selInstructor_<?=$scmId?>_<?=$instructorIndex?>" onChange="SetupInstructorOptions(this); ShowInstructorButton(<?=$instructorIndex?>);">
+   	<option></option>
+<?
+if ( $instructorCount ) {
+	// Load room options.
+	query_seek($instructorResult, 0);
+	while ($instructorInfo = query_row($instructorResult)) {
+		if ( !in_array($instructorInfo['userId'],$instructorSelectedIds) ) {
+	?>
+			<option value="<?=$instructorInfo['userId']?>"<? if ( $f['Instructor'] == $instructorInfo['userId'] ) { ?> selected<? } ?>><?=$instructorInfo['instructorName']?></option>
+	<?
+		}
+	}
+} else {
+	// Output only a blank option.
+?>
+<?
+}
+/** /
+query_seek($instructorResult, 0);
+while ($instructorInfo = query_row($instructorResult)) {
+?>
+  	<option value="<?=$instructorInfo['userId']?>"<? if ( $f['Instructor'] == $instructorInfo['userId'] ) { ?> selected<? } ?>><?=$instructorInfo['instructorName']?></option>
+<?
+}
+	/**/
+?>
+  </select>
+</label>
+<?
+	if ( isset($instructorIds[$instructorIndex+1]) ) {
+		if ( $f['Instructor'] ) {
+			$btnShowInstructorClass = '';
+			$instructorSelectedIds[] = $f['Instructor'];
+		} else {
+			$btnShowInstructorClass = ' hidden';
+		}
+		$nextInstructorIndex = $instructorIndex+1;
+		button('+','Add another instructor', "ShowNextInstructor(".$nextInstructorIndex.");", '', 'small'.$btnShowInstructorClass, 'btnShowInstructor_'.$instructorIndex);
+	}
+?>
+</div><!-- divInstructor_instructorId -->
+<?
+} // Loop thru $instructorIds.
+
+t_End(); // End TRACKing ScheduleClassForm_Instructor.phpinc.
+?>

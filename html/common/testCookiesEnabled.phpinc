@@ -1,0 +1,25 @@
+<?
+// common/testCookiesEnabled.phpinc
+// Warn user to enable Cookies.
+
+t_Begin(); // Begin TRACKing included file.
+
+if ( isset($_COOKIE['PHPSESSID']) ) {
+  $_SESSION['APP']['REQUIRES']['cookies'] = 'OK';
+} else {
+?>
+  <br>
+  <b>Cookies are disabled by your browser.</b><br>
+  <b class="attention">Cookies are disabled by your browser.</b><br>
+  <b class="error">Cookies are disabled by your browser.</b><br>
+  <br>
+  <span class="appName bold"><?=$_SESSION['APP']['shortname']?></span> makes use of Cookies and will not work correctly if Cookies are disabled.<br>
+  <br>
+  <b>Until you enable Cookies, this is the only page you will see.</b><br>
+  Once you get Cookies enabled, you can reload this page or click on a menu item above to continue.
+<?
+  pageFooter();
+}
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

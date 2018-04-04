@@ -1,0 +1,139 @@
+<?
+// Schedule/ScheduleChange/ScheduleChange.phpinc
+// Display forn or update settings.
+// calendar_dayview, calendar_timebegin, calendar_timeend, calendar_timeincrement, calendar_incrementheight
+
+t_Begin(); // Begin TRACKing ScheduleChange.phpinc.
+
+f('sessionId'); if ( !$f['sessionId'] ) !$f['sessionId'] = 0;
+f('departmentId'); if ( !$f['departmentId'] ) !$f['departmentId'] = 0;
+f('scheduleId'); if ( !$f['scheduleId'] ) !$f['scheduleId'] = 0;
+if ( !$f['scheduleId'] && $_SESSION['user']['scheduleId'] ) $f['scheduleId'] = $_SESSION['user']['scheduleId'];
+f('scheduleName');
+
+// Get user schedules.
+$departmentIdList = array_to_list($_SESSION['user']['department']); if ( !$departmentIdList ) $departmentIdList = '0';
+#d_Var('$departmentIdList',$departmentIdList,'d');
+$query = "
+    SELECT scheduleId
+         , department.departmentId
+         , session.sessionId
+         , scheduleName
+				 , departmentCode
+				 , departmentName
+				 , YRTR
+				 , sessionName
+      FROM `schedule`
+      JOIN `department` ON schedule.departmentId = department.departmentId
+      JOIN `session` ON schedule.sessionId = session.sessionId
+     WHERE schedule.departmentId IN ( ".$departmentIdList." )
+  ORDER BY departmentCode, YRTR
+";
+d_Var('scheduleResult',$query,'q');
+$scheduleResult = query_do($query);
+$scheduleCount = $GLOBALS['_QUERY']['count'];
+d_Var('$scheduleResult',$scheduleResult);
+
+// Get sessions.
+$query = "
+    SELECT sessionId
+         , YRTR
+         , sessionName
+         , sessionDescription
+      FROM `session`
+		 WHERE sessionEnd > '".currentDate()."'
+  ORDER BY YRTR DESC
+";
+d_Var('sessionResult',$query,'q');
+$sessionResult = query_do($query);
+$sessionCount = $GLOBALS['_QUERY']['count'];
+d_Var('$sessionResult',$sessionResult);
+
+include('site/get_user_departments.phpinc'); // Get user departments.
+
+?>
+<style type="text/css">
+	#inp_scheduleName { width: 19em; }
+</style>
+<?
+sectionHeader();
+
+// BEGIN form.
+?>
+<fieldset><legend>Change or create schedule</legend>
+<form name="form_name" action="<?=php_self()?>" method="get">
+  <input type="hidden" name="form" value="form_name">
+  <input type="hidden" name="uuid" value="<?=uuid()?>">
+<?
+if ( $scheduleCount ) {
+// Select an existing schedule.
+?>
+<span class="float_left">
+<fieldset><legend>Change schedule to work on</legend>
+Schedule: <select name="scheduleId" id="sel_scheduleId" onChange="ScheduleChange_ChangeScheduleButtonCheck(this)">
+		<option value="" selected disabled></option>
+<?
+  query_seek($scheduleResult, 0);
+  while ($scheduleInfo = query_row($scheduleResult)) {
+?>
+		<option value="<?=$scheduleInfo['scheduleId']?>"<? if ( $scheduleInfo['scheduleId'] == $_SESSION['user']['scheduleId']) { ?> disabled<? } ?>><?=$scheduleInfo['scheduleName']?> (<?=$scheduleInfo['departmentCode']?> <?=$scheduleInfo['YRTR']?><? if ( $scheduleInfo['scheduleId'] == $_SESSION['user']['scheduleId']) { ?> current<? } ?>)</option>
+<?
+  }
+?>
+	</select>
+	<input type="button" name="task" id="btn_Change_schedule" value="Change schedule" onclick="formSubmit(this);" onmouseover="ttShow('Change to the selected schedule');" onmouseout="ttHide();" disabled>
+</fieldset>
+<br><br><? button('Cancel','Do not change the schedule view settings.',"return ScheduleChange('Cancel');"); ?><br>
+</span>
+<fieldset class="float_left"><legend>Create a new schedule</legend>
+<?
+}// Select schedule
+// Request sessionId and departmentId for a new schedule.
+?>
+<table>
+<? if ( isset($formError['sessionId']) ) { ?>
+  <tr><td class="error" colspan="2"><?=$formError['sessionId']?></td></tr>
+<? } ?>
+	<tr><td class="right">Session:</td><td><select name="sessionId" id="sel_sessionId" onChange="ScheduleChange_CreateScheduleButtonCheck(this)">
+		<option value="" selected disabled></option>
+<?
+if ( $sessionCount ) {
+  query_seek($sessionResult, 0);
+  while ($sessionInfo = query_row($sessionResult)) {
+?>
+		<option value="<?=$sessionInfo['sessionId']?>"<? if ( $f['sessionId'] == $sessionInfo['sessionId'] ) { ?> selected<? } ?>><?=$sessionInfo['sessionName']?> (<?=$sessionInfo['YRTR']?>)</option>
+<?
+  }
+}
+?>
+	</select></td></tr>
+<? if ( isset($formError['departmentId']) ) { ?>
+  <tr><td class="error" colspan="2"><?=$formError['departmentId']?></td></tr>
+<? } ?>
+	<tr><td class="right">Department:</td><td><select name="departmentId" id="sel_departmentId" onChange="ScheduleChange_CreateScheduleButtonCheck(this)">
+		<option value="" selected disabled></option>
+<?
+if ( $departmentCount ) {
+  query_seek($departmentResult, 0);
+  while ($departmentInfo = query_row($departmentResult)) {
+?>
+		<option value="<?=$departmentInfo['departmentId']?>"<? if ( $f['departmentId'] == $departmentInfo['departmentId'] ) { ?> selected<? } ?>><?=$departmentInfo['departmentCode']?> - <?=$departmentInfo['departmentName']?></option>
+<?
+  }
+}
+?>
+	</select></td></tr>
+<? if ( isset($formError['scheduleName']) ) { ?>
+  <tr><td class="error" colspan="2"><?=$formError['scheduleName']?></td></tr>
+<? } ?>
+	<tr><td class="right">Schedule name:</td><td><input type="text" name="scheduleName" id="inp_scheduleName" value="<?=htmlSafe($f['scheduleName'])?>" onInput="ScheduleChange_CreateScheduleButtonCheck(this)"> <input type="button" name="task" id="btn_Create_new_schedule" value="Create new schedule" onclick="formSubmit(this);" onmouseover="ttShow('Create a new schedule');" onmouseout="ttHide();" disabled></td></tr>
+</table>
+</fieldset>
+</form>
+</fieldset>
+<?
+sectionFooter();
+
+#d_On('foot');
+t_End(); // End TRACKing ScheduleChange.phpinc.
+?>

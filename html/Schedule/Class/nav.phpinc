@@ -1,0 +1,17 @@
+<?
+// saranya-nav.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// include_filename_content_goes_here.
+?>
+<ul class="nav nav-sidebar">
+	<li><a href="../" role="button" class="btn btn-xs">Schedule</a></li>
+	<? if ( $GLOBALS['f']['task'] != '' ) { ?><li><a href="?task=" role="button" class="btn btn-xs">Class</a></li><? } ?>
+	<? if ( $GLOBALS['f']['task'] != 'ClassMeeting' ) { ?><li><a href="?task=ClassMeeting" role="button" class="btn btn-xs">Meeting</a></li><? } ?>
+</ul>
+<?
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

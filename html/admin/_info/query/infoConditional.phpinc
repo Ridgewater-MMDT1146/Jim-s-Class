@@ -1,0 +1,53 @@
+<?
+// admin/_info/form/infoConditional.phpinc
+// Display conditional selection.
+t_Begin(); // Begin TRACKing included file.
+d_Var('$queryType',$queryType);
+if ( !isset($f['conditionIs']) || $f['subtask'] == 'Reset' ) {
+  // Set conditionals to default values.
+  foreach ( $fieldArray as $fieldArrayKey => $fieldArrayValue ) {
+    #d_Var($fieldArrayKey.' $fieldArrayValue',$fieldArrayValue);
+    $fieldArray[$fieldArrayKey]['conditional'] = 0; // Begin unchecked.
+    if ( $fieldArrayValue['Null'] == 'YES' ) {
+      //$fieldArray[$fieldArrayKey]['conditional'] = 1; // Null fields are conditional and default to checked..
+      if ( ( $queryType == 'INSERT' && substr($fieldArrayKey,0,5) == 'Added' ) || ( $queryType == 'UPDATE' && substr($fieldArrayKey,0,8) == 'Modified' ) ) $fieldArray[$fieldArrayKey]['conditional'] = 0;
+    }
+  }
+}
+if ( !isset($f['conditionIs']) ) $f['conditionIs'] = "f";
+if ( $f['conditionIs'] == 'f' ) {
+  $conditionalUse = "f('field')";
+} elseif ( $f['conditionIs'] == 'isset' ) {
+  $conditionalUse = " isset(field)";
+} elseif ( $f['conditionIs'] == 'isfalse' ) {
+  $conditionalUse = "field!==false";
+} else {
+  $conditionalUse = "field";
+}
+?>
+<br>
+Check fields to only <?=$queryType?> if (<div id="conditionalUse" class="inline"><?=$conditionalUse?></div>). This is used for conditional <?=$queryType?>.
+<input type="hidden" name="task" value="<?=$f['task']?>">
+<input type="hidden" name="database" value="<?=$f['database']?>">
+<input type="hidden" name="table" value="<?=$f['table']?>">
+Use
+<input type="radio" name="conditionIs" value="f"<? if ( $f['conditionIs'] == 'f' ) { ?> checked<? } ?> onChange="document.getElementById('conditionalUse').innerHTML = 'f(field!==NULL)';<? if ( !isset($forceQuery) ) { ?> info_gotoName(this,'conditional_settings'); formSubmit(this,{'subtask':'Update'});<? } ?>">if (f(field)!==NULL)
+<input type="radio" name="conditionIs" value="isset"<? if ( $f['conditionIs'] == 'isset' ) { ?> checked<? } ?> onChange="document.getElementById('conditionalUse').innerHTML = 'isset(field)';<? if ( !isset($forceQuery) ) { ?> info_gotoName(this,'conditional_settings'); formSubmit(this,{'subtask':'Update'});<? } ?>">if (isset(field))
+<input type="radio" name="conditionIs" value="isfalse"<? if ( $f['conditionIs'] == 'isfalse' ) { ?> checked<? } ?> onChange="document.getElementById('conditionalUse').innerHTML = 'field!==false';<? if ( !isset($forceQuery) ) { ?> info_gotoName(this,'conditional_settings'); formSubmit(this,{'subtask':'Update'});<? } ?>">if (field!==false)
+<input type="radio" name="conditionIs" value="isvalue"<? if ( $f['conditionIs'] == 'notvalue' ) { ?> checked<? } ?> onChange="document.getElementById('conditionalUse').innerHTML = 'field';<? if ( !isset($forceQuery) ) { ?> info_gotoName(this,'conditional_settings'); formSubmit(this,{'subtask':'Update'});<? } ?>">if (field) &nbsp;for condition.<br>
+<input type="<? if ( !isset($forceQuery) ) { ?>submit<? } else { ?>button<? } ?>" name="Clear" value="Clear" class="smaller" title="Clear all conditional settings." onClick="info_SetAllCheckBoxes(this,'conditional',false); info_gotoName(this,'conditional_settings');">
+<? //if ( !isset($forceQuery) ) { ?>
+<input type="<? if ( !isset($forceQuery) ) { ?>submit<? } else { ?>button<? } ?>" name="subtask" value="Reset" class="smaller" title="Reset all conditional settings." onClick="info_gotoName(this,'conditional_settings');">
+<? //} else { ?>
+<input type="<? if ( !isset($forceQuery) ) { ?>submit<? } else { ?>button<? } ?>" name="Set" value="Set" class="smaller" title="Set all conditional settings." onClick="info_SetAllCheckBoxes(this,'conditional',true); info_gotoName(this,'conditional_settings');"> 
+<? //} ?>
+<?
+query_seek($fieldResult, 0);
+while ($fieldInfo = query_row($fieldResult)) {
+  if ( !isset($fieldArray[$fieldInfo['Field']]['conditional']) ) formValue('',$fieldInfo['Field'].'_conditional',"fieldArray['".$fieldInfo['Field']."']]['conditional']");
+  if ( $fieldInfo['Null'] != 'NO' && ( ( $queryType == 'INSERT' && substr($fieldInfo['Field'],0,8) != 'Modified' ) || ( $queryType == 'UPDATE' && substr($fieldInfo['Field'],0,5) != 'Added' ) || $queryType == 'INSERT or UPDATE' ) ) {
+  ?><div class="inline_info nowrap_info"><input type="checkbox" name="<?=$fieldInfo['Field']?>_conditional" id="conditional_<?=$fieldInfo['Field']?>_id" value="1"<? if ( $fieldArray[$fieldInfo['Field']]['conditional'] ) { ?> checked<? } ?> title="Check to make <?=$fieldInfo['Field']?> conditional."<? if ( !isset($forceQuery) ) { ?> onClick="info_gotoName(this,'conditional_settings'); formSubmit(this,{'subtask':'Update'});"<? } ?>><?=$fieldInfo['Field']?></div> <?
+  }
+}
+t_End(); // End TRACKing included file.
+?>

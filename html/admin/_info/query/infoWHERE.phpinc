@@ -1,0 +1,48 @@
+<?
+// infoWHERE.phpinc
+// Add the WHERE section to the query.
+
+t_Begin(); // Begin TRACKing included file.
+d_Var('$fieldArray',$fieldArray,'k');
+d_Var('$query',$query);
+if ( !isset($indent) ) { $indent = ''; }
+if ( !isset($query) ) { $query = ''; }
+if ( !isset($querytable )) { $querytable = ''; }
+$indexField = array();
+$orderBy = '';
+$field1 = '';
+$field2 = '';
+if ( !isset($queryType) ) $queryType = '';
+$prefix = $indent.'     WHERE';
+d_Var('$queryType',$queryType);
+d_Var('$prefix',$prefix);
+foreach ($fieldArray as $fieldName => $fieldValue) {
+  d_Var('$fieldName',$fieldName);
+  d_Var('$fieldValue',$fieldValue);
+  if ( $fieldValue['Key'] == 'PRI' ) {
+    $indexField[] = $fieldName; // Remember the PRImary keys.
+  } elseif ( !$field1 ) {
+    $field1 = $fieldName; // Remember the first non PRImary fieldName
+  } elseif ( !$field2 ) {
+    $field2 = $fieldName; // Remember the second non PRImary fieldName
+  }
+  if ( !$orderBy && strlen(stristr($fieldName,'name')) ) $orderBy=$fieldName; // Remember the first fieldName where part of it is 'name'.
+  $qc = info_fieldQC($fieldValue['Type']); // Get the field quote chars.
+  if ( $queryType != 'INSERT or UPDATE' || $prefix == $indent.'     WHERE' ) {
+    $query .= $prefix." ".$fieldName." = ".trim($qc[0]).info_userBy($fieldName).$qc[1].in();
+    $querytable .= $prefix." ".$f['table'].".".$fieldName." = ".$qc[0].info_userBy($fieldName).$qc[1].in();
+  }
+  $prefix = $indent.'       AND';
+}
+if ( !$indexField ) $indexField[] = $field1; // No PRImary key was found so set $indexField to the first field.
+if ( !$orderBy ) {
+  if ( $field2 ) {
+    $orderBy = $field2; // No fieldName where part of it is 'name' so set $orderBy to the second field.
+  } else {
+    $orderBy = $field12; // No fieldName where part of it is 'name' and no second field so set $orderBy to the first field.
+  }
+}
+d_Var('$prefix',$prefix);
+d_Var('$query',$query);
+t_End(); // End TRACKing included file.
+?>

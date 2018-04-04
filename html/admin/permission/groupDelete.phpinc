@@ -1,0 +1,34 @@
+<?
+// admin/group/groupDelete.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+formValue('userpermissionId');
+// DELETE group from group_page.
+$query = "
+    DELETE
+      FROM `group_page`
+     WHERE userpermissionId = ".$f['userpermissionId']."
+";
+#d_Var('$query',$query,'q');
+$group_pageDelete = query_do($query);
+// DELETE group from user_userpermission.
+$query = "
+    DELETE
+      FROM `user_userpermission`
+     WHERE userpermissionId = ".$f['userpermissionId']."
+";
+#d_Var('$query',$query,'q');
+$user_userpermissionDelete = query_do($query);
+// DELETE group from userpermission.
+$query = "
+    DELETE
+      FROM `userpermission`
+     WHERE userpermissionId = ".$f['userpermissionId']."
+";
+#d_Var('$query',$query,'q');
+$groupDelete = query_do($query);
+
+t_End(); // End TRACKing included file.
+#pageFooter();
+?>

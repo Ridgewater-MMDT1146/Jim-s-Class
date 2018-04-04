@@ -1,0 +1,27 @@
+<?
+// admin/_info/form/infoForm_Code_ListCode.phpinc
+// Display the list form code.
+t_Begin(); // Begin TRACKing included file.
+if ( !isset($f['list_code_value']) ) $f['list_code_value'] = 1;
+?>
+<a name="list_code_name"></a>
+<input type="hidden" name="list_code_value" id="list_code_value_id" value="<?=$f['list_code_value']?>">
+<table><tr><td><fieldset><legend><a href="#list_code_name" name="list_code" onClick="return info_Set(this);"><div id="list_code_status" class="inline"><? if ( !$f['list_code_value']) { ?>+<? } else { ?>-<? } ?></div> <?=$f['filenameBase']?>List code <span class="small_info">(using <?=$f['displayListUsing']?>)</span></a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'list_code_name');"></legend>
+<div id="list_code_show" class="<? if ( !$f['list_code_value']) { ?>d_s_h <? } ?>d_s_l">
+<?
+switch( $f['displayListUsing'] ) {
+  case 'css':
+    include('admin/_info/form/infoForm_Code_ListCode_CSS.phpinc');
+  break;
+  case 'table':
+    include('admin/_info/form/infoForm_Code_ListCode_Table.phpinc');
+  break;
+  default:
+    programmingError('The displayListUsing ('.$f['displayListUsing'].') is of incorrect type.');
+}
+?>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

@@ -1,0 +1,24 @@
+<?
+// buildingFormVerify.phpinc
+// Verify the building form.
+t_Begin(); // Begin TRACKing included file.
+unset($formError); // Begin with no errors.
+
+// Verify buildingId.
+f('buildingId'); $is_valid = is_valid('buildingId',$f['buildingId'],'buildingId','building',true);
+if ( $is_valid !== true ) { $formError['buildingId'] = $is_valid; } // ENTRY ERROR! The buildingId is not valid.
+
+// Verify campusId.
+f('campusId'); $is_valid = is_valid('campusId',$f['campusId'],'campusId','building');
+if ( $is_valid !== true ) { $formError['campusId'] = $is_valid; } // ENTRY ERROR! The campusId is not valid.
+
+// Verify buildingCode.
+f('buildingCode'); $is_valid = is_valid('buildingCode',$f['buildingCode'],'buildingCode','building');
+if ( $is_valid !== true ) { $formError['buildingCode'] = $is_valid; } // ENTRY ERROR! The buildingCode is not valid.
+
+// Verify buildingName.
+f('buildingName'); $is_valid = is_valid('buildingName',$f['buildingName'],'buildingName','building');
+if ( $is_valid !== true ) { $formError['buildingName'] = $is_valid; } // ENTRY ERROR! The buildingName is not valid.
+
+t_End(); // End TRACKing included file.
+?>

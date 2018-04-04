@@ -1,0 +1,165 @@
+<?
+// application.phpinc
+// Performs setup for this web application. Includes functions, authentication, debugging, etc...
+// ********** Note that application.phpinc MUST be in the website root folder.
+
+// DEBUGGING. See application_DEBUG.phpinc for debugging SETUP and DOCUMENTATION.
+// ********** Uncomment the line below to enable debugging functionality for the site#.
+$debuggingAvailable = true; // Comment this line to disable debugging.
+if ( !isset($debuggingAvailable) ) $debuggingAvailable = false;
+
+// Set the default timezone.
+$default_timezone = 'America/Chicago'; date_default_timezone_set($default_timezone);
+
+// Start the session.
+session_start();
+ob_start();
+// Set the session timeout in seconds. If unset it will expire when the browser closes.
+// For 1hr use 3600 (60min*60sec=3600). For 20min use 1200 (20min*60sec=1200).
+// ********** Uncomment the lines below to set the session timeout.
+#if (isset($_COOKIE[session_name()])) { setcookie(session_name(), $_COOKIE[session_name()], time()+3600, '/'); }
+
+// Add the website root to the PHP include_path.
+$include_path_original = ini_get('include_path'); // Save the current include_path.
+ini_set('include_path','.'.PATH_SEPARATOR.dirname(__FILE__).PATH_SEPARATOR.str_replace('.'.PATH_SEPARATOR,'',ini_get('include_path'))); // Inject the website root into include_path.
+$include_path_new = ini_get('include_path'); // Get the new include_path.
+/**/ // ********** Put a space between the last * and / to comment out this section of code. This code ensures include_path was changed.
+#echo ini_get('include_path');
+if ( $include_path_original == $include_path_new ) { // Was the include_path changed?
+  // Unable to change include_path; show error and exit.
+  $commentLine = __LINE__ - 3; // Get the line number of the comment line above.
+?>
+  Unable to add website root to the PHP include_path. All require() statements will need to use full or relative paths.<br>
+  You can eliminate this error message by turning <b><?=basename(__FILE__)?></b> line <b><?=$commentLine?></b> into a comment.<br>
+  ini_get('include_path') == <b>'<?=ini_get('include_path')?>'</b>.<br>
+  <span class="d_s_fl"><?=basename(__FILE__)?></span><span class="d_s_fp"> (<?=__FILE__?>:<?=__LINE__?>)</span><br>
+<?
+  ob_end_flush(); exit;
+}
+/**/
+
+// Track page time start.
+if ( $debuggingAvailable ) {
+	$page_time_begin = microtime(true); // Get page start time.
+}
+
+// Check for URL session switch.
+if ( isset($_GET['session']) ) {
+	// Reset session.
+	session_unset();
+	session_destroy();
+	session_start();
+	ob_start();
+}
+
+$_PAGE = array(); // Used to track page status variables.
+
+// Set the directory and http ROOT for file location. Note that application.phpinc MUST be in the website root folder.
+#unset($_SESSION['ROOT']); // ********** Uncomment this line to force reset of $_SESSION['ROOT'].
+if ( !isset($_SESSION['ROOT']) ) {
+  //if ( isset($messages) ) { $_SESSION['message'] = $messages; $_SESSION['message']['hold'] = 2; echo 'messages'; } else { $_SESSION['message'] = array(); echo 'NO messages'; }
+	$_SESSION['message'] = array();
+	$_SESSION['ROOT'] = array();
+  // Set the directory root for file includes or uploads.
+  $_SESSION['ROOT']['directory'] = str_replace("\\","/",dirname(__FILE__));
+  #$_SESSION['ROOT']['write'] = $_SESSION['ROOT']['directory'];
+	#if ( strpos($_SESSION['ROOT']['write'],'/home/jimmarti') !== false ) $_SESSION['ROOT']['write'] = str_replace('/home/jimmarti','',$_SESSION['ROOT']['write']);
+	#echo "\$_SESSION['ROOT']['directory']",$_SESSION['ROOT']['directory'];
+  // Set the http root for http requests.
+  if ( !isset($_SERVER['SUBDOMAIN_DOCUMENT_ROOT']) ) {
+    // Use the $_SERVER['DOCUMENT_ROOT'].
+    #echo "DEBUG: Use \$_SERVER['DOCUMENT_ROOT'] for directory root.".' <span class="d_s_fl">'.basename(__FILE__).'</span><span class="d_s_fp"> ('.__FILE__.':'.__LINE__.')</span>'."<br>\n";
+    // Get the DOCUMENT_ROOT with any \ relaced with /.
+    $_SESSION['ROOT']['http'] = str_replace("\\","/",$_SERVER['DOCUMENT_ROOT']);
+		#echo "\$_SESSION['ROOT']['http']=".$_SESSION['ROOT']['http']."<br>\n";
+  } else {
+    // Use the $_SERVER['SUBDOMAIN_DOCUMENT_ROOT']. Some hosting services store the DOCUMENT_ROOT in SUBDOMAIN_DOCUMENT_ROOT.
+    #echo "DEBUG: Use the \$_SERVER['SUBDOMAIN_DOCUMENT_ROOT'] for directory root.".' <span class="d_s_fl">'.basename(__FILE__).'</span><span class="d_s_fp"> ('.__FILE__.':'.__LINE__.')</span>'."<br>\n";
+    // Get the SUBDOMAIN_DOCUMENT_ROOT with any \ relaced with /.
+    $_SESSION['ROOT']['http'] = str_replace("\\","/",$_SERVER['SUBDOMAIN_DOCUMENT_ROOT']);
+  }
+  #echo "DEBUG: \$_SESSION['ROOT']['http'] at start == '".$_SESSION['ROOT']['http']."' ".' <span class="d_s_fl">'.basename(__FILE__).'</span><span class="d_s_fp"> ('.__FILE__.':'.__LINE__.')</span>'."<br>\n";
+  // Fix for godaddy.com. Remove /var/chroot.
+  #$_SESSION['ROOT']['http'] = str_replace("/var/chroot","",$_SESSION['ROOT']['http']);
+  // Remove the $_SESSION['ROOT']['http'] from the $_SESSION['ROOT']['directory']. This is the URL to this directory.
+	#echo "\$_SESSION['ROOT']['directory']=".$_SESSION['ROOT']['directory']."<br>\n";
+	#echo "\$_SESSION['ROOT']['http']=".$_SESSION['ROOT']['http']."<br>\n";
+  $_SESSION['ROOT']['http'] = str_replace($_SESSION['ROOT']['http'],"",$_SESSION['ROOT']['directory']);
+	#echo "\$_SESSION['ROOT']['http']=".$_SESSION['ROOT']['http']."<br>\n";
+}
+#echo "DEBUG: \$_SESSION['ROOT']['directory'] == '".$_SESSION['ROOT']['directory']."' ".' <span class="d_s_fl">'.basename(__FILE__).'</span><span class="d_s_fp"> ('.__FILE__.':'.__LINE__.')</span>'."<br>\n";
+#echo "DEBUG: \$_SESSION['ROOT']['http'] == '".$_SESSION['ROOT']['http']."' ".' <span class="d_s_fl">'.basename(__FILE__).'</span><span class="d_s_fp"> ('.__FILE__.':'.__LINE__.')</span>'."<br>\n";
+
+// Make sure the $_SESSION['uuid'] is set. $_SESSION['uuid'] is used to trap form reloads.
+if ( !isset($_SESSION['uuid']) ) {
+	$_SESSION['uuid'] = 'unused';
+	#echo "\$_SESSION['uuid'] was unset.<br>\n";
+}
+
+// Allow pageHeader.phpinc to show the page header once.
+unset($GLOBALS['_PAGE']['pageHeaderLoaded']);
+unset($GLOBALS['_PAGE']['pageFooterLoaded']);
+
+// Define pageHeader variables.
+$_PAGE = array();
+$_PAGE['bodyId'] = '';
+$_PAGE['css'] = '';
+$_PAGE['js'] =  '';
+$_PAGE['meta'] = '';
+$_PAGE['onload'] = '';
+$_PAGE['onresize'] = '';
+$_PAGE['onscroll'] = '';
+$_PAGE['onunload'] = '';
+
+// Track the page count. This is the number of pages loaded this session.
+if ( !isset($_SESSION['pageCount']) ) { $_SESSION['pageCount'] = 1; } else { $_SESSION['pageCount'] += 1; }
+
+// ********** DEBUGGING. See application_debug.phpinc for debugging SETUP and DOCUMENTATION.
+// Load debugging functionality.
+require('common/application_debug.phpinc');
+
+// Include the common functions.
+// If you have site specific functions be sure to edit /common/functions_site.phpinc to include them.
+require('common/functions.phpinc');
+#d_Var("\$GLOBALS['TRACK']",$GLOBALS['TRACK'],'d');
+#d_Var('$debuggingAvailable',$debuggingAvailable,'d');
+
+// Get standard form variables.
+if ( count($_GET) || count($_POST) ) { // Only check for the other standard variables if this is a form or has URL variables.
+  formValue(); // Get all $_GET and $_POST Key index values and place then in the $f[] array.
+}
+// Ensure common $f[] indexes have a value.
+f('form');
+f('task');
+f('subtask');
+f('uuid');
+
+// Check for logout.
+if ( isset($_GET['Logout']) || $f['task'] == 'Logout' || isset($_GET['Login']) || $f['task'] == 'Login' ) {
+  $_SESSION['user']['userId'] = 0;
+  $_SESSION['gameId'] = 0;
+	$_SESSION['user'] = array();
+  $_SESSION['user']['groups'] = array();
+	if ( $f['task'] == 'Logout' ) $f['task'] = '';
+}
+
+// Include website specific settings.
+require('application_site.phpinc'); // Be sure to edit this file to your website's settings.
+
+// Reset error and warning count.
+$errorCount = 0;
+$warningCount = 0;
+
+// Authenticate user for the including page.
+if ( !isset($skipAuthentication) || $skipAuthentication != true ) {
+	require('User/authenticate.phpinc');
+} else {
+  t_Line('<span class="d_s_vt">$skipAuthentication is true.</span>','h');
+}
+if ( isset($_GET['Login']) && ( !isset($_SESSION['user']['userId']) || !$_SESSION['user']['userId'] ) ) require("User/login.phpinc");
+
+// Include additional website code. This is any code that must be executed after page authentication.
+require('application_site_additional_code.phpinc'); // Be sure to edit this file to your website's settings.
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

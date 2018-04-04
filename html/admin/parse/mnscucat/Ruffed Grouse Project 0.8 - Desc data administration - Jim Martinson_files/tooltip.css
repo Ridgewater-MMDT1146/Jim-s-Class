@@ -1,0 +1,29 @@
+@charset "utf-8";
+/* css/tooltip.css */
+
+#tooltipContainer { display:table; /** /width:650px;/**/ }
+#tooltipContainer > div{ display:table-cell; }
+#tooltipDiv { background-color:#020; border:2px solid #ccc; color:#fff; font-size:.8em; padding:2px; position:absolute; text-align:left; visibility:hidden; /**/white-space:pre/**/; /** /max-width:650px;/**/ z-index:150; }
+#tooltipDiv.action { background-color:#020; border-color:#ff0; color:#ff0; }
+#tooltipDiv.attention { background-color:#020; border-color:#af3; color:#af3; }
+#tooltipDiv.button { background-color:transparent; border:0; color:#ccc; }
+#tooltipDiv.disabled { background-color:transparent; border-color:#888; color:#bbb; }
+#tooltipDiv.error { background-color:#f00; border-color:#888; color:#fff; }/**/ #tooltip.error:before { display:none; } #tooltip.error:after { display:none; }/**/
+#tooltipDiv.info { background-color:#020; border-color:#6af; color:#6af; }
+#tooltipDiv.large { font-size:1em; }
+#tooltipDiv.normal { background-color:#020; border-color:#ccc; color:#fff; } /*{ background-color:#fcfcfc; border-color:#888; color:#020; }*/
+#tooltipDiv.opaque { opacity:.6; /** /filter:alpha(opacity=60);/**/ }
+#tooltipDiv.warn { background-color:#f90; border-color:#888; color:#fff; }/**/ #tooltip.warn:before { display:none; } #tooltip.warn:after { display:none; }/**/
+#tooltipDiv table { font-size:1.0em } /* Needed so #tooltipDiv font-size:.8em; works */
+abbr { border-bottom: .1em dotted #af3; cursor:help; /** /font-weight:bold; /**/ /** /line-height:1.2em;/**/ }
+abbr.action { border-bottom:2px dotted #ff0; }
+abbr.attention { border-bottom:2px dotted #af3; }
+abbr.button { border-bottom:0; }
+abbr.disabled { border-bottom:2px dotted #888; color:#888; }
+abbr.error { border-bottom:2px dotted #fff; } abbr.error:after { color:#fff; } abbr.error:before { content:"\00a0"; } abbr.error:after { content:" !\00a0"; }
+abbr.info { border-bottom:2px dotted #6af; }
+abbr.nodot { border-bottom:0; cursor:default }
+abbr.normal { border-bottom:2px dotted #888; }
+abbr.opaque { opacity:.6; /** /filter:alpha(opacity=60);/**/ }
+abbr.underline { border-bottom-style:solid; border-bottom-width:1px; }
+abbr.warn { border-bottom:2px dotted #fff; } abbr.warn:after { color:#fff; } abbr.warn:before { content:"\00a0"; } abbr.warn:after { content:" !\00a0"; }

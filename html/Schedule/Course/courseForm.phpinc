@@ -1,0 +1,298 @@
+<?
+// courseForm.phpinc
+// Display the course Add/Edit form.
+t_Begin(); // Begin TRACKing included file.
+include('courseFormPreset.phpinc');
+?>
+<script> 
+$(function(){
+	$(".search-single").chosen({search_contains:true})
+	$(".search-multi").chosen({search_contains:true})	
+});
+</script>
+<table class="popup-form"><tr><td>
+
+<fieldset>
+<legend><? if ( $f['courseId'] ) { ?>Edit<? } else { ?>Add<? } ?> Course</legend>
+<form name="form_course" id="id_form_course" action="<?=php_self()?>" method="post">
+<input type="hidden" name="form" value="form_course">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="courseId" id="id_courseId" value="<?=htmlSafe($f['courseId'])?>">
+<table>
+
+
+<? if ( isset($formError['userId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userId']?></td></tr>
+<? } ?>
+
+
+<? if ( isset($formError['YRTR']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['YRTR']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">YRTR</td>
+    <td><input type="text" class="" name="YRTR" id="id_YRTR" value="<?=htmlSafe($f['YRTR'])?>" maxlength="5" style="width:3.48em;"></td>
+  </tr>
+  
+  
+<? if ( isset($formError['departmentId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['departmentId']?></td></tr>
+<? } ?>
+<tr>
+<td class="label">Department
+</td>
+<td>
+	<select class="search-single" id="id_departmentId" data-placeholder="Select a department" name="departmentId">
+    <option value=""></option>
+    <?
+	// Get Departments
+	$query = "
+		SELECT departmentId
+			 , departmentCode
+			 , departmentName
+		  FROM `department`
+		 WHERE departmentInactive = 0
+	  ORDER BY departmentName;";
+	$departmentResult = query_do($query);
+	$departmentCount = $GLOBALS['_QUERY']['count'];
+    if ( $departmentCount ) {
+      query_seek($departmentResult, 0);
+      while ($departmentInfo = query_row($departmentResult)) {
+    ?>    
+     <option value="<?=$departmentInfo['departmentId']?>"><?=$departmentInfo['departmentName']?> (<?=$departmentInfo['departmentCode']?>)</option>
+    <?
+      }
+	  mysqli_free_result($departmentResult);
+    }
+    ?>
+    </select>
+    </div> 
+</td>
+</tr>
+
+<? if ( isset($formError['courseNumber']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseNumber']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">Number</td>
+  <td><input type="text" class="" name="courseNumber" id="id_courseNumber" value="<?=htmlSafe($f['courseNumber'])?>" maxlength="8" style="width:4.82em;"></td>
+</tr>
+  
+  
+<? if ( isset($formError['courseTitle']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseTitle']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">Title</td>
+  <td><input type="text" class="" name="courseTitle" id="id_courseTitle" value="<?=htmlSafe($f['courseTitle'])?>" maxlength="75" style="width:21.65em;"></td>
+</tr>
+  
+  
+<? if ( isset($formError['courseShortTitle']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseShortTitle']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">ShortTitle</td>
+  <td><input type="text" class="" name="courseShortTitle" id="id_courseShortTitle" value="<?=htmlSafe($f['courseShortTitle'])?>" maxlength="25" style="width:11.25em;"></td>
+</tr>
+  
+  
+<? if ( isset($formError['courseCredits']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseCredits']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">Credits</td>
+  <td><input type="text" class="" name="courseCredits" id="id_courseCredits" value="<?=htmlSafe($f['courseCredits'])?>" maxlength="2" style="width:1.5em;"></td>
+</tr>
+  
+  
+<? if ( isset($formError['courseCreditsMax']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseCreditsMax']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">CreditsMax</td>
+  <td><input type="text" class="" name="courseCreditsMax" id="id_courseCreditsMax" value="<?=htmlSafe($f['courseCreditsMax'])?>" maxlength="2" style="width:1.5em;"></td>
+</tr>
+  
+<? if ( isset($formError['courseLecture']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseLecture']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">Lecture</td>
+  <td><input type="text" class="" name="courseLecture" id="id_courseLecture" value="<?=htmlSafe($f['courseLecture'])?>" maxlength="4" style="width:3em;"></td>
+</tr>
+  
+<? if ( isset($formError['courseLab']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseLab']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">Lab</td>
+  <td><input type="text" class="" name="courseLab" id="id_courseLab" value="<?=htmlSafe($f['courseLab'])?>" maxlength="4" style="width:3em;"></td>
+</tr>
+  
+<? if ( isset($formError['courseOther']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseOther']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">Other</td>
+  <td><input type="text" class="" name="courseOther" id="id_courseOther" value="<?=htmlSafe($f['courseOther'])?>" maxlength="4" style="width:3em;"></td>
+</tr>
+  
+<? if ( isset($formError['courseDescription']) ) { ?>
+<tr><td></td><td class="error"><?=$formError['courseDescription']?></td></tr>
+<? } ?>
+<tr>
+  <td class="label">Description</td>
+  <td><textarea class="" name="courseDescription" id="id_courseDescription" style="height:6em;"><?=htmlSafe($f['courseDescription'])?></textarea></td>
+</tr>
+  
+<? if ( isset($formError['coursePrerequisite']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['coursePrerequisite']?></td></tr>
+<? } ?>
+<tr>
+    <td class="label">Prerequisite</td>
+  <td>
+    <select type="text" class="search-multi" multiple="" data-placeholder="Select a pre-req" name="coursePrerequisite" id="id_coursePrerequisite" >
+    <option value=""></option>
+    <?
+	// Get classes as pre-reqs.
+	$query = "
+		SELECT courseId, departmentCode, courseNumber, courseTitle
+		FROM course as c, department as d
+		WHERE d.departmentId = c.departmentId
+		ORDER BY DepartmentCode, courseNumber;
+	";
+	$prereqResult = query_do($query);
+	$prereqCount = $GLOBALS['_QUERY']['count'];
+    if ( $prereqCount ) {
+      query_seek($prereqResult, 0);
+      while ($prereqInfo = query_row($prereqResult)) {
+    ?>    
+      	<option value="<?=$prereqInfo['courseId']?>"><?=$prereqInfo['courseNumber']?> <?=$prereqInfo['courseTitle']?> (<?=$prereqInfo['departmentCode']?>)</option>
+    <?
+      }
+	  mysqli_free_result($prereqResult);
+    }
+    ?>
+  </td>
+</tr>
+  
+  
+  
+<? if ( isset($formError['courseCorequisite']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseCorequisite']?></td></tr>
+<? } ?>
+<tr>
+    <td class="label">Corequisites</td>
+  <td>
+    <select type="text" class="search-multi" data-placeholder="Select a co-req" multiple="" name="courseCorequisite" id="id_courseCorequisite" >
+    <option value=""></option>
+    <?
+	// Get classes as pre-reqs.
+	$query = "
+		SELECT courseId, departmentCode, courseNumber, courseTitle
+		FROM course as c, department as d
+		WHERE d.departmentId = c.departmentId
+		ORDER BY DepartmentCode, courseNumber;
+	";
+	$coereqResult = query_do($query);
+	$coreqCount = $GLOBALS['_QUERY']['count'];
+    if ( $coreqCount ) {
+      query_seek($coereqResult, 0);
+      while ($coreqInfo = query_row($coereqResult)) {
+    ?>    
+      	<option value="<?=$coreqInfo['courseId']?>"><?=$coreqInfo['courseNumber']?> <?=$coreqInfo['courseTitle']?> (<?=$coreqInfo['departmentCode']?>)</option>
+    <?
+      }
+	  mysqli_free_result($coreqResult);
+    }
+    ?>
+  </td>
+</tr>
+  
+  
+  
+<? if ( isset($formError['courseinstrtypeId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseinstrtypeId']?></td></tr>
+<? } ?>
+  <tr>
+
+<td class="label">Instruction</td>
+<td>
+ <? 
+ //Get Instructor types
+$query = "
+    SELECT courseinstrtypeId
+         , courseinstrtypeName
+      FROM `courseinstrtype`
+  ORDER BY courseinstrtypeName
+";
+d_Var('instrtypeResult',$query,'q');
+$instrtypeResult = query_do($query);
+$instrtypeCount = $GLOBALS['_QUERY']['count'];
+d_Var('$instrtypeResult',$instrtypeResult);
+?>
+<select class="search-single" style="width:13em;" id="courseinstrtypeId" name="courseinstrtypeId" data-placeholder="Select an instr type">
+    <option value=""></option>
+    <?
+    if ($instrtypeCount) {
+      query_seek($instrtypeResult, 0);
+      while ($instrInfo = query_row($instrtypeResult)) {
+    ?>    
+        <option value="<?=$instrInfo['courseinstrtypeId']?>"> <?=$instrInfo['courseinstrtypeName']?> </option>
+    <?
+      }
+	  mysqli_free_result($instrtypeResult);
+    }
+    ?>
+</select>
+</td>
+</tr>
+
+
+<? if ( isset($formError['courseMax']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseMax']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Max</td>
+    <td><input type="text" class="" name="courseMax" id="id_courseMax" value="<?=htmlSafe($f['courseMax'])?>" maxlength="3" style="width:2.25em;"></td>
+  </tr>
+<? if ( isset($formError['courseInactive']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['courseInactive']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Inactive</td>
+    <td>
+      <input type="radio" class="" name="courseInactive" id="id_courseInactive_$f['courseInactive']" value="$f['courseInactive']"<? if ( $f['courseInactive'] == $f['courseInactive']) { ?> checked<? } ?>></td>
+  </tr>
+  <tr>
+    <td class="center" colspan="2">
+<?
+      if ( $f['courseId'] ) {
+?>
+      <input type="submit" name="task" value="Update course">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Add course">
+<?
+      }
+      if ( $f['form'] != 'form_course' || isset($formError) || isset($f['postId']) ) {
+?>
+      <input type="submit" name="task" value="Cancel">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Done">
+<?
+      }
+?>
+    </td>
+  </tr>
+</table>
+</form>
+</fieldset></td></tr></table>
+
+<?
+t_End(); // End TRACKing included file.
+?>

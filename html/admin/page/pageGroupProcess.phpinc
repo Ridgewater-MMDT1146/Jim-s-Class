@@ -1,0 +1,36 @@
+<?
+// admin/page/pageGroupProcess.phpinc
+formValue('pageId');
+formValue('inGroup');
+formValue('notGroup');
+#d_V('inGroup');
+#d_V('notGroup');
+if ($f['inGroup']) {
+  foreach ($f['inGroup'] as $index => $f['userpermissionId'])  {
+    #d_Var('$userpermissionId',$f['userpermissionId']);
+    $query = "
+      DELETE
+        FROM group_page
+       WHERE userpermissionId = ".$f['userpermissionId']."
+         AND pageId = ".$f['pageId']."
+    ";
+    $group_pageDelete = query_do($query);
+  }
+}
+if ($f['notGroup']) {
+  foreach ($f['notGroup'] as $index => $f['userpermissionId'])  {
+  $query = "
+    INSERT
+      INTO group_page (
+      userpermissionId,
+      pageId
+    ) VALUES (
+      ".$f['userpermissionId'].",
+      ".$f['pageId']."
+    )
+  ";
+  $group_pageInsert = query_do($query);
+}
+
+}
+?>

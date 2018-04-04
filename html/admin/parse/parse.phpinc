@@ -1,0 +1,149 @@
+<?
+// parse.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+#$DEBUG_parse = true;
+if ( !isset($DEBUG_parse) ) $DEBUG_parse = false;
+
+if ( $sessionName ) {
+	sectionHeader('Parsed');
+?>
+	<h2><?=$sessionName?></h2>
+<?
+	sectionFooter();
+}
+
+require('parseFunctions.phpinc');
+
+$class = array(); // Store the class data.
+$classInfo; // Store the class info from one class.
+$campus; // Store the campus name.
+$department = array(); // Store the departments found in the files.
+$instructor = array(); // Store the instructors found in the files.
+$YRTR; // Store the year/term.
+
+foreach ( $parseFiles as $parseFile ) { // Loop through files.
+	if ( $parseFile ) { // Is the parseFile not empty?
+		sectionHeader();
+?>
+		<h3 class="info">BEGIN parse <?=$parseFile?>.</h3>
+<?
+		$parseFilePath = 'mnscucat/'.$parseFile;
+		if (file_exists($parseFilePath)) {
+			if ( $DEBUG_parse ) d_Line($parseFile.' found.');
+		} else {
+			if ( $DEBUG_parse ) d_Line($parseFilePath.' not found.','de');
+		}
+		$numberOfClassesByFile = 1;
+		$state = 10;
+		$statePrevious = 0;
+		$subState = '';
+		$line = 0;
+		$classLn_Array = file($parseFilePath);
+		array_unshift($classLn_Array,''); // Insert a blank line so array index number matches the file line number.
+		$classLnCount = count($classLn_Array);
+		/*
+	
+		State table:
+	
+		10 - Get YRTR and campus then move to first department line.
+		11 - Find class or department line.
+	
+		20 - Get department.
+		
+		30 - Get class info.
+		31 - Check for meeting or note line.
+		
+		40 - Get class meeting.
+		41 - Check for Instructor only line and add Instructor.
+		
+		50 - Get class meeting.
+		
+		60 - Save class.
+	
+		*/
+		while ( !$f_error && $line <= $classLnCount ) { // Loop thru lines.
+			if (get_ClassLn()) {
+				if ( $DEBUG_parse ) d_Line("line:$line of $classLnCount, state:$state statePrevious:$statePrevious.",'/');
+				if ( $DEBUG_parse ) d_Line("$classLn",'');
+				#if ( $DEBUG_parse ) d_Var('$classLnAsize',$classLnAsize);
+				#if ( $DEBUG_parse ) d_Var('$classLnA',$classLnA);
+				#if ( $DEBUG_parse ) d_Var('$classLnA',$classLnA); exit;
+				$filename = 'parse_'.$state.$subState.'.phpinc';
+				$filepathname = dirname($_SERVER['SCRIPT_FILENAME']).'/'.$filename;
+				#if ( $DEBUG_parse ) d_Var('$state:$statePrevious:$filename',$state.':'.$statePrevious.':'.$filename);
+				if ( file_exists($filepathname) ) {
+					include($filename);
+				} else {
+					$f_error = '<br><span class="bold error">'."State $state is not programmed.<br>Or file $filepathname does not exist.".'</span>'."<br><br>\n";
+				}
+			}
+		} // Loop thru lines.
+		$numberOfClassesByFile--; // Fix $numberOfClassesByFile count.
+		
+		if ( !$f_error ) { // Was there an error?
+			// No.
+			$numberOfClassesTotal += $numberOfClassesByFile;
+?>
+		<h3 class="info">END parse <?=$parseFile?>.</h3>
+		<h4><?=$campus?> classes parsed: <?=$numberOfClassesByFile?></h4>
+<?
+		} else { // Was there an error?
+			// Yes. Display DEBUG info.
+			include('displayErrorsAndMessages.phpinc');
+			if ( $DEBUG_parse ) d_Var('$state',$state);
+			$lineOverlap = 5;
+			if (!isset($lineStart)) $lineStart = max(0,$line - 10);
+			$lineStart = max(0,$lineStart - $lineOverlap);
+			if (!isset($lineStop)) $lineStop = min($classLnCount,$line + 10);
+			$lineStop = min($classLnCount,$lineStop + $lineOverlap);
+			$errorIndex = $line;
+			$lineShow = $lineStart;
+?>
+		<pre>
+<?
+			while ($lineShow <= $errorIndex) {
+				$classLn = rtrim($classLn_Array[$lineShow]);
+				$lineDisplay = "   ".$lineShow.": ";
+				$lineDisplay = substr($lineDisplay,strlen($lineDisplay)-6,6);
+				if ( $lineShow == $lineStart+$lineOverlap || $lineShow == $lineStop-$lineOverlap ) {
+					echo '<span class="info">==========</span>',"\n";
+				}
+				if ($lineShow != $errorIndex) {
+					echo $lineDisplay,$classLn,"\n";
+				} else {
+					echo '<span class="error">',$lineDisplay,$classLn,'</span>',"\n";
+					echo '<span class="info">$classLnA=</span>',"\n";
+					print_r($classLnA);
+				}
+				$lineShow++;
+			}
+?>
+		</pre>
+<?
+		} // Was there an error?
+		sectionFooter();
+	} // Is the parseFile not empty?
+} // Loop through files.
+
+// Display total classes parsed.
+if ( $numberOfClassesTotal ) {
+	sectionHeader();
+?>
+	<h4>Total classes parsed: <?=$numberOfClassesTotal?></h4>
+<?
+	sectionFooter();
+	
+	sectionHeader('Data');
+	#d_On();
+	d_Var('$class',$class,'d');
+	d_Var('$department',$department);
+	#d_Off();
+	require('parseProcess.phpinc');
+	sectionFooter();
+}
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

@@ -1,0 +1,83 @@
+<?
+// Schedule/ScheduleClass/ScheduleClassMeetingForm.phpinc
+// purpose_of_ScheduleClassForm.
+
+t_Begin(); // Begin TRACKing ScheduleClassForm.phpinc.
+
+$scmIds = listAppend($scmIds,$scmId);
+?>
+	<br>
+<style type="text/css">
+	div.scheduleClassMeeting { float: left; border: 1px solid blue; }
+</style>
+	<fieldset id="id_meetings"><legend>Meetings: <? button('+','Add another meeting',"Meeting_Add(".$f['scheduleclassId'].");",'','small',''); ?></legend>
+<?
+		d_V('scheduleclassStartDate','');d_Var('$thisMeeting',$thisMeeting,'');
+		
+?>
+		<div class="scheduleClassMeeting" id="id_classmeeting_<?=$scmId?>">
+		<label for="inp_class1meetingStartDate_<?=$scmId?>">
+		Dates:
+		<input type="date" name="scheduleclassmeetingStartDate_<?=$scmId?>" id="inp_class1meetingStartDate_<?=$scmId?>" value="<?=$f['scheduleclassStartDate']?>" max="">
+		-
+		<input type="date" name="scheduleclassmeetingEndDate_<?=$scmId?>" id="inp_scheduleclassmeetingEndDate_<?=$scmId?>" value="<?=$f['scheduleclassEndDate']?>" min=""> <?
+		button('Full','Class runs the full semester',"dateStartEnd_Set('inp_class1meetingStartDate_$scmId','inp_scheduleclassmeetingEndDate_$scmId',SemesterFullStart,SemesterFullEnd);",'','small');
+		button('1st half','Class runs the first half of the semester',"dateStartEnd_Set('inp_class1meetingStartDate_$scmId','inp_scheduleclassmeetingEndDate_$scmId',Semester1stStart,Semester1stEnd);",'','small');
+		button('2nd half','Class runs the second half of the semester',"dateStartEnd_Set('inp_class1meetingStartDate_$scmId.','inp_scheduleclassmeetingEndDate_$scmId',Semester2ndStart,Semester2ndEnd);",'','small');
+		if ( $f['scheduleclassId'] ) {
+			if ( $thisMeeting['scheduleclassmeetingBeginTime'] ) {
+				$arrangedChecked = '';
+				$meetingTimesDaysClass = '';
+				$f['scheduleclassmeetingBeginTime'] = valid_time($thisMeeting['scheduleclassmeetingBeginTime'],'USA');
+				$f['scheduleclassmeetingEndTime'] = valid_time($thisMeeting['scheduleclassmeetingEndTime'],'USA');
+				$f['weekdayIds'] = $thisMeeting['Day'];
+			} else {
+				$arrangedChecked = ' checked';
+				$meetingTimesDaysClass = ' class="hidden"';
+				$f['scheduleclassmeetingBeginTime'] = '';
+				$f['scheduleclassmeetingEndTime'] = '';
+				$f['weekdayIds'] = array();
+			}
+		} else {
+			$arrangedChecked = '';
+			$meetingTimesDaysClass = '';
+			$f['scheduleclassmeetingBeginTime'] = '';
+			$f['scheduleclassmeetingEndTime'] = '';
+			$f['weekdayIds'] = array();
+		}
+	?>
+		</label>
+	
+	<div><label for="id_scheduleclassmeetingArranged"><input type="checkbox" name="scheduleclassmeetingArranged_<?=$scmId?>" id="id_scheduleclassmeetingArranged_<?=$scmId?>" value="1" onClick="ClassmeetingArranged(this);"<?=$arrangedChecked?>><span>Arranged</span></label>
+	</div>
+	
+	<div id="id_meetingTimes_<?=$scmId?>"<?=$meetingTimesDaysClass?>>
+	<label for="id_scheduleclassmeetingBeginTime_<?=$scmId?>">Time:</label> <input type="text" name="scheduleclassmeetingBeginTime_<?=$scmId?>" id="id_scheduleclassmeetingBeginTime_<?=$scmId?>" class="time" value="<?=$f['scheduleclassmeetingBeginTime']?>" onFocus="this.select();" onMouseOver="ttShow('Class start time');" onMouseOut="ttHide();"></label>
+	<label for="id_scheduleclassmeetingEndTime_<?=$scmId?>"> - <input name="scheduleclassmeetingEndTime_<?=$scmId?>" id="id_scheduleclassmeetingEndTime_<?=$scmId?>" type="text" class="time" value="<?=$f['scheduleclassmeetingEndTime']?>" onFocus="this.select();" onMouseOver="ttShow('Class end time');" onMouseOut="ttHide();">
+	<span  onMouseOver="ttShow('Auto set the end time based on the class credits and days');" onMouseOut="ttHide();">
+	<label for="id_AutoEnd"><input type="checkbox" id="id_AutoEnd" value="1" onClick="SetClassEndTime();"><span class="">Auto set end time by credits/days</span></label></span>
+	<span id="spn_asLab" onMouseOver="ttShow('Auto set the end time for lab credits');" onMouseOut="ttHide();">
+	<label for="id_AsLab"><input type="checkbox" id="id_AsLab" value="1" onClick="SetClassEndTime();"><span class="">As lab</span></label></span>
+	</div><!-- id_meetingTimes -->
+	<div id="id_meetingDays"<?=$meetingTimesDaysClass?>>Days:
+	<?
+		if ( $weekdayCount ) {
+			query_seek($weekdayResult, 0);
+			while ($weekdayInfo = query_row($weekdayResult)) {
+	?>
+		<label for="id_weekday_<?=$scmId?>_<?=$weekdayInfo['weekdayId']?>" onMouseOver="ttShow('<?=htmlSafe($weekdayInfo['weekdayWeekday'])?>');" onMouseOut="ttHide();"><input type="checkbox" name="weekdayIds_<?=$scmId?>[]" id="id_weekday_<?=$scmId?>_<?=$weekdayInfo['weekdayId']?>" value="<?=$weekdayInfo['weekdayId']?>" onClick="SetClassEndTime();"<? if ( in_array($weekdayInfo['weekdayId'],$f['weekdayIds']) ) { ?> checked<? } ?>><span class="weekday"><?=$weekdayInfo['weekdayD']?></span></label> &nbsp;
+	<?
+			}
+		}
+	?>
+	</div><!-- id_meetingDays -->
+	<?
+	require('Schedule/ScheduleClass/ScheduleClassForm_Room.phpinc');
+	require('Schedule/ScheduleClass/ScheduleClassForm_Instructor.phpinc');
+	?>
+		</div><!-- id_classmeeting_<?=$scmId?> -->
+	</fieldset>
+<?
+	
+t_End(); // End TRACKing ScheduleClassForm.phpinc.
+?>

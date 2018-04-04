@@ -1,0 +1,21 @@
+<?
+// admin/_info/form//infoForm_Form_AddEditForm_ConditionalSettings.phpinc
+// Purpose_of_include_file_goes_here.
+t_Begin(); // Begin TRACKing included file.
+$forceQuery = true;
+include('admin/_info/query/infoTableFields.phpinc'); // Get table field info.
+$queryType = 'INSERT or UPDATE';
+if ( !isset($f['conditional_settings_value']) ) $f['conditional_settings_value'] = 1;
+?>
+<a name="conditional_settings_name"></a>
+<input type="hidden" name="conditional_settings_value" id="conditional_settings_value_id" value="<?=$f['conditional_settings_value']?>">
+<table><tr><td><fieldset><legend><a href="#conditional_settings" name="conditional_settings" onClick="return info_Set(this);"><div id="conditional_settings_status" class="inline"><? if ( !$f['conditional_settings_value']) { ?>+<? } else { ?>-<? } ?></div> <?=basename($f['filenameBase'])?>FormProcess conditional settings</a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'conditional_settings_name');"></legend>
+<div id="conditional_settings_show" class="<? if ( !$f['conditional_settings_value']) { ?>d_s_h <? } ?>d_s_l">
+<?
+include('admin/_info/query/infoConditional.phpinc');
+?>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

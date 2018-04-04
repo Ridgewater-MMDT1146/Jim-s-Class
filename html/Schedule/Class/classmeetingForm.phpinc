@@ -1,0 +1,98 @@
+<?
+// classmeetingForm.phpinc
+// Display the classmeeting Add/Edit form.
+t_Begin(); // Begin TRACKing included file.
+include('classmeetingFormPreset.phpinc');
+?>
+<table><tr><td><fieldset><legend><? if ( $classmeetingId ) { ?>Edit<? } else { ?>Add<? } ?> Classmeeting</legend>
+<form name="form_classmeeting" id="id_form_classmeeting" action="<?=php_self()?>" method="post">
+<input type="hidden" name="form" value="form_classmeeting">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="classmeetingId" id="id_classmeetingId" value="<?=htmlSafe($f['classmeetingId'])?>">
+<table>
+<? if ( isset($formError['classId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classId']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Class</td>
+    <td><input type="text" class="" name="classId" id="id_classId" value="<?=htmlSafe($f['classId'])?>" maxlength="10" style="width:5.66em;"></td>
+  </tr>
+<? if ( isset($formError['classmeetingStartDate']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classmeetingStartDate']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">StartDate</td>
+    <td><input type="text" class="" name="classmeetingStartDate" id="id_classmeetingStartDate" value="<?=htmlSafe($f['classmeetingStartDate'])?>" maxlength="10" style="width:5.66em;"></td>
+  </tr>
+<? if ( isset($formError['classmeetingEndDate']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classmeetingEndDate']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">EndDate</td>
+    <td><input type="text" class="" name="classmeetingEndDate" id="id_classmeetingEndDate" value="<?=htmlSafe($f['classmeetingEndDate'])?>" maxlength="10" style="width:5.66em;"></td>
+  </tr>
+<? if ( isset($formError['weekdayId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['weekdayId']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Weekday</td>
+    <td><input type="text" class="" name="weekdayId" id="id_weekdayId" value="<?=htmlSafe($f['weekdayId'])?>" maxlength="10" style="width:5.66em;"></td>
+  </tr>
+<? if ( isset($formError['classmeetingBeginTime']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classmeetingBeginTime']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">BeginTime</td>
+    <td><input type="text" class="" name="classmeetingBeginTime" id="id_classmeetingBeginTime" value="<?=htmlSafe($f['classmeetingBeginTime'])?>" maxlength="13" style="width:6.85em;"></td>
+  </tr>
+<? if ( isset($formError['classmeetingEndTime']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classmeetingEndTime']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">EndTime</td>
+    <td><input type="text" class="" name="classmeetingEndTime" id="id_classmeetingEndTime" value="<?=htmlSafe($f['classmeetingEndTime'])?>" maxlength="13" style="width:6.85em;"></td>
+  </tr>
+<? if ( isset($formError['roomId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['roomId']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Room</td>
+    <td><input type="text" class="" name="roomId" id="id_roomId" value="<?=htmlSafe($f['roomId'])?>" maxlength="10" style="width:5.66em;"></td>
+  </tr>
+<? if ( isset($formError['userId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['userId']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">User</td>
+    <td><input type="text" class="" name="userId" id="id_userId" value="<?=htmlSafe($f['userId'])?>" maxlength="10" style="width:5.66em;"></td>
+  </tr>
+  <tr>
+    <td class="center" colspan="2">
+<?
+      if ( $f['classmeetingId'] ) {
+?>
+      <input type="submit" name="task" value="Update classmeeting">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Add classmeeting">
+<?
+      }
+      if ( $f['form'] != 'form_classmeeting' || isset($formError) || isset($f['postId']) ) {
+?>
+      <input type="submit" name="task" value="Cancel">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Done">
+<?
+      }
+?>
+    </td>
+  </tr>
+</table>
+</form>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

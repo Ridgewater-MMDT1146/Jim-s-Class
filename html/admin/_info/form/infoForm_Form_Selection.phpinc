@@ -1,0 +1,37 @@
+<?
+// admin/_info/form/infoForm_Form_Selection.phpinc
+// Display the form selection form.
+t_Begin(); // Begin TRACKing included file.
+// Set radio button to default if unset.
+if ( !isset($f['formType']) ) $f['formType'] = 'form';
+if ( !isset($f['form_selection_settings_value']) ) $f['form_selection_settings_value'] = 1; // Set to show if unset.
+?>
+<a name="form_selection_settings_name"></a>
+<input type="hidden" name="form_selection_settings_value" id="form_selection_settings_value_id" value="<?=$f['form_selection_settings_value']?>">
+<table><tr><td><fieldset><legend><a href="#form_selection_settings_name" name="form_selection_settings" onClick="return info_Set(this);"><div id="form_selection_settings_status" class="inline"><? if ( !$f['form_selection_settings_value']) { ?>+<? } else { ?>-<? } ?></div> form selection</a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'form_selection_settings_name');"></legend>
+<div id="form_selection_settings_show" class="<? if ( !$f['form_selection_settings_value']) { ?>d_s_h <? } ?>d_s_l">
+<table>
+  <tr><td class="label_info">Form type</td><td>
+    <input type="radio" name="formType" value="form"<? if ( $f['formType'] == 'form' ) { ?> checked<? } ?>>Add/Edit form
+    <input type="radio" name="formType" value="list"<? if ( $f['formType'] == 'list' ) { ?> checked<? } ?>>List form and control code
+  </td></tr>
+  <!--
+  <tr><td colspan="2">
+    <div class="inline" id="saveform_id"><input type="button" name="saveform" value="Save form" class="smaller" onClick="divShow('save_form_id');"></div><div class="hidden" id="save_form_id">
+    <table>
+      <tr>
+        <td class="label">Form name</td><td><input name="formname" value=""></td>
+      </tr>
+    </table>
+    <input type="submit" name="task" value="Save form" onClick="formSubmit(this);">
+    <input type="button" name="task" value="Cancel" onClick="divHide('save_form_id');">
+    </div>
+    <input type="submit" name="subtask" value="Load form" class="smaller" onClick="info_gotoName(this,'selection_settings');">
+  </td></tr>
+  -->
+</table>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

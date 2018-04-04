@@ -1,0 +1,27 @@
+<?
+// admin/_info/form/infoForm_Preview_ListForm.phpinc
+// Display the list form preview.
+t_Begin(); // Begin TRACKing included file.
+if ( !isset($f['list_form_preview_value']) ) $f['list_form_preview_value'] = 0;
+?>
+<a name="ListFormPreview"></a>
+<input type="hidden" name="list_form_preview_value" id="list_form_preview_value_id" value="<?=$f['list_form_preview_value']?>">
+<table><tr><td><fieldset><legend><a href="#ListFormPreview" name="list_form_preview" onClick="return info_Set(this);"><div id="list_form_preview_status" class="inline"><? if ( !$f['list_form_preview_value']) { ?>+<? } else { ?>-<? } ?></div> list form preview (using <?=$f['displayListUsing']?>)</a><input type="submit" name="subtask_form_settings" value="Update form" onClick="info_gotoName(this,'ListFormPreview');"></legend>
+<div id="list_form_preview_show" class="<? if ( !$f['list_form_preview_value']) { ?>d_s_h <? } ?>d_s_l">
+<?
+switch( $f['displayListUsing'] ) {
+  case 'css':
+    include('admin/_info/form/infoForm_Preview_ListForm_CSS.phpinc');
+  break;
+  case 'table':
+    include('admin/_info/form/infoForm_Preview_ListForm_Table.phpinc');
+  break;
+  default:
+    programmingError('The displayFormUsing ('.$f['displayListUsing'].') is of incorrect type.');
+}
+?>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

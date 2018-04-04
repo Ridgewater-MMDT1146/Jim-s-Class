@@ -1,0 +1,152 @@
+<?
+// application_postdata.phpinc
+// Contains code and functions for dealing with saving data from and loading data into a form.
+// This is used to 'jump' from one page to another with pre-loaded form data.
+// It is also used to 'jump' from one form to another and return with current data saved.
+t_Begin(); // Begin TRACKing included file.
+
+// Define the page functions.
+require('common/postdata/pageCall.phpinc');
+require('common/postdata/pageDelete.phpinc');
+require('common/postdata/pageReturn.phpinc');
+require('common/postdata/pageSave.phpinc');
+require('common/postdata/pageSaveData.phpinc');
+
+// Check for URL 'clear' switch.
+if ( isset($_GET['clear']) ) {
+  // Clear from, post, and postdata for this session.
+  // Reset $_SESSION['pageFrom'].
+  unset($_SESSION['pageFrom']);
+  $_SESSION['pageFrom'] = array();
+  $_SESSION['pageFrom']['index'] = 0;
+  // Get all postIds for this session.
+  $query = "
+      SELECT postId
+        FROM `post`
+       WHERE postPHPSESSID = '".mysql_safe($_COOKIE['PHPSESSID'])."'
+  ";
+  $postResult = query_do($query);
+  $postCount = $_SESSION['query']['count'];
+  #d_Var('$postCount',$postCount);
+  // Remove all postdata for this session.
+  if ($postCount) {
+    mysqli_data_seek($postResult, 0);
+    while ($postInfo = mysqli_fetch_assoc($postResult)) {
+      pageDelete($postInfo['postId']);
+    }
+    displayInfo("\$_SESSION['pageFrom'], post, and postdata cleared.");
+  } else {
+    displayInfo("The was no \$_SESSION['pageFrom'], post, or postdata.");
+  }
+}
+
+// Setup the $_SESSION['pageFrom'] variable if it is not setup. This is used to return to calling page.
+if ( !isset($_SESSION['pageFrom']) ) $_SESSION['pageFrom'] = array();
+if ( !isset($_SESSION['pageFrom']['index']) ) $_SESSION['pageFrom']['index'] = 0; // The current $_SESSION['pageFrom'] index count.
+
+// Get old postdata postIds.
+$addedBefore = -2; // postIds more than addedBefore hours old.
+#d_Var('$addedBefore',$addedBefore);
+$query = "
+    SELECT postId
+      FROM `post`
+     WHERE AddedOn <= '".date("Y-m-d H:i:s", strtotime($addedBefore." hours"))."'
+";
+$postResult = query_do($query);
+$postCount = $_SESSION['query']['count'];
+#d_Var('$query',$query,'q');
+#d_Var('$postCount',$postCount);
+#d_Var('$postResult',$postResult);
+// Clear old postdata.
+if ($postCount) {
+  mysqli_data_seek($postResult, 0);
+  while ($postInfo = mysqli_fetch_assoc($postResult)) {
+    pageDelete($postInfo['postId']);
+  }
+}
+
+// If this page has post data in the database then get it.
+if ( isset($_COOKIE['PHPSESSID']) ) {
+  $postIndex = $_SESSION['pageFrom']['index'];
+  $query = "
+      SELECT postId,
+             postPHPSESSID,
+             postPage
+        FROM `post`
+       WHERE postPHPSESSID = '".mysql_safe($_COOKIE['PHPSESSID'])."'
+         AND postPage = '".mysql_safe(php_self())."'
+         AND postIndex >= ".$postIndex."
+    ORDER BY postId DESC
+  ";
+  #d_Var('$query',$query,'qd');
+	$postResult = query_do($query);
+  #d_Var('$postResult',$postResult,'d');
+  $postCount =  $_SESSION['query']['count'];
+} else {
+  $postCount =  false;
+}
+if ($postCount) {
+  // There is a saved POST for this page. Get the postId.
+  mysqli_data_seek($postResult, 0);
+  $postInfo = mysqli_fetch_assoc($postResult);
+  // Set $_SESSION['pageFrom']['loaded'] to empty string. Variables loaded from the database will have their names listed here.
+  $_SESSION['pageFrom']['loaded'] = '';
+  $f['postId'] = $postInfo['postId'];
+  if ( isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER'] == "http://".$_SERVER['HTTP_HOST'].php_self() ) {
+    $postdataDeleted = "\$_SERVER['HTTP_REFERER'] is same as current page (".$_SERVER['HTTP_REFERER'].")<br>Deleted the post and postdata (".$f['postId'].").";
+    // DELETE postdata.
+    pageDelete($f['postId']);
+    unset($f['postId']);
+    // Detete any matching 'from' information.
+    if ( $_SESSION['pageFrom']['index'] && $_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]['page'] == php_self() ) {
+      unset($_SESSION['pageFrom'][$_SESSION['pageFrom']['index']]);
+      $_SESSION['pageFrom']['index'] -= 1;
+    }
+  } else {
+    // There is a saved POST for this page so load it.
+    // Get the postdata.
+    $query = "
+       SELECT postId,
+              postdataName,
+              postdataValue
+         FROM `postdata`
+        WHERE postId = ".$f['postId']."
+    ";
+	  #d_Var('$query',$query,'qd');
+    $postdataResult = query_do($query);
+	  #d_Var('$postdataResult',$postdataResult,'d');
+    $postdataCount =  $_SESSION['query']['count'];;
+    if ($postdataCount) {
+      $postdataLoaded = '';
+      $prefix = '';
+      if ( !isset($GLOBALS['f']) ) $GLOBALS['f'] = array(); // Create the $f array if it does not exist.
+      mysqli_data_seek($postdataResult, 0);
+      while ($postdataInfo = mysqli_fetch_assoc($postdataResult)) {
+        $GLOBALS['f'][$postdataInfo['postdataName']] = $postdataInfo['postdataValue'];
+        #d_Var("\$postdataInfo['postdataName']",$postdataInfo['postdataName']);
+        {
+          $postdataLoaded .= $postdataInfo['postdataName'].' == ';
+          if ( is_numeric($GLOBALS['f'][$postdataInfo['postdataName']]) ) {
+            $postdataLoaded .= $GLOBALS['f'][$postdataInfo['postdataName']];
+          } else {
+            $postdataLoaded .= "'".$GLOBALS['f'][$postdataInfo['postdataName']]."'";
+          }
+          $postdataLoaded .= "<br>
+";
+        }
+        $_SESSION['pageFrom']['loaded'] = $_SESSION['pageFrom']['loaded'].$prefix.'$'.$postdataInfo['postdataName'].' = ';
+        if ( is_numeric($postdataInfo['postdataValue']) ) {
+          $_SESSION['pageFrom']['loaded'] .= $postdataInfo['postdataValue'];
+        } else {
+          $_SESSION['pageFrom']['loaded'] .= "'".$postdataInfo['postdataValue']."'";
+        }
+        $_SESSION['pageFrom']['loaded'] .= ';';
+        $prefix = ' ';
+      }
+    }
+  }
+  if ( !$_SESSION['pageFrom']['loaded'] )  unset($_SESSION['pageFrom']['loaded']);
+}
+
+t_End(); // End TRACKing included file.
+?>

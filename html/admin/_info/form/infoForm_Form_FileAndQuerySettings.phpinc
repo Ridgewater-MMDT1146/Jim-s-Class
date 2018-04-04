@@ -1,0 +1,21 @@
+<?
+// admin/_info/form/infoForm_Form_FileAndQuerySettings.phpinc
+// Display the query settings form.
+t_Begin(); // Begin TRACKing included file.
+if ( !isset($f['filenameBase']) ) $f['filenameBase'] = $f['table'];
+if ( !isset($f['file_and_query_settings_value']) ) $f['file_and_query_settings_value'] = 1;
+?>
+<a name="file_and_query_settings_name"></a>
+<input type="hidden" name="file_and_query_settings_value" id="file_and_query_settings_value_id" value="<?=$f['file_and_query_settings_value']?>">
+<table><tr><td><fieldset><legend><a href="#file_and_query_settings" name="file_and_query_settings" onClick="return info_Set(this);"><div id="file_and_query_settings_status" class="inline"><? if ( !$f['file_and_query_settings_value']) { ?>+<? } else { ?>-<? } ?></div> file and query settings</a><input type="submit" name="subtask_form_settings" value="Update form" onClick="info_gotoName(this,'file_and_query_settings_name');"></legend>
+<div id="file_and_query_settings_show" class="<? if ( !$f['file_and_query_settings_value']) { ?>d_s_h <? } ?>d_s_l">
+<table>
+  <tr><td class="label_info">Base filename</td><td><input type="text" name="filenameBase" value="<?=$f['filenameBase']?>" style="width:8em;"></td></tr>
+  <tr><td class="label_info">Table keys</td><td><input type="text" name="tablePrimaryKey" value="<?=str_replace(',',', ',array_to_list($tablePrimaryKey))?>" style="width:16em;"></td></tr>
+  <tr><td class="label_info">Query</td><td><?=$tableQueryError?><textarea class="code_info" name="tableQuery" id="id_tableQuery"><?=htmlSafe($tableQuery)?></textarea></td></tr>
+</table>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

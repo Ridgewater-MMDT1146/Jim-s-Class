@@ -1,0 +1,27 @@
+<?
+// admin/page/pageVerify.phpinc
+
+formValue('pageId');
+formValue('pageURL');
+formValue('pageDescription');
+
+#d_Line("http://".$_SERVER['SERVER_NAME'].'/');
+#d_V('pageURL');
+// Remove server URL.
+$new_pageURL = str_replace('http://'.$_SERVER['SERVER_NAME'].'/','',$f['pageURL']);
+#d_Var('$new_pageURL',$new_pageURL);
+// Remove /index.php.
+$new_pageURL = str_replace("/index.php","",$new_pageURL);
+#d_Var('$new_pageURL',$new_pageURL);
+// Remove the trailing /.
+if ( substr($new_pageURL,strlen($new_pageURL)-1,1) == '/' ) $new_pageURL = substr($new_pageURL,0,strlen($new_pageURL)-1);
+#d_Var('$new_pageURL',$new_pageURL);
+
+$error = false;
+// Verify pageURL
+if ($f['pageURL'] == '') {
+  //error
+  $f['pageURL_Error'] = '<span class="error">The page name cannot be blank.</span>';
+  $error = true;
+}
+?>

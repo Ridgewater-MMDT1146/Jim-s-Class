@@ -1,0 +1,45 @@
+<?
+// parse_11.phpinc
+// Find class or department line.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+d_line('Find department line.','a');
+d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+
+#$DEBUG_parse_11_ShowSkippedLines = true; // Show skipped lines.
+if ( !isset($DEBUG_parse_11_ShowSkippedLines) ) $DEBUG_parse_11_ShowSkippedLines = false;
+if ( $DEBUG_parse_11_ShowSkippedLines ) { $ShowSkippedLines = 'd'; } else { $ShowSkippedLines = ''; }
+
+$continue = 15; // Skip a max of 15 lines.
+while ( $continue ) {
+	if ( strlen($classLnA[0]) == 6 && is_numeric($classLnA[0]) ) { // Is this a class line?
+		// Yes. Setup for: Get class info.
+		$continue = false;
+		$classInfo['meeting'] = array();
+		$classInfo['note'] = array();
+		set_state(30); // Get class info.
+		$line--; // Re-parse this line.
+	} elseif ( substr($classLn,0,17) == '<FONT SIZE=+1><B>' ) { // Is this a department line.
+		// Yes. Setup for: Get department.
+		$continue = false;
+		set_state(20); // Get department.
+		$line--; // Re-parse this line.
+	} else {
+		// Neither found.
+		d_Line("Skipping: $line $classLn.",$ShowSkippedLines.'i');
+		if ( get_ClassLn() ) { // Is there another line?
+			// Yes, decrement count.
+			$continue--;
+			d_Line('state: '.$state.' line: '.$line.': '.$classLn);
+			d_Var('$classLnA',$classLnA); // DEBUG class line.
+		} else { // Is there another line?
+			// No, quit.
+			$continue = false;
+			d_Line('End of file encountered.','e');
+		} // Is there another line?
+	} // Skip to class line.
+}
+
+#set_state(99);
+t_End(); // End TRACKing include_filename.phpinc.
+?>

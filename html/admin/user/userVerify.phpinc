@@ -1,0 +1,108 @@
+<?
+// admin/user/userVerify.phpinc
+// Verify the user form.
+t_Begin(); // Begin TRACKing included file.
+
+// Begin with no errors.
+unset($formError);
+
+// Verify userId.
+formValue('userId');
+if ( $f['userId'] ) {
+  // Get the original user info.
+  $query = "
+      SELECT *
+        FROM `user`
+       WHERE userId = '".$f['userId']."'
+  ";
+  $userResult = query_do($query);
+  $userCount = $GLOBALS['_QUERY']['count'];
+  if ( !$userCount ) {
+    programmingError('The userId ('.$f['userId'].') was not found.');
+  }
+  $userInfo = query_row($userResult);
+} else {
+  $userInfo = false;
+}
+
+// Verify userUsername.
+formValue('userUsername');
+// Set default Admin userUsername.
+$defaultAdminUsername = 'Admin';
+if ( !$f['userUsername'] ) {
+  // ENTRY ERROR! The userUsername is blank.
+  $formError['userUsername'] = 'The Username cannot be blank. Please enter a Username.';
+} else {
+  // If the userUsername is the defaultAdminUsername it cannot be changed.
+  if ( $userInfo && $userInfo['userUsername'] == $defaultAdminUsername && $f['userUsername'] != $defaultAdminUsername ) {
+    // ENTRY ERROR! The userUsername is defaultAdminUsername and cannot be changed.
+    $formError['userUsername'] = 'The Username ('.$defaultAdminUsername.') cannot be changed.';
+    $f['userUsername'] = $defaultAdminUsername;
+  }
+  // We have a userUsername so verify it.
+  if ( !isset($formError['userUsername']) && $userInfo && $f['userUsername'] != $userInfo['userUsername'] ) {
+    // The userUsername is new or changed.
+    // Verify that the userUsername is unique.
+    $query = "
+        SELECT userId
+          FROM `user`
+         WHERE userUsername = '".query_safe($f['userUsername'])."'
+    ";
+    $userUsernameResult = query_do($query);
+    $userUsernameCount = $GLOBALS['_QUERY']['count'];
+    if ( $userUsernameCount ) {
+      // ENTRY ERROR! The userUsername is not unique.
+      $formError['userUsername'] = 'This Username ('.htmlSafe($f['userUsername']).') is already in use. Please enter a different Username.';
+      $f['userUsername'] = $userInfo['userUsername'];
+    }
+  }
+}
+
+// Verify userPassword.
+formValue('newPassword');
+formValue('confirmPassword');
+if ($f['newPassword'] != $f['confirmPassword']) {
+  // ENTRY ERROR! The new password and confirmation do not match.
+  $formError['userPassword'] = 'The Password and Confirm password do not match. Please re-enter the Password and Confirm password.';
+  $error = true;
+} else {
+  if ( $f['newPassword'] ) {
+    $f['userPassword'] = $f['newPassword'];
+  } else {
+    $f['userPassword'] = false;
+  }
+}
+
+// Verify userFirstname.
+formValue('userFirstname');
+if ( !$f['userFirstname'] ) {
+  // ENTRY ERROR! The userFirstname is blank.
+  $formError['userFirstname'] = 'The Firstname cannot be blank. Please enter a Firstname.';
+}
+
+// Verify userMiddlename.
+formValue('userMiddlename');
+
+// Verify userLastname.
+formValue('userLastname');
+
+// Verify userNickname.
+formValue('userNickname');
+
+// Verify userEmailAddress.
+formValue('userEmailAddress');
+// To do!
+
+// Verify userImage.
+formValue('userImage');
+// To do!
+
+// Verify userInactive.
+formValue('userInactive');
+if ( $f['userInactive'] != 1 ) $f['userInactive'] = 0;
+
+// Verify userNote.
+formValue('userNote');
+
+t_End(); // End TRACKing included file.
+?>

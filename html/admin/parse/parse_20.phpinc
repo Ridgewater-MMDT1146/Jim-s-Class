@@ -1,0 +1,18 @@
+<?
+// parse_20.phpinc
+// Get department.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+d_line('Get department.','a');
+d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+
+$departmentCurrent = trim(strip_tags($classLn));
+?>
+		<h5><?=$departmentCurrent?>.</h5>
+<?
+
+set_state(11); // Find class or department line.
+
+#set_state(99);
+t_End(); // End TRACKing include_filename.phpinc.
+?>

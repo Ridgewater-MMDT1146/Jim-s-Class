@@ -1,0 +1,120 @@
+<?
+// common/pageFooter.phpinc
+// Generate the page footer for each page.
+
+t_Begin(); // Begin TRACKing included file.
+
+#d_Var("\$GLOBALS['_DEBUG']",$GLOBALS['_DEBUG'],'d');
+#if ( !isset($GLOBALS['_PAGE']['showAnyHeader']) ) $GLOBALS['_PAGE']['showAnyHeader'] = true;
+if ( !isset($GLOBALS['showAnyFooter']) ) $GLOBALS['showAnyFooter'] = true;
+/** /
+d_Var("\$GLOBALS['_PAGE']['showAnyHeader']",$GLOBALS['_PAGE']['showAnyHeader'],'d');
+d_Var("\$GLOBALS['_DEBUG']['div']['count']",$GLOBALS['_DEBUG']['div']['count'],'d');
+d_Var("\$GLOBALS['DEBUG_Show_menu']",$GLOBALS['DEBUG_Show_menu'],'d');
+d_Var("\$GLOBALS['showAnyFooter']",$GLOBALS['showAnyFooter'],'/d');
+d_Var("\$GLOBALS['_PAGE']['pageHeaderLoaded']",$GLOBALS['_PAGE']['pageHeaderLoaded'],'d');
+#$GLOBALS['_PAGE']['pageFooterLoaded'] = true;
+/**/
+if ( isset($GLOBALS['_PAGE']['pageContent']) && $GLOBALS['_PAGE']['pageContent'] ) {
+	$GLOBALS['_PAGE']['pageContent'] = false;
+}
+if ( $GLOBALS['showAnyFooter'] ) { // showAnyFooter = true?
+	// showAnyFooter = true.
+	#d_Var("\$GLOBALS['_PAGE']['pageHeaderLoaded']",$GLOBALS['_PAGE']['pageHeaderLoaded']);
+	if ( !isset($GLOBALS['_PAGE']['pageHeaderLoaded']) ) { pageHeader("called by pageFooter"); $pageFooter_debug = 'pageHeader() never called'; } // Load page header if not already loaded.
+	if ( !isset($GLOBALS['displayFooter']) || $GLOBALS['displayFooter'] == true ) {
+?>
+</main>
+<footer id="pageFooter"><!-- BEGIN #pageFooter -->
+<div id="DEBUG_js_div" class="hidden"><!-- Needed for js DEBUG info --></div>
+<?
+	// Display the copyright.
+	$copyrightyear = $_SESSION['APP']['copyrightyear'];
+	if ( date('y') != substr($_SESSION['APP']['copyrightyear'],2) ) {
+		$copyrightyear = $_SESSION['APP']['copyrightyear'].'-'.date('y');
+	}
+	if ( isset($_SESSION['user']['userId']) && $_SESSION['user']['userId'] ) {
+?>
+  <div class="center faded p smaller">&copy;<?=$copyrightyear?>
+<?
+     foreach ( $_SESSION['APP']['copyrightowner'] as $name => $email ) {
+?>
+  <span class="nowrap"><a href="mailto:<?=$email?>"><?=$name?></a> &lt;<?=$email?>&gt;</span>
+<?
+     }
+?>       
+  </div>
+<?
+	} else {
+?>
+  <div class="center faded p smaller">&copy;<?=$copyrightyear?>
+<?
+     foreach ( $_SESSION['APP']['copyrightowner'] as $name => $email ) {
+       echo ' '.$name;
+     }
+?>       
+  </div>
+<?
+	}
+	// Track memory usage.
+	if ( isset($GLOBALS['_DEBUG']['page']['memory']) && $GLOBALS['_DEBUG']['page']['memory'] ) require('common/memoryTrack.phpinc');
+?>
+</footer><!-- END #pageFooter -->
+<?
+	}
+	// Set $pageFooter_debug based on $GLOBALS['_DEBUG'] setting.
+	if ( !isset($pageFooter_debug) ) { $pageFooter_debug = ''; $pageFooter_prefix = ''; } else { $pageFooter_prefix = ' and '; }
+	if ( ( isset($GLOBALS['_DEBUG']['page']['code']) && $GLOBALS['_DEBUG']['page']['code'] ) ) {
+		$pageFooter_debug .= $pageFooter_prefix."\$GLOBALS['_DEBUG']['page']['code']";
+	}
+	if ( ( isset($GLOBALS['_DEBUG']['page']['foot']) && $GLOBALS['_DEBUG']['page']['foot'] ) ) {
+		$pageFooter_debug .= $pageFooter_prefix."\$GLOBALS['_DEBUG']['page']['foot']";
+	}
+	if ( ( isset($GLOBALS['_DEBUG']['page']['query']) && $GLOBALS['_DEBUG']['page']['query'] ) ) {
+		$pageFooter_debug .= $pageFooter_prefix."\$GLOBALS['_DEBUG']['page']['query']";
+	}
+	if ( ( isset($_SESSION['DEBUG']['codeSite']) && $_SESSION['DEBUG']['codeSite'] ) ) {
+		$pageFooter_debug .= $pageFooter_prefix."\$_SESSION['DEBUG']['codeSite']";
+	}
+	if ( ( isset($_SESSION['DEBUG']['footSite']) && $_SESSION['DEBUG']['footSite'] ) ) {
+		$pageFooter_debug .= $pageFooter_prefix."\$_SESSION['DEBUG']['footSite']";
+	}
+	if ( ( isset($_SESSION['DEBUG']['querySite']) && $_SESSION['DEBUG']['querySite'] ) ) {
+		$pageFooter_debug .= $pageFooter_prefix."\$_SESSION['DEBUG']['querySite']";
+	}
+	if ( $pageFooter_debug ) {
+		require('pageFooter_debug.phpinc');
+		unset($_SESSION['pageFrom']['triggered']);
+	}
+	if ( $GLOBALS['_PAGE']['showAnyHeader'] ) { // Close the body tag.
+?>
+</body><?=d_Var("\$GLOBALS['_PAGE']['showAnyHeader']",$GLOBALS['_PAGE']['showAnyHeader'],'C')?><?=d_Var("\$GLOBALS['_PAGE']['showFullHeader']",$GLOBALS['_PAGE']['showFullHeader'],'C')?><?=d_Var("\$GLOBALS['showAnyFooter']",$GLOBALS['showAnyFooter'],'C')?>
+
+<?
+	}
+	if ( $pageFooter_debug ) {
+		$pageFooter_debug_backtrace = debug_backtrace();
+		for ( $backtrace_index=0; $backtrace_index<count($pageFooter_debug_backtrace); $backtrace_index++ ) {
+?>
+	<!-- END <?=str_replace($_SESSION['ROOT']['directory'],"",str_replace("\\","/",$pageFooter_debug_backtrace[$backtrace_index]['file']))?> (from <?=basename(__FILE__)?>) -->
+<?
+		}
+	}
+	if ( $GLOBALS['_PAGE']['showAnyHeader'] ) { // Close the html tag.
+?>
+</html>
+<?
+	}
+} else { // showAnyFooter = true?
+	// showAnyFooter = false.
+	if ( $GLOBALS['_PAGE']['showAnyHeader'] && !$GLOBALS['_PAGE']['showFullHeader'] ) { // Close the pageContent div, body, and html tags.
+?>
+</main> <?=__LINE__?> --><?=d_Var("\$GLOBALS['_PAGE']['showAnyHeader']",$GLOBALS['_PAGE']['showAnyHeader'],'C')?><?=d_Var("\$GLOBALS['_PAGE']['showFullHeader']",$GLOBALS['_PAGE']['showFullHeader'],'C')?><?=d_Var("\$GLOBALS['showAnyFooter']",$GLOBALS['showAnyFooter'],'C')?>
+
+</body>
+</html>
+<?
+	}
+} // showAnyFooter = true?
+require('common/pageSend.phpinc'); // Cleanup memory and send page.
+?>

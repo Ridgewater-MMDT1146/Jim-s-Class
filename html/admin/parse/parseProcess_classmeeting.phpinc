@@ -1,0 +1,171 @@
+<?
+// parseProcess_classmeeting.phpinc
+// 
+
+t_Begin(); // Begin TRACKing parseProcess_classmeeting.phpinc.
+
+// BEGIN parseProcess_classmeeting.phpinc
+//
+foreach ( $thisClass['meeting'] as $thisClassmeeting ) {
+	d_Var('$thisClassmeeting',$thisClassmeeting);
+	$classmeetingOnOff = NULL;
+	// Check if on campus, OFF CAMPUS, or ON LINE.
+	switch ( strtoupper($thisClassmeeting['BLDG'].$thisClassmeeting['ROOM']) ) 
+	{
+		case 'ONONLINE':
+		case 'ONLINE':
+			$roomId = NULL;
+			$classmeetingOnOff = 1;
+		break;
+		case 'OFFCAMPUS':
+			$roomId = NULL;
+			$classmeetingOnOff = 0;
+		break;
+		default:
+			if ( $thisClassmeeting['BLDG'].$thisClassmeeting['ROOM'] != '' ) 
+			{
+				// Get roomId.
+				$query = "
+						SELECT roomId
+							FROM `room`
+							JOIN `building` ON room.buildingId = building.buildingId
+						 WHERE roomNumber = '".query_safe($thisClassmeeting['ROOM'])."'
+							 AND buildingCode = '".query_safe($thisClassmeeting['BLDG'])."'
+					ORDER BY roomNumber
+				";
+				d_Var('roomInfo',$query,'q');
+				$roomInfo = query_info($query);
+				d_Var('$roomInfo',$roomInfo);
+				// In $roomInfo['roomId'].
+				
+				if ( !$roomInfo && ( $thisClassmeeting['BLDG'] != 'ON' && $thisClassmeeting['ROOM'] != 'LINE' ) ) 
+				{
+					//Class is not online and room OR building were not found
+					//Check if building exists
+					$query = "SELECT buildingId FROM building
+								WHERE buildingCode = '".query_safe($thisClassmeeting['BLDG'])."'
+							 ";
+					$buildingExists = query_info($query);
+					if(!$buildingExists)
+					{
+						//Should buildings just always be added by hand??
+						echo("\nNew Building Code: " . $thisClassmeeting['BLDG'] . "\n" );	
+						$sql = "INSERT INTO building
+								(campusId, buildingCode) 
+								VALUES(????, ".$thisClassmeeting['BLDG'].")
+								";
+							//$buildingId = $GLOBALS['_QUERY']['insertId'];
+					}
+					
+					//Check if room exists
+					$query = "SELECT roomId FROM room
+								WHERE roomNumber = '".query_safe($thisClassmeeting['ROOM'])."'
+							 ";
+					$roomExists = query_info($query);
+					
+					if(!$roomExists)
+					{
+						echo("\nNew Room: " . $thisClassmeeting['ROOM'] . "\n" );
+						
+						if($buildingExists)
+						{
+							//If the building existed, we have its ID
+							$buildingId = $buildingExists['buildingId'];
+						}
+						//If the building is new, we keep the ID of the one we just inserted
+						
+						$sql = "INSERT INTO room
+								(buildingId, roomNumber)
+								VALUES(".$buildingId.", '".$thisClassmeeting['ROOM']."')
+								";	
+						query_do($sql);
+						$roomInfo['roomId'] = $GLOBALS['_QUERY']['insertId'];
+					}
+					
+					//d_Var("\$thisClassmeeting['BLDG']",$thisClassmeeting['BLDG'],'d');
+					//d_Var("\$thisClassmeeting['ROOM']",$thisClassmeeting['ROOM'],'d');
+					//programmingError('The building ['.$thisClassmeeting['BLDG'].'], room ['.$thisClassmeeting['ROOM'].'] is not  in the database.');
+				}
+				#d_Var('$roomInfo',$roomInfo,'d');
+				if ( $roomInfo ) {
+					$roomId = $roomInfo['roomId'];
+				} else {
+					$roomId = NULL;
+				}
+				if ( !isset($classmeetingOnOff) ) $classmeetingOnOff = NULL;
+			} 
+			else 
+			{
+				$roomId = NULL;
+				if ( !isset($classmeetingOnOff) ) $classmeetingOnOff = NULL;
+			}
+		break;
+	}
+	// INSERT class meeting.
+	$query = "
+		INSERT INTO `classmeeting` (
+				classId
+			, classmeetingStartDate
+			, classmeetingEndDate";
+	if ( $thisClassmeeting['classmeetingBeginTime'] != 'ARR' && $thisClassmeeting['classmeetingBeginTime'] != '' ) 
+	{
+		$query .= "
+			, classmeetingBeginTime
+			, classmeetingEndTime";
+	}
+	if ( $roomId !== NULL ) 
+	{
+		$query .= "
+			, roomId";
+	}
+	if ( $classmeetingOnOff !== NULL ) 
+	{
+		$query .= "
+			, classmeetingOnOff";
+	}
+	$query .= "
+		) VALUES (
+				".$thisClass['classId']."
+			, '".query_safe($thisClassmeeting['classmeetingStartDate'])."'
+			, '".query_safe($thisClassmeeting['classmeetingEndDate'])."'";
+	if ( $thisClassmeeting['classmeetingBeginTime'] != 'ARR' && $thisClassmeeting['classmeetingBeginTime'] != '' ) 
+	{
+		$query .= "
+			, '".query_safe(valid_time($thisClassmeeting['classmeetingBeginTime']))."'
+			, '".query_safe(valid_time($thisClassmeeting['classmeetingEndTime']))."'";
+	}
+	if ( $roomId !== NULL ) {
+		$query .= "
+			, ".$roomId;
+	}
+	if ( $classmeetingOnOff !== NULL ) 
+	{
+		$query .= "
+			, ".$classmeetingOnOff;
+	}
+	$query .= "
+		)
+	";
+	d_Var('classmeetingINSERT',$query,'q');
+	$classmeetingINSERT = query_do($query);
+	d_Var('$classmeetingINSERT',$classmeetingINSERT,'l');
+	$thisClassmeeting['classmeetingId'] = $GLOBALS['_QUERY']['insertId'];
+	d_Var("\$thisClassmeeting['classmeetingId']",$thisClassmeeting['classmeetingId']);
+	
+	//Process classmeeting days
+	require('parseProcess_classmeeting_days.phpinc');
+	
+	//Process classmeeting instructors
+	require('parseProcess_classmeeting_instructors.phpinc');
+	
+	
+	// END Process classmeeting Instructors.
+}
+#d_Var('$thisClass',$thisClass,'d+');exit;
+?>
+<?=$thisClass['classQId']?> <?=$thisClass['departmentCode']?><?=$thisClass['courseNumber']?> <?=$thisClass['courseTitle']?> - <?=$thisClass['classSection']?> added.<br>
+<?	
+// END 
+
+t_End(); // End TRACKing parseProcess_classmeeting.phpinc.
+?>

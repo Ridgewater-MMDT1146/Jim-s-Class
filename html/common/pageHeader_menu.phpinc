@@ -1,0 +1,50 @@
+<?
+// common/pageHeader_menu.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing pageHeader_menu.phpinc.
+#d_Line('','/');
+
+?>
+<div id="pageMenu">
+<form name="menu_form" action="/" method="post"><input type="hidden" name="form" value="menu_form">
+<?
+// Include previous directory menus starting at the ROOT directory.
+$currentDirectory = dirname($_SERVER['SCRIPT_FILENAME']);
+// Fix for godaddy.
+$currentDirectory = str_replace("/var/chroot","",$currentDirectory);
+$nextDirectory = $_SESSION['ROOT']['directory'];
+$directoryArray = explode("/",$currentDirectory);
+$directoryIndex = count(explode("/",$nextDirectory))-1;
+// Parse through each directory looking for a menu.
+$menuNumber = 0;
+while ($nextDirectory != $currentDirectory && $directoryIndex < 8) {
+	if (file_exists($nextDirectory."/"."menu.phpinc")) {
+		$menuNumber++;
+?>
+<div class="menu" id="menu<?=$menuNumber?>"><?
+	require($nextDirectory."/"."menu.phpinc");
+?>
+</div><!-- class="menu" id="menu<?=$menuNumber?>" --><?
+}
+// Move to next directory.
+$directoryIndex++;
+$nextDirectory .= "/".$directoryArray[$directoryIndex];
+}
+// Include current directory menu.
+if (file_exists($currentDirectory."/"."menu.phpinc")) {
+	$menuNumber++;
+?>
+<div class="menu" id="menu<?=$menuNumber?>"><?
+	require($currentDirectory."/"."menu.phpinc");
+?>
+</div><!-- class="menu" id="menu<?=$menuNumber?>" --><?
+}
+#if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] ) require('common/menu_DEBUG.phpinc');
+?>
+</form><!-- name="menu_form" -->
+</div><!-- id="pageMenu" -->
+<?
+
+t_End(); // End TRACKing pageHeader_menu.phpinc.
+?>

@@ -1,0 +1,51 @@
+<?
+// admin/user/userGroupProcess.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+formValue('userpermissionId');
+formValue('inGroup');
+formValue('notGroup');
+#d_V('userpermissionId');
+#d_V('inGroup');
+#d_V('notGroup');
+if ($f['inGroup']) {
+  foreach ($f['inGroup'] as $index => $f['userId'])  {
+    #d_Var('$userpermissionId',$f['userpermissionId']);
+    #d_V('userId');
+    if ( $f['userId'] != 1 || $f['userpermissionId'] != 1 ) {
+      $query = "
+        DELETE
+          FROM user_userpermission
+         WHERE userpermissionId = ".$f['userpermissionId']."
+           AND userId = ".$f['userId']."
+      ";
+      $user_userpermissionDelete = query_do($query);
+      #d_Var('user_userpermissionDelete',$query);
+    }
+  }
+}
+if ($f['notGroup']) {
+  $f['AddedOn'] = currentDateTime();
+  foreach ($f['notGroup'] as $index => $f['userId'])  {
+    $query = "
+      INSERT
+        INTO user_userpermission (
+        userpermissionId,
+        userId,
+        AddedOn,
+        AddedBy
+      ) VALUES (
+        ".$f['userpermissionId'].",
+        ".$f['userId'].",
+       '".query_safe($f['AddedOn'])."',
+        ".$_SESSION['user']['trueId']."
+      )
+    ";
+    $user_userpermissionInsert = query_do($query);
+    #d_Var('user_userpermissionInsert',$query);
+  }
+}
+
+t_End(); // End TRACKing included file.
+?>

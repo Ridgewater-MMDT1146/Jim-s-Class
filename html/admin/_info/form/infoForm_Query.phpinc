@@ -1,0 +1,259 @@
+<?
+// admin/_info/form/infoForm_Query.phpinc
+// Populate fieldResult array.
+t_Begin(); // Begin TRACKing included file.
+d_Var("\$f",$f,'k');
+#info_fDiffBegin();
+$infoForm_Query_Debug = true;
+if ( !isset($infoForm_Query_Debug) ) $infoForm_Query_Debug = false;
+// Get the prefix.
+// Get an array of all tables.
+$allTables = array();
+$tableQuery="SHOW TABLES FROM ".$_SESSION['DB'][$f['database']]['database'];
+$ShowTables_QueryField = 'Tables_in_'.$_SESSION['DB'][$f['database']]['database'];
+$tableResult = query_do($tableQuery,$f['database']);
+$tableCount = $GLOBALS['_QUERY']['count'];
+if ($tableCount) {
+  query_seek($tableResult, 0);
+  while ($tableInfo = query_row($tableResult)) {
+    $allTables[] = $tableInfo[$ShowTables_QueryField];
+  }
+}
+// Get field information based on the query.
+$enctype = '';
+#d_Line('$fieldArray = array()','oe',false,true);
+$fieldArray = array(); // All field info.
+formValue('','tablePrimaryKey');
+if ( !isset($tablePrimaryKey) ) {
+  $tablePrimaryKey = array();
+  $getTablePrimaryKeys = true;
+} else {
+  $tablePrimaryKey = list_to_array($tablePrimaryKey);
+  $getTablePrimaryKeys = false;
+}
+d_Var('$tablePrimaryKey ',$tablePrimaryKey );
+$tableQueryError = '';
+$fieldTable = array(); // Fields and table info.
+formValue('','tableQuery'); // The Id field for this form.
+d_Var('$tableQuery ',$tableQuery );
+if ($tableQuery == '') {
+  $tableQuery = 'SELECT * FROM `'.$f['table']."`";
+  $tableQueryError = 'The query was blank. Set query to '.$tableQuery.'.<br>';
+}
+$queryResult = query_do($tableQuery,$f['database']);
+$queryCount = $GLOBALS['_QUERY']['count'];
+if ( $queryCount ) {
+  // Populate fieldTable array from query fields.
+  query_seek($queryResult, 0);
+  $index = 0;
+  while ($index < mysqli_num_fields($queryResult)) {
+    $meta = mysqli_fetch_field($queryResult);
+    $index++;
+    $fieldTable[$meta->name] = $meta->table;
+  }
+} else {
+  // Parse allTables to get queryTables.
+  $queryTables = array();
+  $queryTablesList = '';
+  $tok = strtok($tableQuery, ", \n\t");
+  while ($tok !== false) {
+    $tok = trim(str_replace('`','',$tok));
+    if ( in_array($tok,$allTables) && !in_array($tok,$queryTables) ) {
+      $queryTables[] = $tok;
+      $queryTablesList = listAppend($queryTablesList,'`'.$tok.'`');
+    }
+    $tok = strtok(", \n\t");
+  }
+  $fieldTable = array();
+  // Populate $fieldTable array from field in the tables.
+  foreach ( $queryTables as $tableName ) {
+    $fieldQuery="SHOW COLUMNS FROM `".$tableName."`";
+    $columnResult = query_do($fieldQuery,$f['database']);
+    $columnCount = $GLOBALS['_QUERY']['count'];
+    if ( $columnCount ) {
+      query_seek($columnResult, 0);
+      while ($columnInfo = query_row($columnResult)) {
+       if ( $getTablePrimaryKeys && $columnInfo['Key'] == 'PRI' ) $tablePrimaryKey[] = $columnInfo['Field']; // Set the Id fields.
+        $fieldTable[$columnInfo['Field']] = $tableName;
+      }
+    }
+  }
+  $tableQueryError = 'Query has no results. Using fields from table';
+  if ( count($queryTables) > 1 ) { $tableQueryError .= 's'; }
+  $tableQueryError .= ': '.$queryTablesList.'.<br>';
+}
+d_Var('$fieldTable',$fieldTable);
+if ( count($fieldTable) ) {
+  foreach ( $fieldTable as $fieldName => $tableName ) {
+    $fieldArray[$fieldName] = array();
+    $fieldQuery = 'SHOW COLUMNS FROM `'.$tableName.'` WHERE field=\''.$fieldName.'\'';
+    #d_Var('$fieldQuery',$fieldQuery,'q');
+    $columnResult=query_do($fieldQuery,$f['database']);
+    #d_Var('$columnResult',$columnResult);
+    query_seek($columnResult, 0);
+    $columnInfo = query_row($columnResult);
+    #d_Var($fieldName,$columnInfo);
+    if ( !$tablePrimaryKey && $columnInfo['Key'] == 'PRI' ) $tablePrimaryKey[] = $fieldName; // Set the Id fields.
+    // Get the field table name. This is the table the field is from.
+    $fieldArray[$fieldName]['table'] = $tableName;
+    // Get the field _Default. This is the field Type.
+    $fieldArray[$fieldName]['Default'] = $columnInfo['Default'];
+    // Get the field _Extra. This is the field Extra.
+    $fieldArray[$fieldName]['Extra'] = $columnInfo['Extra'];
+    // Get the field _Key. This is the field Key.
+    $fieldArray[$fieldName]['Key'] = $columnInfo['Key'];
+    // Get the field _Null. This is the field Key.
+    $fieldArray[$fieldName]['Null'] = $columnInfo['Null'];
+    // Get the field _Type. This is the field Type.
+    $fieldArray[$fieldName]['Type'] = $columnInfo['Type'];
+    if ( !isset($fieldArray[$fieldName]['Type']) ) d_Var('$columnInfo',$columnInfo);
+    // Get the field conditional. This is the conditional flag for INSERT and UPDATE.
+    formValue('',$fieldName.'_conditional',"fieldArray['".$fieldName."']['conditional']");
+    // Get the field label. This is the label to show on the form.
+    formValue('',$fieldName.'_label',"fieldArray['".$fieldName."']['label']");
+    // Get the field class. This is the class to use for the form element.
+    formValue('',$fieldName.'_class',"fieldArray['".$fieldName."']['class']");
+    // Get the field value. This is the value to use for the form element.
+    formValue('',$fieldName.'_value',"fieldArray['".$fieldName."']['value']");
+    // Get the field options. This is the options text to use for the checkbox, radio, or select element.
+    formValue('',$fieldName.'_options',"fieldArray['".$fieldName."']['options']");
+    // Get the field fieldtable. This is the table to use for the checkbox, radio, or select element.
+    formValue('',$fieldName.'_fieldtable',"fieldArray['".$fieldName."']['fieldtable']");
+    // Get the field width. This is the width to use for the form element.
+    formValue('',$fieldName.'_width',"fieldArray['".$fieldName."']['width']");
+    if ( !isset($fieldArray[$fieldName]['width']) ) {
+      // Get width from Type.
+      $fieldArray[$fieldName]['width'] = info_Size($fieldArray[$fieldName]['Type']);
+      $fieldArray[$fieldName]['width'] = $fieldArray[$fieldName]['width']['width'];
+    }
+    // Get the field height. This is the height to use for the form element.
+    formValue('',$fieldName.'_height',"fieldArray['".$fieldName."']['height']");
+    if ( !isset($fieldArray[$fieldName]['height']) ) {
+      // Get height from Type.
+      $fieldArray[$fieldName]['height'] = info_Size($fieldArray[$fieldName]['Type']);
+      $fieldArray[$fieldName]['height'] = $fieldArray[$fieldName]['height']['height'];
+    }
+    // Get the field maxlength. This is the maxlength to use for the form element.
+    formValue('',$fieldName.'_maxlength',"fieldArray['".$fieldName."']['maxlength']");
+    if ( !isset($fieldArray[$fieldName]['maxlength']) ) {
+      // Get width from Type.
+      $fieldArray[$fieldName]['maxlength'] = info_Size($fieldArray[$fieldName]['Type']);
+      $fieldArray[$fieldName]['maxlength'] = $fieldArray[$fieldName]['maxlength']['maxlength'];
+    }
+    // Get the field onclick. This is the onclick to use for the form element.
+    formValue('',$fieldName.'_onclick',"fieldArray['".$fieldName."']['onclick']");
+    // Get the field src. This is the src to use for the form element.
+    formValue('',$fieldName.'_src',"fieldArray['".$fieldName."']['src']");
+    // Get the field qc. This is the qc to use for the form element value.
+    $qc = info_fieldQC($columnInfo['Type']); $fieldArray[$fieldName]['qc'] = $qc;
+    // Get the field type. This is the input type to use for the form element.
+    formValue('',$fieldName.'_type',"fieldArray['".$fieldName."']['type']");
+    if ( !isset($fieldArray[$fieldName]['type']) || $fieldArray[$fieldName]['type'] == '' ) {
+			// The field type is not set.
+      if ( $fieldName == $tableName."Id" ) {
+        // This is the primaryId field for this table, so hidden.
+        $fieldArray[$fieldName]['type'] = 'hidden';
+      } elseif ( substr($fieldName,strlen($fieldName)-2,2) == "By" || substr($fieldName,strlen($fieldName)-2,2) == "On" ) {
+        // The field name ends with By or On, so default.
+        $fieldArray[$fieldName]['type'] = 'skip';
+      } elseif ( substr($fieldName,strlen($fieldName)-2,2) == "Id" ) {
+        // This may be an Id field for another table.
+        $fieldArray[$fieldName]['type'] = 'hidden'; // Default type if not primaryId field.
+        // Test if there is a table with this field name (less 'Id').
+        foreach ( $allTables as $thisTable ) {
+          if ( substr($fieldName,0,strlen($fieldName)-2) == $thisTable ) {
+            // There is a table with this field name (less 'Id'), so select.
+            $fieldArray[$fieldName]['type'] = 'select';
+            $fieldArray[$fieldName]['fieldtable'] = $thisTable;
+            $fieldArray[$fieldName]['value'] = $fieldName;
+            $fieldArray[$fieldName]['options'] = '';
+          }
+        }
+      } elseif ( $fieldArray[$fieldName]['Type'] == 'tinyint(1) unsigned' ) {
+        // The field is a tinyint(1) unsigned so radio.
+        $fieldArray[$fieldName]['type'] = 'radio';
+      } elseif ( stripos($fieldArray[$fieldName]['Type'],'char') !== false
+              || stripos($fieldArray[$fieldName]['Type'],'date') !== false
+              || stripos($fieldArray[$fieldName]['Type'],'float') !== false
+              || stripos($fieldArray[$fieldName]['Type'],'int') !== false
+              || stripos($fieldArray[$fieldName]['Type'],'time') !== false
+              || stripos($fieldArray[$fieldName]['Type'],'year') !== false
+                ) {
+        // The field is a char, date, float, int, or tine, so text.
+        $fieldArray[$fieldName]['type'] = 'text';
+      } elseif ( stripos($fieldArray[$fieldName]['Type'],'text') !== false ) {
+        // The field is text so textarea.
+        $fieldArray[$fieldName]['type'] = 'textarea';
+      } else {
+        // The field is not text so default.
+        $fieldArray[$fieldName]['type'] = 'default';
+      }
+    }
+		d_Var("\$fieldArray[$fieldName]['type']",$fieldArray[$fieldName]['type']);
+    if ($fieldArray[$fieldName]['type'] == 'file') $enctype = ' enctype="multipart/form-data"';
+    switch ( $fieldArray[$fieldName]['type'] ) {
+      case 'checkbox':
+      case 'radio':
+      case 'select':
+        if ( $fieldArray[$fieldName]['fieldtable'] ) {
+          // Form element is using a fieldtable.
+          if ( !$fieldArray[$fieldName]['label'] ) {
+            $fieldArray[$fieldName]['label'] = ucwords($fieldArray[$fieldName]['fieldtable']);
+          }
+          // If the field options is empty, set it to the fieldoptions.
+          if ( !$fieldArray[$fieldName]['options'] ) formValue('',$fieldName.'_fieldoptions',"fieldArray['".$fieldName."']['fieldoptions']"); if ( $fieldArray[$fieldName]['fieldoptions'] ) $fieldArray[$fieldName]['options'] = $fieldArray[$fieldName]['fieldoptions'];
+          #d_Var("\$fieldArray[$fieldName]['fieldoptions']","fieldArray['".$fieldName."']['fieldoptions']");
+          #d_Var("\$fieldArray[$fieldName]['options']","fieldArray['".$fieldName."']['options']");
+          if ( !$fieldArray[$fieldName]['options'] ) {
+            // The options needs is blank.
+            $fieldQuery="SHOW COLUMNS FROM `".$fieldArray[$fieldName]['fieldtable']."`";
+            $fieldtableResult = query_do($fieldQuery,$f['database']);
+            $fieldtableCount = $GLOBALS['_QUERY']['count'];
+            if ( $fieldtableCount ) {
+              query_seek($fieldtableResult, 0);
+              while ( $fieldtableInfo = query_row($fieldtableResult) ) {
+                // Set options to the first field with 'name' in the field name.
+                if ( strlen(stristr($fieldtableInfo['Field'],'name')) && $fieldArray[$fieldName]['options'] == '' ) $fieldArray[$fieldName]['options'] = $fieldtableInfo['Field'];
+              } // while ( $fieldtableInfo = query_row($fieldtableResult) )
+            } // if ( $fieldtableCount )
+          } // if ( $fieldArray[$fieldName]['options'] == '' )
+        } else {  // if ( $fieldArray[$fieldName]['fieldtable'] )
+          if ( $fieldArray[$fieldName]['Type'] == 'tinyint(1) unsigned' && !$fieldArray[$fieldName]['options'] && !$fieldArray[$fieldName]['value'] ) {
+            // This is a true/false field.
+            $fieldArray[$fieldName]['options'] = 'Yes,No';
+            $fieldArray[$fieldName]['value'] = '1,0';
+          }
+        } // if ( $fieldArray[$fieldName]['fieldtable'] )
+      break;
+      default:
+      break;
+    }
+    // If the field label is empty, set it to the field name with the table name removed.
+    if ( !$fieldArray[$fieldName]['label'] ) $fieldArray[$fieldName]['label'] = preg_replace ('/^'.$tableName.'/',"",$fieldName);
+    // If the field value is empty, set it to the fieldvalue.
+    if ( !$fieldArray[$fieldName]['value'] ) formValue('',$fieldName.'_fieldvalue',"fieldArray['".$fieldName."']['value']");
+    // If the field value is empty, set it to '$'.prefix.fieldName.
+    if ( !$fieldArray[$fieldName]['value'] ) $fieldArray[$fieldName]['value'] = '$f[\''.$fieldName.'\']';
+    // If the prefix has changed, change the value prefix.
+    #if ( $f['prefixOriginal'] != $f['prefix'] && substr($fieldArray[$fieldName]['value'],0,1) == '$' && strlen($fieldArray[$fieldName]['value']) > strlen($f['prefixOriginal']) && substr($fieldArray[$fieldName]['value'],1,strlen($f['prefixOriginal'])) == $f['prefixOriginal'] ) $fieldArray[$fieldName]['value'] = '$'.substr($fieldArray[$fieldName]['value'],strlen($f['prefixOriginal'])+1);
+  } // foreach ( $fieldTable as $fieldName => $tableName )
+} else { // if ( count($fieldTable) )
+?>
+<span class="error_info">No tables found in query.</span>
+<?
+} // if ( count($fieldTable) )
+d_Var('$fieldArray',$fieldArray);
+// Get buttons.
+$maximumSubmitButtonPairs = 3;
+$f['submit'] = array();
+for ($i=1; $i<=$maximumSubmitButtonPairs*2; $i++) {
+  $f['submit'][$i] = array();
+  formValue('','submit_'.$i.'_name',"f['submit'][".$i."]['name']");
+  formValue('','submit_'.$i.'_value',"f['submit'][".$i."]['value']");
+}
+#d_Var('$tablePrimaryKey',$tablePrimaryKey,'k');
+#d_Var('$fieldArray',$fieldArray,'k');
+#info_fDiffEnd();
+#d_Var("\$f",$f);
+t_End(); // End TRACKing included file.
+?>

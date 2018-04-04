@@ -1,0 +1,27 @@
+<?
+// email/getHostAddress.phpinc
+// Check if the IP address is a 192., 10. or other.
+#$skipAuthentication = true; // Uncomment this line to skip authentication for this page.
+#require('../application.phpinc'); // Include application setup file. Use a relative path.
+
+// See if shell_exec is available.
+$disabled = explode(', ', ini_get('disable_functions'));
+#d_Var('$disabled',$disabled);
+if ( !in_array('shell_exec', $disabled) ) {
+  // Use shell_exec to het host IP addtess.
+  # This is command to execute.
+  $windows_cmd_to_execute = 'cmd /c ipconfig /all|find "IPv4 Address"';
+  # This executes the command.
+  $result_command = explode("\n",str_replace('IPv4 Address. . . . . . . . . . . : ','',str_replace("(Preferred)",'',shell_exec($windows_cmd_to_execute))));
+  $ipaddress = $result_command[0];
+} else {
+  $ipaddress = $_SERVER['SERVER_ADDR'];
+}
+#d_Var('$ipaddress',$ipaddress);
+
+$ipNetwork = 'mediacom';
+$ipaddress = explode('.',$ipaddress);
+#d_Var('$ipaddress',$ipaddress);
+if ( $ipaddress[0] == '10' ) $ipNetwork = 'ridgewater';
+if ( $ipaddress[0] != '192' &&  $ipaddress[0] != '10' ) $ipNetwork = 'hostsite';
+?>

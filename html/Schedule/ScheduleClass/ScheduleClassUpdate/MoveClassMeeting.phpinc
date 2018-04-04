@@ -1,0 +1,121 @@
+<?
+// Schedule/ScheduleClass/ScheduleClassUpdate/MoveClassMeeting.phpinc
+// Handle the MoveClassMeeting task.
+
+t_Begin(); // Begin TRACKing MoveClassMeeting.
+
+if ( $pageHeaderCall ) d_On();
+
+f('scId');
+f('scmId');
+f('bTime');
+f('eTime');
+f('days');
+if ( $f['DEBUG'] ) {
+?>
+<h1><?=__FILE__?></h1>
+<?
+	d_V();
+}
+
+// Verify scId (scheduleclassId).
+$query = "
+    SELECT *
+      FROM `scheduleclass`
+     WHERE scheduleclassId = ".$f['scId']."
+";
+d_Var('scheduleclassInfo',$query,'q');
+$scheduleclassInfo = query_info($query);
+d_Var('$scheduleclassInfo',$scheduleclassInfo,'+');
+
+// Verify scmId (scheduleclassmeetingId).
+$scheduleclassmeetingInfo = false;
+if ( $scheduleclassInfo) {
+	$query = "
+			SELECT *
+				FROM `scheduleclassmeeting`
+			 WHERE scheduleclassmeetingId = ".$f['scmId']."
+	";
+	d_Var('scheduleclassmeetingInfo',$query,'q');
+	$scheduleclassmeetingInfo = query_info($query);
+	d_Var('scheduleclassmeetingInfo',$scheduleclassmeetingInfo,'+');
+}
+
+// Verify days.
+$daysOK = false;
+if ( $scheduleclassInfo && $scheduleclassmeetingInfo ) {
+	$daysOK = true;
+	$days = str_split($f['days']);
+	d_Var('$days',$days);
+	$weekdayIds = array();
+	foreach ($days as $weekdayD) { // Loop thru days.
+		// Get the weekdayId.
+		$query = "
+				SELECT weekdayId
+					FROM `weekday`
+				 WHERE weekdayD = '".query_safe($weekdayD)."'
+		";
+		d_Var('weekdayInfo',$query,'q');
+		$weekdayInfo = query_info($query);
+		d_Var('$weekdayInfo',$weekdayInfo,'+');
+		if ( $weekdayInfo ) {
+			$weekdayIds[] = $weekdayInfo['weekdayId'];
+		} else {
+			$daysOK = false;
+		}
+	} // Loop thru days.
+}
+
+if ( !$scheduleclassInfo || !$scheduleclassmeetingInfo || !$daysOK ) {
+	// Verify failed.
+	echo 'Verify failed.';
+	return;
+}
+
+// UPDATE scheduleclassmeeting.
+$query = "
+		UPDATE `scheduleclassmeeting`
+			 SET scheduleclassmeetingBeginTime = '".query_safe($f['bTime'])."'
+				 , scheduleclassmeetingEndTime = '".query_safe($f['eTime'])."'
+		 WHERE scheduleclassmeetingId = ".$f['scmId']."
+";
+d_Var('scheduleclassmeetingUPDATE',$query,'q+');
+if ( !$f['DEBUG'] ) $scheduleclassmeetingUPDATE = query_do($query);
+@d_Var('$scheduleclassmeetingUPDATE',$scheduleclassmeetingUPDATE,'l');
+// DELETE current scheduleclassmeetingweekday.
+$query = "
+		DELETE FROM `scheduleclassmeetingweekday`
+		 WHERE scheduleclassmeetingId = ".$f['scmId']."
+";
+d_Var('scheduleclassmeetingweekdayDELETE',$query,'q+');
+if ( !$f['DEBUG'] ) $scheduleclassmeetingweekdayDELETE = query_do($query);
+@d_Var('$scheduleclassmeetingweekdayDELETE',$scheduleclassmeetingweekdayDELETE,'l');
+// INSERT days.
+foreach ( $weekdayIds as $weekdayId ) { // Loop thru weekdayIds
+	$query = "
+		INSERT INTO `scheduleclassmeetingweekday` (
+				scheduleclassmeetingId
+			, weekdayId
+		) VALUES (
+				".$f['scmId']."
+			, ".$weekdayId."
+		)
+	";
+	d_Var('scheduleclassmeetingweekdayINSERT',$query,'q+');
+	if ( !$f['DEBUG'] ) $scheduleclassmeetingweekdayINSERT = query_do($query);
+	@d_Var('$scheduleclassmeetingweekdayINSERT',$scheduleclassmeetingweekdayINSERT,'l');
+} // Loop thru weekdayIds
+
+$f['departmentId'] = $_SESSION['user']['departmentId'];
+$f['sessionId'] = $_SESSION['user']['sessionId'];
+if ( $f['DEBUG'] ) $DEBUG_getSchedule = true;
+require('Schedule/getSchedule.phpinc');
+$showOuterDiv = false; // Create only the div contents.
+if ( $f['DEBUG'] ) {
+	$DEBUG_displayScheduleClassDiv = true;
+	$showOuterDiv = true; // Show the outer div when DEBUGging.
+}
+require('Schedule/displayScheduleClassDiv.phpinc');
+
+t_End(); // End TRACKing MoveClassMeeting.
+?>

@@ -1,0 +1,95 @@
+<?
+// User/login.phpinc
+// Displays the login form.
+t_Begin(); // Begin TRACKing included file.
+#unset($_SESSION['user']); // Logout the user.
+$_SESSION['user'] = array('userId'=>NULL);
+
+pageHeader("Login",'','encode.js');
+if ( !isset($f['username']) ) $f['username'] = '';
+if ( !isset($f['password']) ) $f['password'] = '';
+if ( !isset($isAuthorized) ) {
+  $legend = '<span class="center">Please login:</span><br><br>'; 
+			 
+} else {
+  if ( isset($_SESSION['user']['userId']) && $_SESSION['user']['userId'] && !isset($_SESSION['user']['userPassword'])) {
+    $legend = '<span class="error center">Invalid Password.</span><br><br>';
+			  //'<legend><p class=error center">Invalid Password.</p></legend>
+			  //<p class="error center">Please try again:</p>'; 
+			  	  
+  } else {
+    $legend = '<span class="error center">Invalid Username or Password.</span><br><br>';
+			  //'<legend><p class="error center">Invalid Username or Password.</p></legend>
+			  //<p class="error center">Please try again:</p>';
+			  
+  }
+}
+
+sectionHeader();
+?>
+ 
+
+ 
+ <div class="jumbotron center" style="position: relative; left:-83px;">
+ 
+
+<fieldset>
+<legend><h2 class="center">Welcome to Scheduler Application</h2></legend>
+<?php echo($legend) ?>
+
+<?php /*?>
+<? if ( !isset($_GET['Login']) ) { ?>
+  <tr><td colspan="2" class="info">In order to access this page you must login.</td></tr>
+<? } ?>
+<?php */?>
+<form class="form-horizontal" name="form_login" action="<?=php_self()?>" method="post">
+<input type="hidden" name="form" value="form_login">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="task" value="Login">
+<input type="hidden" name="password" id="id_password" value="">
+    <div class="form-group">
+    <label for="name">Username:</label>
+    <input class="input-lg" type="text" id="name" name="username" value="<?=htmlSafe($f['username'])?>" >
+    </div>
+    <div class="form-group">
+    <label for="id_pw">Password:</label>
+    <input  class="input-lg" type="password" name="pw" id="id_pw" value="" >
+    </div>
+    
+    <input class="btn btn-lg" type="submit" value="Login" onClick="submit_form_login();">
+   
+</form>
+
+</fieldset>
+ </div>
+ 
+
+
+<? 
+sectionFooter();
+?>
+<script type="text/javascript">
+<!--
+function submit_form_login() {
+  document.form_login.id_password.value = document.form_login.id_pw.value;
+/*  if (!document.form_login.id_password.value) {
+	  alert("no password entered")
+  }*/
+  document.form_login.id_pw.disabled=true;
+  //alert('encoling pw');
+	encode('id_password');
+  //document.form_login.submit();
+  //return false;
+	return true;
+}
+if (document.forms && document.forms['form_login'] && document.forms['form_login'].elements && document.forms['form_login'].elements['username']) {
+  document.forms['form_login'].elements['username'].focus();
+  document.forms['form_login'].elements['username'].select();
+}
+
+// -->
+</script>
+<?
+t_End(); // End TRACKing included file.
+pageFooter();
+?>

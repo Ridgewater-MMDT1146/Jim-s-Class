@@ -1,0 +1,243 @@
+<?
+// common/functions_arraylist.phpinc
+// Contains arraylist functions.
+t_Begin(); // Begin TRACKing included file.
+
+// array_to_list($array, $separator)
+// Returns the array as an trimmed list.
+//      $array = the array used to create the list.
+// $separator = the list separator. Default is a comma ','.
+function array_to_list($array, $separator=',') {
+  $list = '';
+  foreach($array as $item) {
+    $list .= $item.$separator;
+  }
+  $list = substr($list,0,-strlen($separator));
+  return $list;
+}
+
+// listAnd($list, $separator)
+// Returns a comma separated list with 'and' inserted.
+//      $list = the list to modify.
+// $separator = the list separator. Default is a comma ','.
+// Examples: $list='one' returns 'one'.
+//           $list='one,two' returns 'one and two'.
+//           $list='one,two,three' returns 'one, two, and three'.
+function listAnd($list, $separator=',', $word='and') {
+  $listArray = list_to_array($list, $separator);
+  $listLen = count($listArray);
+  if ($listLen > 1) {
+    $list = '';
+    $separator='';
+    if ($listLen != 2) { $separatorNext = ', '; } else { $separatorNext = ' '; }
+    for ($i = 0; $i < count($listArray); $i++) {
+      if ($i == $listLen-1) { $separator .= $word.' '; }
+      $list .= $separator.$listArray[$i];
+      $separator = $separatorNext;
+    }
+  }
+  return $list;
+}
+
+// listAppend($list, $item, $separator)
+// Returns the list with the $item appended to the end of the list.
+//      $list = the list.
+//      $item = the item to append to the list.
+// $separator = the list separator. Default is a comma ','.
+function listAppend($list, $item, $separator=',') {
+  if ($list != '') {
+    if ($item != '') $list .= $separator.$item;
+  } else {
+    if ($item != '') $list .= $item;
+  }
+  return $list;
+}
+
+// listDeleteItem($list, $item, $separator=, $all)
+// Delete item from list.
+//      $list = the list.
+//      $item = the item to delete.
+// $separator = the list separator. Default is a comma ','.
+//       $all =  true = delete all occurances of $item.
+//              false = delete first occurance of $item.
+function listDeleteItem($list, $item, $separator=',', $all=false) {
+	$listArray = explode($separator,$list);
+  foreach ( $listArray as $key => $value ) {
+    if ( $value == $item ) {
+			unset($listArray[$key]);
+			if ( !$all ) break;
+		}
+  }
+	$list = array_to_list($listArray,$separator);
+	return $list;
+}
+
+// listFind($list, $item, $separator)
+// Searches the $list for the $item and returns the first position $item found. The first position is 0. Returns false if not found.
+//      $list = the list.
+//      $item = the item to find in the list.
+// $separator = the list separator. Default is a comma ','.
+function listFind($list, $item, $separator=',') {
+  $listArray = explode($separator,$list);
+  $listFind = false;
+  $listSearch = 0;
+  foreach ($listArray as $key => $value) {
+		if ( $listFind === false && $value == $item ) $listFind = $listSearch + 1;
+    $listSearch++;
+  }
+  return $listFind;
+}
+
+// listFirst($list, $separator)
+// Removes the first item in the list and returns it. Returns false if there are no items in the list.
+//      $list = the list.
+// $separator = the list separator. Default is a comma ','.
+function listFirst(&$list, $separator=',') {
+  if ( $list != '' ) {
+    $listArray = explode($separator,$list);
+    $listFirst = $listArray[0];
+    $list = '';
+    if ( count($listArray) > 1 ) {
+      $list = $listArray[1];
+      for ($i=2; $i<count($listArray); $i++) {
+        $list .= $separator.$listArray[$i];
+      }
+    }
+  } else {
+    $listFirst = false;
+  }
+  return $listFirst;
+}
+
+// listGetAt($list, $index, $separator)
+// Returns the value of the list item at the $index position. If there is no entry at $index returns false.
+//      $list = the list to use.
+//     $index = the index of the list item to return. The $index begins with 0.
+// $separator = the list separator. Default is a comma ','.
+function listGetAt($list, $index, $separator=',') {
+  $listArray = explode($separator,$list);
+  if ( is_numeric($index) && $index >= 0 && $index < count($listArray) ) {
+    $listGet = $listArray[$index];
+  } else {
+    $listGet = false;
+  }
+  return $listGet;
+}
+
+// listLast($list, $separator)
+// Removes the last item in the list and returns it. Returns false if there are no items in the list.
+//      $list = the list.
+// $separator = the list separator. Default is a comma ','.
+function listLast(&$list, $separator=',') {
+  if ( $list != '' ) {
+    $listArray = explode($separator,$list);
+    $listLast = $listArray[count($listArray)-1];
+    $list = '';
+    if ( count($listArray) > 1 ) {
+      $list = $listArray[0];
+      for ($i=1; $i<count($listArray)-1; $i++) {
+        $list .= $separator.$listArray[$i];
+      }
+    }
+  } else {
+    $listLast = false;
+  }
+  return $listLast;
+}
+
+// listLen($list, $separator)
+// Returns the length of the list.
+//      $list = the list to count.
+// $separator = the list separator. Default is a comma ','.
+function listLen($list, $separator=',') {
+  if ( $list != '' ) {
+    $listArray = explode($separator,$list);
+    $listLen = count($listArray);
+  } else {
+    $listLen = false;
+  }
+  t_Func($listLen);
+  return $listLen;
+}
+
+// listNonEmpty($list, $whitespace, $separator=',')
+// Returns the list without any empty elements.
+//       $list = the list to parse.
+// $whitespace = True to keep whitespace elements, false to remove them. Default is true.
+//  $separator = the list separator. Default is a comma ','.
+function listNonEmpty($list, $whitespace=true, $separator=',') {
+  $listArray = explode($separator,$list);
+  $listNonEmpty = '';
+  foreach ($listArray as $value) {
+    if ( !$whitespace ) $value = trim($value);
+    if ($value != '') { $listNonEmpty .= $separator.$value; }
+  }
+  $listNonEmpty = substr($listNonEmpty,strlen($separator));
+  return $listNonEmpty;
+}
+
+// listOr($list, $separator)
+// Returns a comma separated list with 'or' inserted.
+//      $list = the list to modify.
+// $separator = the list separator. Default is a comma ','.
+// Examples: $list='one' returns 'one'.
+//           $list='one,two' returns 'one or two'.
+//           $list='one,two,three' returns 'one, two, or three'.
+function listOr($list, $separator=',') {
+  $listOr = listAnd($list, $separator,'or');
+  return $listOr;
+}
+
+// listPrepend($list, $item, $separator)
+// Returns the list with the $item prepended to the beginning of the list.
+//      $list = the list.
+//      $item = the item to prepend to the list.
+// $separator = the list separator. Default is a comma ','.
+function listPrepend($list, $item, $separator=',') {
+  if ($list != '') {
+    $list = $item.$separator.$list;
+  } else {
+    $list .= $item;
+  }
+  return $list;
+}
+
+// listSort($list)
+// Return a sorted list.
+function listSort($list) {
+  $listArray = list_to_array($list);
+  sort($listArray);
+  $listSort = array_to_list($listArray);
+  return $listSort;
+}
+// list_to_array($list, $separator)
+// Returns the list as a trimmed array.
+//      $list = the list to split.
+// $separator = the list separator. Default is a comma ','.
+function list_to_array($list, $separator=',') {
+  $list_to_array = explode($separator,$list);
+  for ($i = 0; $i < count($list_to_array); $i++) {
+    $list_to_array[$i] = trim($list_to_array[$i]);
+  }
+  return $list_to_array;
+}
+
+// listUnique($list, $separator)
+// Returns the list without duplicates.
+//      $list = the list to parse.
+// $separator = the list separator. Default is a comma ','.
+function listUnique($list, $separator=',') {
+  $listUnique = '';
+  $list_to_array = explode($separator,$list);
+  $listAddedArray = array();
+  for ($i = 0; $i < count($list_to_array); $i++) {
+    if ( !in_array($list_to_array[$i],$listAddedArray) ) {
+      $listUnique = listAppend($listUnique, $list_to_array[$i]);
+      $listAddedArray[] = $list_to_array[$i];
+    }
+  }
+  return $listUnique;
+}
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

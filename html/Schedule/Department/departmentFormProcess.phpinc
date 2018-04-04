@@ -1,0 +1,53 @@
+<?
+// departmentFormProcess.phpinc
+// Process the department form.
+t_Begin(); // Begin TRACKing included file.
+if ( $f['uuid'] != $_SESSION['uuid'] ) {
+  // Not a page reload.
+  if ( $f['departmentId'] ) {
+    // UPDATE department.
+    $query = "
+        UPDATE `department`
+           SET departmentCode = '".query_safe($f['departmentCode'])."'
+             , departmentName = '".query_safe($f['departmentName'])."'
+             , departmenttypeId = ".$f['departmenttypeId']."
+             , departmentNote = '".query_safe($f['departmentNote'])."'
+             , departmentInactive = '".query_safe($f['departmentInactive'])."'
+         WHERE departmentId = ".$f['departmentId']."
+    ";
+    d_Var('departmentUPDATE',$query,'q');
+    $departmentUPDATE = query_do($query);
+    d_Var('$departmentUPDATE',$departmentUPDATE,'l');
+    displayMessage('Department '.$f['departmentName'].' updated.');
+  } else {
+    // INSERT department.
+    $query = "
+      INSERT INTO `department` (           AND
+          departmentCode
+        , departmentName
+        , departmenttypeId
+        , departmentNote
+        , departmentInactive
+      ) VALUES (
+          '".query_safe($f['departmentCode'])."'
+        , '".query_safe($f['departmentName'])."'
+        , ".$f['departmenttypeId']."
+        , '".query_safe($f['departmentNote'])."'
+        , '".query_safe($f['departmentInactive'])."'
+      )
+    ";
+    d_Var('departmentINSERT',$query,'q');
+    $departmentINSERT = query_do($query);
+    d_Var('$departmentINSERT',$departmentINSERT,'l');
+    $f['departmentId'] = mysql_insert_id();
+    d_Var("\$f['departmentId']",$f['departmentId']);
+    displayMessage('Department '.$f['departmentName'].' added.');
+  }
+  // Remember that the form was processed.
+  $_SESSION['uuid'] = $f['uuid'];
+} else {
+  // Page was reloaded.
+  displayMessage('Page reloaded.','warn');
+}
+t_End(); // End TRACKing included file.
+?>

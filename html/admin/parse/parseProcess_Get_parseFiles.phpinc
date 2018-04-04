@@ -1,0 +1,38 @@
+<?
+// parseProcess_Get_parseFiles.phpinc
+// Get class files for parsing.
+
+t_Begin(); // Begin TRACKing parseProcess_Get_parseFiles.phpinc.
+
+// Get class files.
+$YRTR_files = array();
+
+$files = scandir('mnscucat');
+d_Var('$files',$files);
+
+foreach ( $files as $file ) {
+	if ( is_numeric(substr($file,0,5)) ) {
+		$YRTRthis = substr($file,0,5);
+		if ( !isset($YRTR_files[$YRTRthis]) ) $YRTR_files[$YRTRthis] = array();
+		$YRTR_files[$YRTRthis][] = $file;
+	}
+}
+krsort($YRTR_files);
+
+// Set $parseFiles. These files will be parsed
+if ( f('YRTRParse') ) {
+	$sessionName = explode('|',$f['YRTRParse']);
+	$YRTRnow = $sessionName[0];
+	$parseFiles = $YRTR_files[$YRTRnow];
+	$sessionName = $sessionName[1];
+	if ( $sessionName != $YRTRnow ) $sessionName = $sessionName.' ('.$YRTRnow.')';
+} else {
+	$parseFiles = array('');
+	$sessionName = false;
+}
+$numberOfClassesTotal = 0;
+
+d_Var('$YRTR_files',$YRTR_files);
+
+t_End(); // End TRACKing parseProcess_Get_parseFiles.phpinc.
+?>

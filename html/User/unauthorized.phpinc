@@ -1,0 +1,37 @@
+<?
+// User/unauthorized.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+if (isset($_SESSION['user']['Fullname']) && $_SESSION['user']['Fullname'] != '') {
+} else {
+}
+if ( isset($pageTitle) ) { $pageName = 'the "'.$pageTitle.'"'; } else { $pageName = 'this'; }
+pageHeader("User Not Authorized");
+?>
+
+<div>
+<span class="bold error">
+<?
+if ( isset($_SESSION['user']['Fullname']) && $_SESSION['user']['Fullname'] != '' ) {
+?>
+  <?=$_SESSION['user']['Fullname']?> is not authorized to view <?=$pageName?> page.
+<?
+} else {
+?>
+  Guest is not authorized to view <?=$pageName?> page.
+<?
+}
+?>
+</span>
+<br>
+<br>
+If you feel this is an error, please contact the <span class="appName"><?=$_SESSION['APP']['shortname']?></span> web site Administrator <a href="mailto:<?=$_SESSION['APP']['ADMIN']['email']?>"><?=$_SESSION['APP']['ADMIN']['name']?></a> at <?=$_SESSION['APP']['ADMIN']['email']?>.
+
+</div>
+<?
+if ( !isset($_SESSION['user']['Firstname']) || ( isset($_SESSION['user']['Firstname']) && $_SESSION['user']['Firstname'] == '' ) ) {
+  require('login.phpinc');
+}
+t_End(); // End TRACKing included file.
+pageFooter();
+?>

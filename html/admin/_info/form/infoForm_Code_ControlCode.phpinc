@@ -1,0 +1,30 @@
+<?
+// admin/_info/form/infoForm_Code_ControlCode.phpinc
+// Display the control code.
+t_Begin(); // Begin TRACKing included file.
+if ( !isset($f['formListControl']) ) $f['formListControl'] = 'task';
+switch ($f['formListControl']) {
+  case 'task':
+    $f['displayCodeControlUsingText'] = 'task';
+  break;
+  case 'task_subtask':
+    $f['displayCodeControlUsingText'] = 'task &amp; subtask';
+  break;
+  case 'form_task':
+    $f['displayCodeControlUsingText'] = 'form &amp; task';
+  break;
+}
+?>
+// control_code.
+if ( !isset($f['control_code_value']) ) $f['control_code_value'] = 0;
+?>
+<a name="control_code_name"></a>
+<input type="hidden" name="control_code_value" id="control_code_value_id" value="<?=$f['control_code_value']?>">
+<table><tr><td><fieldset><legend><a href="#control_code_name" name="control_code" onClick="return info_Set(this);"><div id="control_code_status" class="inline"><? if ( !$f['control_code_value']) { ?>+<? } else { ?>-<? } ?></div> control code <span class="small_info">(using <?=$f['displayCodeControlUsingText']?>)</span></a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'control_code_name');"><input type="submit" name="subtask" value="Expand code" onClick="info_gotoName(this,'control_code_name');"><input type="submit" name="subtask" value="Collapse code" onClick="info_gotoName(this,'control_code_name');"></legend>
+<div id="control_code_show" class="<? if ( !$f['control_code_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=$control_code?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

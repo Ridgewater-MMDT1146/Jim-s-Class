@@ -1,0 +1,59 @@
+// admin/database/Desc/Desc.js
+
+// CalcHeading(descId) .. Calculate CSV column heading.
+// DatasetChange(e) ..... Change the dataset.
+
+// CalcHeading(descId)
+// Calculate CSV column heading.
+function CalcHeading(descId,subId) {
+	if ( typeof subId === 'undefined' ) {
+		subId = '_';
+	} else {
+		subId = '_add_';
+	}
+	console.warn('CalcHeading[descId='+descId+']');
+	var textBefore = document.getElementById('inp_'+'textBefore'+subId+descId).value;
+	var circle = document.getElementById('inp_'+'circle'+subId+descId).value;
+	var textAfter = document.getElementById('inp_'+'textAfter'+subId+descId).value;
+	var heading = document.getElementById('inp_'+'heading'+subId+descId).value;
+	var prefix = document.getElementById('inp_'+'prefix'+subId+descId).value;
+	console.log('textBefore='+textBefore+' circle='+circle+' textAfter='+textAfter+' heading='+heading+' prefix='+prefix);
+	var calcHead = '';
+	if ( heading !== '' ) {
+		calcHead = heading;
+	} else {
+		if ( prefix !== '' ) {
+			calcHead = prefix+' ';
+			if ( circle !== '' ) {
+				calcHead = calcHead + circle;
+			} else {
+				calcHead = calcHead + textBefore.replace(prefix,'') + textAfter;
+			}
+		} else {
+			if ( circle !== '' ) {
+				calcHead = circle;
+			} else {
+				calcHead = textBefore + textAfter;
+			}
+		}
+	}
+	console.log('calcHead='+calcHead);
+	document.getElementById('calcHead'+subId+descId).innerHTML = calcHead;
+} // END CalcHeading.
+
+// DatasetChange(e)
+// Change the dataset.
+function DatasetChange(e) {
+	var thisDatasetCode = radioGetValue(e.name);
+	console.log('DatasetCode='+DatasetCode);
+	if ( thisDatasetCode !== DatasetCode ) {
+		if ( DatasetCode !== '' ) {
+			document.getElementById('pageContentLoading').innerHTML = 'Changing dataset. Please wait . . .';
+		} else {
+			document.getElementById('pageContentLoading').innerHTML = 'Loading dataset. Please wait . . .';
+		}
+		document.getElementById('pageContentLoading').style.display = 'block';
+		document.getElementById('pageContent').style.display = 'none';
+		e.form.submit();
+	}
+} // END DatasetChange.

@@ -1,0 +1,116 @@
+<?
+// common/postdata/pageSaveData.phpinc
+// Contains the pageSaveData function.
+#t_Begin(); // Begin TRACKing included file.
+// pageSaveData($callPage, $callData, $callTask, $callQuery)
+// Stores postdata for a page.
+//  $callPage = The page to call.
+//  $callData = An associative array of variable data/value pairs that will be loaded when the page is called.
+//  $callTask = The $f['task'] value to use when returning to the page.
+// $callQuery = The URL query string to append to the URL.
+function pageSaveData($callPage, $callData, $callTask, $callQuery, $backtrace=false) {
+  t_FuncBegin();
+  $GLOBALS['DEBUG_pageSave'] = false;
+  $GLOBALS['DEBUG_pageSave_EXIT'] = false;
+  $GLOBALS['DEBUG_pageSave_INSERT'] = false;
+  if ( !$backtrace ) {
+    $backtrace = debug_backtrace(); // Get caller information.
+    d_Var('$backtrace',$backtrace);
+  }
+  // INSERT the post info.
+  $f['AddedOn'] = currentDateTime();
+  $query = "
+    INSERT INTO `post` (
+           postPHPSESSID
+         , postPage
+         , postQuery
+         , postFile
+         , postLine
+         , postIndex
+         , postNote";
+           if ( $GLOBALS['TRACK'] && isset($_SESSION['TRACK']['count']) ) {
+  $query .="
+         , TRACKcount";
+           }
+  $query .="
+         , AddedOn
+         , AddedBy
+    ) VALUES (
+           '".mysql_safe($_COOKIE['PHPSESSID'])."'
+         , '".mysql_safe($callPage)."'
+         , '".mysql_safe($callQuery)."'
+         , '".mysql_safe($backtrace['0']['file'])."'
+         , ".$backtrace['0']['line']."
+         , ".$_SESSION['pageFrom']['index']."
+         , '".''."'";
+           if ( $GLOBALS['TRACK'] && isset($_SESSION['TRACK']['count']) ) {
+  $query .="
+         , ".$_SESSION['TRACK']['count'];
+           }
+  $query .="
+         , '".mysql_safe($f['AddedOn'])."'
+         , ".$_SESSION['user']['trueId']."
+    )
+  ";
+  if ( $GLOBALS['DEBUG_pageSave'] ) d_Var('$query',$query,'q');
+  if ( !$GLOBALS['DEBUG_pageSave_INSERT'] ) {
+    $postInsert = query_do($query);
+    $f['postId'] = insert_id();
+  }
+  // Add the $callQuery.
+  if ($GLOBALS['DEBUG_pageSave']) { d_Var('$callQuery',$callQuery); }
+  if ( $callQuery ) {
+  if ( substr($callQuery,0,1) == '?' ) $callQuery = substr($callQuery,1);
+    $callQueryArray = explode('&',$callQuery);
+    foreach ( $callQueryArray as $callQueryPair ) {
+      $callQuerySet = explode('=',$callQueryPair);
+      if ( $callQuerySet[0] ) {
+        if ( isset($callQuerySet[1] ) ) {
+          $callData[$callQuerySet[0]] = $callQuerySet[1];
+          if ($GLOBALS['DEBUG_pageSave']) { d_Var('$callData['.$callQuerySet[0].']',$callQuerySet[1]); }
+        } else {
+          $callData[$callQuerySet[0]] = '';
+          if ($GLOBALS['DEBUG_pageSave']) { d_Var('$callData['.$callQuerySet[0].']',''); }
+        }
+      }
+    }
+  }
+  // Reset the task.
+  if ($callTask != '') $callData['callTask'] = $callTask;
+  // INSERT the post data info.
+  $callDataVariables = array();
+  foreach($callData as $callDataVariable => $callDataValue) {
+    if ( !in_array($callDataVariable,$callDataVariables) ) {
+      $callDataVariables[] = $callDataVariable;
+      if ( get_magic_quotes_gpc() ) $callDataValue = stripslashes($callDataValue);
+      $query = "
+        INSERT
+          INTO `postdata` (
+          postId,
+          postdataName,
+          postdataValue
+        ) VALUES (
+         '".$f['postId']."',
+         '".mysql_safe($callDataVariable)."',
+         '".mysql_safe($callDataValue)."'
+        )
+      ";
+      if ($GLOBALS['DEBUG_pageSave']) { d_Var('$query',$query,'q'); }
+      if ( !$GLOBALS['DEBUG_pageSave_INSERT'] ) { $postdataInsert = query_do($query); }
+    }
+  }
+  if ($GLOBALS['DEBUG_pageSave_EXIT']) {
+    pageHeader("pageSaveData");
+    d_Line("DEBUG pageSave()");
+    d_Line("Called by ".$backtrace['0']['file'].":".$backtrace['0']['line'],'l');
+    d_Var("\$_COOKIE['PHPSESSID']",$_COOKIE['PHPSESSID'],'l');
+    d_Var('$callPage',$callPage,'l');
+    d_Var('$callTask',$callTask,'l');
+    d_Var('$callQuery',$callQuery,'l');
+    d_Var('$backtrace',$backtrace,'l');
+    pageFooter();
+  }
+  t_FuncEnd();
+}
+#t_End(); // End TRACKing included file.
+?>

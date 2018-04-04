@@ -1,0 +1,109 @@
+<?
+// newSchedule.phpinc
+// include_purpose.
+
+t_Begin(true); // Begin TRACKing newSchedule.phpinc.
+
+pageHeader('New Schedule');
+sectionHeader();
+
+// Get user schedules.
+$departmentIdList = array_to_list($_SESSION['user']['department']); if ( !$departmentIdList ) $departmentIdList = '0';
+$query = "
+    SELECT scheduleId
+         , department.departmentId
+         , session.sessionId
+				 , departmentCode
+				 , departmentName
+				 , YRTR
+				 , sessionName
+      FROM `schedule`
+      JOIN `department` ON schedule.departmentId = department.departmentId
+      JOIN `session` ON schedule.sessionId = session.sessionId
+     WHERE schedule.departmentId IN ( ".$departmentIdList." )
+  ORDER BY departmentCode, YRTR
+";
+d_Var('scheduleResult',$query,'q');
+$scheduleResult = query_do($query);
+$scheduleCount = $_SESSION['query']['count'];
+d_Var('$scheduleResult',$scheduleResult);
+
+// Get sessions.
+$query = "
+    SELECT sessionId
+         , YRTR
+         , sessionName
+         , sessionDescription
+      FROM `session`
+  ORDER BY YRTR DESC
+";
+d_Var('sessionResult',$query,'q');
+$sessionResult = query_do($query);
+$sessionCount = $_SESSION['query']['count'];
+d_Var('$sessionResult',$sessionResult);
+
+include('site/get_user_departments.phpinc'); // Get user departments.
+
+// BEGIN form.
+?>
+<form name="form_name" action="<?=php_self()?>" method="post">
+  <input type="hidden" name="form" value="form_name">
+  <input type="hidden" name="uuid" value="<?=uuid()?>">
+<?
+if ( $scheduleCount ) {
+// Select an existing schedule.
+?>
+Schedule: <select name="scheduleId">
+		<option value=""></option>
+<?
+  mysqli_data_seek($scheduleResult, 0);
+  while ($scheduleInfo = mysqli_fetch_assoc($scheduleResult)) {
+?>
+		<option value="<?=$scheduleInfo['scheduleId']?>"><?=$scheduleInfo['departmentCode']?> <?=$scheduleInfo['sessionName']?> (<?=$scheduleInfo['YRTR']?>)</option>
+<?
+  }
+?>
+	</select>
+	<br>
+	<input type="submit" name="task" value="Select schedule">
+	<br>
+<?
+}
+// Request sessionId and departmentId for a new schedule.
+?>
+	Session: <select name="sessionId">
+		<option value=""></option>
+<?
+if ( $sessionCount ) {
+  mysqli_data_seek($sessionResult, 0);
+  while ($sessionInfo = mysqli_fetch_assoc($sessionResult)) {
+?>
+		<option value="<?=$sessionInfo['sessionId']?>"><?=$sessionInfo['sessionName']?> (<?=$sessionInfo['YRTR']?>)</option>
+<?
+  }
+}
+?>
+	</select>
+	<br>
+	Department: <select name="departmentId">
+		<option value=""></option>
+<?
+if ( $departmentCount ) {
+  mysqli_data_seek($departmentResult, 0);
+  while ($departmentInfo = mysqli_fetch_assoc($departmentResult)) {
+?>
+		<option value="<?=$departmentInfo['departmentId']?>"><?=$departmentInfo['departmentName']?> (<?=$departmentInfo['departmentCode']?>)</option>
+<?
+  }
+}
+?>
+	</select>
+	<br>
+	<input type="submit" name="task" value="Create new schedule">
+</form>
+
+<?
+sectionFooter();
+
+t_End(); // End TRACKing newSchedule.phpinc.
+?>

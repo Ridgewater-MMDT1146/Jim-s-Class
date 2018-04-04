@@ -1,0 +1,32 @@
+<?
+// getScheduleClasses.phpinc
+// Get classes for this schedule.
+
+t_Begin(); // Begin TRACKing getScheduleClasses.phpinc.
+
+$query = "
+    SELECT scheduleclassId
+         , scheduleId
+         , courseId
+         , scheduleclassSection
+         , scheduleclassStartDate
+         , scheduleclassEndDate
+				 , scheduleclassOnline
+      FROM `scheduleclass`
+     WHERE scheduleId = ".$_SESSION['user']['scheduleId']."
+";
+d_Var('scheduleclassResult',$query,'q');
+$scheduleclassResult = query_do($query);
+$scheduleclassCount = $GLOBALS['_QUERY']['count'];
+d_Var('$scheduleclassResult',$scheduleclassResult);
+/** /
+if ( $scheduleclassCount ) {
+  query_seek($scheduleclassResult, 0);
+  while ($scheduleclassInfo = query_row($scheduleclassResult)) {
+    
+  }
+}
+/**/
+
+t_End(); // End TRACKing getScheduleClasses.phpinc.
+?>

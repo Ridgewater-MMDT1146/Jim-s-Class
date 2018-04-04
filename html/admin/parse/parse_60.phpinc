@@ -1,0 +1,42 @@
+<?
+// parse_60.phpinc
+// Save class.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+d_line('Save class.');
+
+#$DEBUG_ALL_CLASSES = true;
+if ( !isset($DEBUG_ALL_CLASSES) ) $DEBUG_ALL_CLASSES = false;
+#$DEBUG_CST = true;
+if ( !isset($DEBUG_CST) ) $DEBUG_CST = false;
+#$DEBUG_MMDT = true;
+if ( !isset($DEBUG_MMDT) ) $DEBUG_MMDT = false;
+
+$output = $classInfo['classQId'].' <b>'.$classInfo['departmentCode'].''.$classInfo['courseNumber'].'</b>-'.$classInfo['classSection'].' '.$classInfo['courseTitle'];
+?>
+<?=$output?><br>
+<?
+/** /
+if ( $DEBUG_ALL_CLASSES || ( $DEBUG_CST_MMDT && ( $classInfo['departmentCode'] == 'CST' || $classInfo['departmentCode'] == 'MMDT' ) ) ) {
+	$d_On = d_O();
+	d_On();
+	d_Line('Class # '.$numberOfClassesByFile.' (line '.$classInfo['!line'].') '.$output,'/h');
+	d_Var('$classInfo',$classInfo,'');	
+	if ( !$d_On ) d_Off();
+}
+/**/
+if ( $DEBUG_CST || $DEBUG_MMDT ) {
+	if ( ( $DEBUG_CST && $classInfo['departmentCode'] == 'CST' ) || ( $DEBUG_MMDT && $classInfo['departmentCode'] == 'MMDT' ) ) {
+		$class[] = $classInfo; // Add the CST/MMDT class;
+	}
+} else {
+	$class[] = $classInfo; // Add the class;
+}
+
+$numberOfClassesByFile++;
+set_state(11); // Find class or department line.
+$line--; // Re-parse this line.
+
+#set_state(99);
+t_End(); // End TRACKing include_filename.phpinc.
+?>

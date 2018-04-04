@@ -1,0 +1,262 @@
+<?
+// infoForm_Code_AddEditForm_Table.phpinc
+// Display the form code.
+t_Begin(); // Begin TRACKing included file.
+#formValue($f['table']'table');
+#include('admin/_info/form/infoForm_Code_AddEditFormPreset.phpinc');
+$codeOutput .= '
+?>
+<table><tr><td><fieldset><legend>';
+if ( count($tablePrimaryKey) == 1 ) {
+  $codeOutput .= '<? if ( $'.$tablePrimaryKey[0].' ) { ?>Edit<? } else { ?>Add<? } ?> '.ucwords($f['table']);
+} else {
+  $codeOutput .= $f['table'];
+}
+$codeOutput .= '</legend>
+<form name="form_'.$f['table'].'" id="id_form_'.$f['table'].'" action="<?=php_self()?>" method="post"'.$enctype.'>
+<input type="hidden" name="'.'form" value="form_'.$f['table'].'">
+<input type="hidden" name="'.'uuid" value="<?=uuid()?>">';
+if ( $f['buttonType'] == "button" ) {
+  $codeOutput .= '</legend>
+<input type="hidden" name="'.'task" value="<?=$'.'task?>">';
+}
+$fieldOutput = '';
+foreach ($fieldArray as $fieldName => $fieldValue) {
+  if ( $fieldValue['type'] == 'hidden' ) {
+    $codeOutput .= '
+<input type="hidden" name="'.$fieldName.'" id="id_'.$fieldName.'" value="<?=htmlSafe($f[\''.$fieldName.'\'])?>">';
+  }
+}
+$codeOutput .= '
+<table>';
+foreach ($fieldArray as $fieldName => $fieldValue) {
+  #d_Var('$fieldName',$fieldName);
+  #d_Var('$fieldValue',$fieldValue);
+  // Create style code.
+  $style = '';
+  if ($fieldValue['width'] != '') {
+    $style = ' width:'.$fieldValue['width'].';';
+  }
+  if ($fieldValue['height'] != '') {
+    $style = ' height:'.$fieldValue['height'].';';
+  }
+  if ( $style ) {
+    $style = ' style="'.trim($style).'"';
+  }
+  // Create showError code.
+  $showErrorBefore = '';
+  $showErrorAfter = '';
+  switch ( $f['showError'] ) {
+    case 'before':
+      $showErrorBefore = '
+<? if ( isset($'.'formError[\''.$fieldName.'\']) ) { ?>
+  <tr><td></td><td class="error"><?=$'.'formError[\''.$fieldName.'\']?></td></tr>
+<? } ?>';
+    break;
+    case 'after':
+      $showErrorAfter = '<?'."\n".'        if ( isset($'.'formError[\''.$fieldName.'\']) ) { ?><br><span class="error"><?=$'.'formError[\''.$fieldName.'\']?></span><? } ?>';
+    break;
+  } // switch ( $f['showError'] )
+  if ($fieldValue['type'] != 'default' && $fieldValue['type'] != 'hidden' && $fieldValue['type'] != 'skip') {
+     $fieldOutput .= $showErrorBefore.'
+  <tr>
+    <td class="label">'.$fieldValue['label'].'</td>';
+  }
+	d_Var("\$fieldValue['type']",$fieldValue['type']);
+  switch ($fieldValue['type']) {
+    case 'button':
+      $fieldOutput .= '
+    <td><input type="button" class="'.$fieldValue['class'].'" name="'.$fieldName.'" id="id_'.$fieldName.'" value="'.$fieldValue['value'].'" onClick="'.stripslashes($fieldValue['onclick']).'">';
+    break;
+    case 'checkbox':
+    case 'radio':
+      $fieldOutput .= '
+    <td>';
+      if ($fieldValue['value'] != '') {
+        if ($fieldValue['fieldtable'] == '') {
+          // value options list
+          $selectOptions['values'] = explode(",",$fieldValue['value']);
+          $selectOptions['options'] = explode(",",$fieldValue['options']);
+          for ($i=0; $i<min(count($selectOptions['values']),count($selectOptions['options'])); $i++) {
+            $fieldOutput .= '
+      <input type="'.$fieldValue['type'].'" class="'.$fieldValue['class'].'" name="'.$fieldName.'" id="id_'.$fieldName.'_'.$selectOptions['values'][$i].'" value="'.$selectOptions['values'][$i].'"<? if ( $f[\''.$fieldName.'\'] == '.$selectOptions['values'][$i].') { ?> checked<? } ?>>'.$selectOptions['options'][$i];
+          }
+        } else { // if ($fieldValue['fieldtable'] == '')          // value options list from table
+          $fieldOutput .= '
+<?
+      $'.$fieldName.'Query = \'SELECT '.$fieldValue['value'].','.$fieldValue['options'].'FROM '.$fieldValue['fieldtable'].' ORDER BY '.$fieldValue['options'].'\';
+      $'.$fieldName.'Result = query_do($'.$fieldName.'Query);
+      $'.$fieldName.'Count = $_SESSION[\'query\'][\'count\'];
+      query_seek($'.$fieldName.'Result, 0);
+      while ($'.$fieldName.'Info = query_row($'.$fieldName.'Result)) {';
+          if ($fieldValue['type'] == 'checkbox') {
+      $fieldOutput .= '
+      formValue($'.$fieldName.'Value,\''.$fieldName.'\'_\'.$'.$fieldName.'Info[\''.$fieldName.'\]);';
+        $fieldIdName = $fieldName.'_<?=$'.$fieldName.'Info[\''.$fieldValue['value'].'\]?>';
+        $fieldNameValue = '$'.$fieldName.'Value';
+  #          $fieldNameValueString = '$'.$fieldName."Info['".$fieldValue['value']."']";
+          } else {
+        $fieldIdName = $fieldName;
+        $fieldNameValue = '$'.$fieldName;
+  #          $fieldNameValueString = '$'.$fieldName."Info['".$fieldValue['value']."']";
+          }
+      $fieldOutput .= '
+      <input type="'.$fieldValue['type'].'" class="'.$fieldValue['class'].'" name="'.$fieldIdName.'" id="id_'.$fieldIdName.'" value="<?=$'.$fieldName.'Info[\''.$fieldName.'\]?>"<? if ('.$fieldNameValue.' == $'.$fieldName.'Info[\''.$fieldValue['value'].'\]) { ?> checked<? } ?>><?=$'.$fieldName.'Info[\''.$fieldValue['options'].'\']?>
+      }';
+        } // if ($fieldValue['fieldtable'] == '')
+      } else { // if ($fieldValue['value'] != '')
+        // blank value options.
+        $fieldOutput .= '
+      <input type="'.$fieldValue['type'].'" class="'.$fieldValue['class'].'" name="'.$fieldName.'" id="id_'.$fieldName.'" value=""<? if ( '.$fieldName.' == \''.$fieldValue['value'].'\' ) { ?> checked<? } ?>>';
+      } // if ($fieldValue['value'] != '')
+    break;
+    case 'default':
+    break;
+    case 'file':
+      $fieldOutput .= '
+    <td>';
+      if ( stripos($fieldName,'image') !== false ) {
+        $fieldOutput .= '<? if ( $'.$fieldName.' ) { ?><img src="/images/<?=$'.$fieldName.'?>" align="top" style="border:1px solid black; margin-right:2px;"><? } ?>';
+      }
+      $fieldOutput .= '<input type="file" class="'.$fieldValue['class'].'" name="'.$fieldName.'" id="id_'.$fieldName.'">';
+    break;
+    case 'hidden':
+    break;
+    case 'image':
+      if ($fieldValue['onclick'] != '') {
+        $imageonclick = stripslashes($fieldValue['onclick']).' return false;';
+      } else {
+        $imageonclick = '';
+      }
+      $fieldOutput .= '
+    <td><input type="image" class="'.$fieldValue['class'].'" name="'.$fieldName.'" id="id_'.$fieldName.'" src="'.$fieldValue['src'].'" alt="" title="" onClick="'.$imageonclick.'">';
+    break;
+    case 'password':
+      if ($fieldValue['maxlength'] == '') {
+        $maxlength = '';
+      } else {
+        $maxlength = ' maxlength="'.$fieldValue['maxlength'].'"';
+      }
+      $fieldOutput .= '
+    <td><input type="password" class="'.$fieldValue['class'].'" type="text" name="'.$fieldName.'" id="id_'.$fieldName.'" value="'.info_htmlWrap($fieldName,$fieldValue['value']).'"'.$maxlength.$style.'>';
+    break;
+    case 'select':
+      $fieldOutput .= '
+    <td>
+<?
+      $'.$fieldName.'Query = \'SELECT '.$fieldValue['value'].','.$fieldValue['options'].' FROM `'.$fieldValue['fieldtable'].'` ORDER BY '.$fieldValue['options'].'\';
+      $'.$fieldName.'Result = query_do($'.$fieldName.'Query);
+      $'.$fieldName.'Count = $_SESSION[\'query\'][\'count\'];
+?>
+      <select class="'.$fieldValue['class'].'" name="'.$fieldName.'" id="id_'.$fieldName.'">
+        <option value=""></option>';
+      if ($fieldValue['value'] != '') {
+        if ($fieldValue['fieldtable'] == '') {
+          // value options list
+          $selectOptions['values'] = explode(",",$fieldValue['value']);
+          $selectOptions['options'] = explode(",",$fieldValue['options']);
+          for ($i=0; $i<min(count($selectOptions['values']),count($selectOptions['options'])); $i++) {
+      $fieldOutput .= '
+        <option value="'.htmlSafe($selectOptions['values'][$i]).'"<? if ( $f[\''.$fieldName.'\'] == \''.htmlSafe($selectOptions['values'][$i]).'\ ) { ?> checked<? } ?>>'.$selectOptions['options'][$i].'</option>';
+          }
+        } else { // if ($fieldValue['fieldtable'] == '')
+          // value options list from table
+      $fieldOutput .= '
+<?
+      query_seek($'.$fieldName.'Result, 0);
+      while ($'.$fieldName.'Info = query_row($'.$fieldName.'Result)) {
+?>
+        <option value="<?=$'.$fieldName.'Info[\''.$fieldValue['value'].'\']?>"<? if ( $f[\''.$fieldName.'\'] == $'.$fieldName.'Info[\''.$fieldValue['value'].'\'] ) { ?> selected<? } ?>><?=htmlSafe($'.$fieldName.'Info[\''.$fieldValue['options'].'\'])?></option>
+<?
+      }';
+        } // if ($fieldValue['fieldtable'] == '')
+      } // if ($fieldValue['value'] != '')
+      $fieldOutput .= '
+?>
+      </select>
+    ';
+    break;
+    case 'text':
+    if ($fieldValue['maxlength'] == '') {
+      $maxlength = '';
+    } else {
+      $maxlength = ' maxlength="'.$fieldValue['maxlength'].'"';
+    }
+      $fieldOutput .= '
+    <td><input type="text" class="'.$fieldValue['class'].'" name="'.$fieldName.'" id="id_'.$fieldName.'" value="'.info_htmlWrap($fieldName,$fieldValue['value']).'"'.$maxlength.$style.'>';
+    break;
+    case 'textarea':
+      $fieldOutput .= '
+    <td><textarea class="'.$fieldValue['class'].'" name="'.$fieldName.'" id="id_'.$fieldName.'"'.$style.'><?=htmlSafe('.$fieldValue['value'].')?></textarea>';
+    break;
+      default:
+    break;
+    } // switch ($fieldValue['type'])
+    if ($fieldValue['type'] != 'skip' && $fieldValue['type'] != 'default' && $fieldValue['type'] != 'hidden') {
+      $fieldOutput .= $showErrorAfter.'</td>
+  </tr>';
+   }
+} // foreach ($fieldArray as $fieldName => $fieldValue)
+// Add fieldOutput.
+$codeOutput .= $fieldOutput;
+if ( $f['defaultButtons'] ) {
+// Add standard buttons.
+if ( $f['buttonType'] == 'submit' ) {
+  $buttonName = 'task';
+} else {
+  $buttonName = 'button';
+}
+$codeOutput .= '
+  <tr>
+    <td class="center" colspan="2">';
+  if ( count($tablePrimaryKey) == 1 ) {
+    $codeOutput .= '
+<?
+      if ( $f[\''.$tablePrimaryKey[0].'\'] ) {
+?>';
+  }
+  $codeOutput .= '
+      <input type="'.$f['buttonType'].'" name="'.$buttonName.'" value="Update '.basename($f['filenameBase']).'"'.$buttonTypeButtonOnClick.'>';
+  if ( count($tablePrimaryKey) == 1 ) {
+    $codeOutput .= '
+<?
+      } else {
+?>';
+    }
+  $codeOutput .= '
+      <input type="'.$f['buttonType'].'" name="'.$buttonName.'" value="Add '.basename($f['filenameBase']).'"'.$buttonTypeButtonOnClick.'>';
+  if ( count($tablePrimaryKey) == 1 ) {
+    $codeOutput .= '
+<?
+      }';
+    }
+$codeOutput .= '
+      if ( $f[\''.'form\'] != \'form_'.$f['table'].'\' || isset($'.'formError) || isset($f[\'postId\']) ) {
+?>
+      <input type="'.$f['buttonType'].'" name="'.$buttonName.'" value="Cancel"'.$buttonTypeButtonOnClick.'>
+<?
+      } else {
+?>
+      <input type="'.$f['buttonType'].'" name="'.$buttonName.'" value="Done"'.$buttonTypeButtonOnClick.'>
+<?
+      }
+?>';
+}
+// Add buttons.
+for ($i=1; $i<=$maximumSubmitButtonPairs*2; $i++) {
+  if ($f['submit'][$i]['name'] !='') {
+    if ( $f['buttonType'] != 'button' ) $buttonName = $f['submit'][$i]['name'];
+    $codeOutput .= '
+      <input type="'.$f['buttonType'].'" name="'.$buttonName.'" value="'.htmlSafe($f['submit'][$i]['value']).'"'.$buttonTypeButtonOnClick.'>';
+  }
+}
+$codeOutput .= '
+    </td>
+  </tr>
+</table>
+</form>
+</fieldset></td></tr></table>
+<?';
+#d_On();
+t_End(); // End TRACKing included file.
+?>

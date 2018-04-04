@@ -1,0 +1,16 @@
+<?
+// parseProcess_classnote_DELETE.phpinc
+// DELETE all class notes.
+
+t_Begin(); // Begin TRACKing parseProcess_classnote_DELETE.phpinc.
+
+$query = "
+        DELETE FROM `classnote`
+         WHERE classId = ".$thisClass['classId']."
+";
+d_Var('classclassnoteDELETE',$query,'q');
+$classclassnoteDELETE = query_do($query);
+d_Var('$classclassnoteDELETE',$classclassnoteDELETE,'l');
+
+t_End(); // End TRACKing parseProcess_classnote_DELETE.phpinc.
+?>

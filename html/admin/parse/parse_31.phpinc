@@ -1,0 +1,27 @@
+<?
+// parse_31.phpinc
+// Check for meeting or note line.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+d_line('Check for meeting or note line.');
+d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+
+if ( substr($classLnA[0],0,1) == '*' ) { // Is this a meeting or note line?
+	// Yes, check which.
+	if ( substr($classLnA[0],0,2) != '**' ) { // Is this not a note line?
+		// Yes, then this is a meeting line.
+		set_state(40); // Get class meeting.
+	} else { // Is this not a note line?
+		// No, then this is a note line.
+		set_state(50); // Get class meeting.
+	} // Is this not a note line?
+} else { // Is this a meeting or note line?
+	// No, then save the class.
+	set_state(60); // Save class.
+} // Is this a meeting or note line?
+
+$line--; // Re-parse this line.
+
+#set_state(99);
+t_End(); // End TRACKing include_filename.phpinc.
+?>

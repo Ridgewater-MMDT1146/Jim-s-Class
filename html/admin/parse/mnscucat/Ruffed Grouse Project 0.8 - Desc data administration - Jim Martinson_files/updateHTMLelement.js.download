@@ -1,0 +1,190 @@
+// js/updateHTMLelement.js
+
+// Last Updated 2014-05-24. Changed ExitScreen function to ScreenExit. By Jim Martinson
+// Last Updated 2014-05-23. UpdateSetTimeout variable. Store the setTimeout call for use by clearTimeout(UpdateSetTimeout) call. By Jim Martinson
+
+var RFnodeId = null;        	// The HTML node.
+var XMLhttp;                	// The XMLHTTPRequest object.
+var UpdateAutoFlag = false;		// The flag to determine if the setTimeout() is triggered.
+var UpdateAutoURL = '';     	// The URL to load into UpdateAutoNodeId.
+var UpdateAutoNodeId = '';	  // The HTML node Id that receives the UpdateAutoURL data.
+var UpdateSetTimeout = false; // Store the setTimeout call for use by clearTimeout(UpdateSetTimeout) call.
+var LoadingText = '';       	// The text to display while thisNodeId is set to thisURL return text.
+var ReloadCount = 0;        	// Keep a count of the reloads.
+var Function2 = false;       // The name of a second js function to call when Update__Auto() executes.
+var UpdateAutoTimer = 0;    	// The time delay for the window.setTimeout. Set in Update__Auto();
+if ( typeof form === 'undefined' ) { var form; } // Form object.
+
+// UpdateAutoOff(thisURL, thisNodeId)
+// Turn off the timer. It will also load the file thisURL into the HTML node thisNodeId if they are given.
+//    thisURL = The URL to load.
+// thisNodeId = The HTML node Id.
+function UpdateAutoOff(thisURL, thisNodeId) {
+	DEBUG_UpdateAutoOff = false; // false = DEBUG off, true = DEBUG on.
+  if ( DEBUG_UpdateAutoOff ) { alert("UpdateAutoOff("+thisURL+","+thisNodeId+") UpdateAutoFlag="+UpdateAutoFlag); }
+   Update__AutoStatus('off');
+  if ( ( typeof thisURL !== 'undefined' ) && ( typeof thisNodeId !== 'undefined' ) ) { UpdateInclude(thisURL, thisNodeId); }
+} // END UpdateAutoOff.
+
+// UpdateAutoOn(thisURL, thisNodeId, timer, thisLoadingText, thisFunction)
+// Turn on the timer and load the file into the HTML node.
+//         thisURL = The URL to load into thisNodeId.
+//      thisNodeId = The HTML node Id that receives the thisURL data. If this is false or blank then thisURL data is not stored in an HTML node.
+//           timer = The delay between reloading the file into the HTML node.
+// thisLoadingText = The text to display while thisNodeId is set to thisURL return text.
+//    thisFunction = A second js function to call when Update__Auto() fires.
+function UpdateAutoOn(thisURL, thisNodeId, timer, thisLoadingText, thisFunction) {
+  //alert("UpdateAutoOn ("+thisURL+", "+thisNodeId+", "+timer+", "+thisLoadingText+", "+thisFunction);
+	if ( typeof thisFunction !== 'undefined' ) {
+	  Function2 = thisFunction;
+	} else {
+	  Function2 = false;
+	}
+	//alert('Function2='+Function2);
+  LoadingText = thisLoadingText;
+   Update__AutoStatus('on');
+  if (thisURL !== null) {
+    UpdateAutoURL = thisURL;
+    UpdateAutoNodeId = thisNodeId;
+  }
+  Update__Auto(timer);
+} // END UpdateAutoOn.
+
+// UpdateInclude(thisURL, thisNodeId, showLoadingText, thisLoadingText, thisFunction)
+// Load the file into the HTML node. The timer is not used (nor changed!).
+//         thisURL = The URL to load into thisNodeId.
+//      thisNodeId = The HTML node Id that receives the thisURL data. If this is false or blank then thisURL data is not stored in an HTML node.
+// showLoadingText = Show 'Loading '+thisLoadingText+' ... text.
+// thisLoadingText = The text to display while thisNodeId is set to thisURL return text.
+//    thisFunction = A second js function to call when Update__Auto() fires.
+function UpdateInclude(thisURL, thisNodeId, showLoadingText, thisLoadingText, thisFunction) {
+  //alert('UpdateInclude(\''+thisURL+'\', \''+thisNodeId+'\', '+showLoadingText+', \''+thisLoadingText+'\')');
+  //alert("UpdateInclude caller is " + arguments.callee.caller.toString());
+	if ( ( typeof thisURL === 'undefined' ) || thisURL === '' ) { thisURL = false; }
+  if ( thisURL ) {
+    //alert('Function2='+Function2);
+		if ( typeof thisNodeId === 'undefined' || thisNodeId === '' ) { thisNodeId = false; }
+    if ( typeof showLoadingText === 'undefined' ) { showLoadingText = true; }
+    if ( typeof thisLoadingText === 'undefined' ) { thisLoadingText = LoadingText; }
+    //alert('thisFunction='+thisFunction);
+    if ( typeof thisFunction !== 'undefined' ) { Function2 = thisFunction; }
+    //alert("UpdateInclude thisURL="+thisURL+" thisNodeId="+thisNodeId+" UpdateAutoFlag="+UpdateAutoFlag);
+    if ( arguments.length !== 0) {
+      if ( thisNodeId ) { RFnodeId = document.getElementById(thisNodeId); }
+      if ( ReloadCount === 0 ) {
+        if ( thisNodeId ) {
+			if ( showLoadingText ) {
+				RFnodeId.innerHTML = '<span class="info bold"><em>Loading '+thisLoadingText+' ...</em></span>';
+			} else {
+				RFnodeId.innerHTML = '';
+			}
+		}
+      }
+      ReloadCount++;
+      XMLhttp = Update__GetHTTPObject(); //new XMLHttpRequest();
+      XMLhttp.open("GET", thisURL, true);
+      XMLhttp.onreadystatechange = function() {
+        if ( XMLhttp.readyState === 4 && XMLhttp.status === 200 ) {
+          if ( thisNodeId && RFnodeId ) { RFnodeId.innerHTML = XMLhttp.responseText; }
+          //alert('Function2='+Function2);
+          if ( Function2 ) { eval(Function2); }
+        }
+      };
+      XMLhttp.send(null);
+    }
+  }
+} // END UpdateInclude.
+
+// URLget(thisURL, thisNodeId)
+// Execute the thisURL page. Page output stored in the thisNodeId div.
+// I tried it without RFnodeId.innerHTML = XMLhttp.responseText; but got uneven results.
+function URLget(thisURL, thisNodeId) {
+  if ( ( typeof thisURL !== 'undefined' ) && thisURL !== '') {
+    //alert("URLget "+thisURL+" "+thisNodeId);
+    if ( arguments.length !== 0) {
+      XMLhttp=Update__GetHTTPObject(); //new XMLHttpRequest();
+      XMLhttp.open("GET", thisURL); // GET thisURL asynchronously (true)(default) or synchronously (false).
+      XMLhttp.onreadystatechange = function() {
+        if ( XMLhttp.readyState === 4 && XMLhttp.status === 200) {
+         if ( ( typeof thisNodeId !== 'undefined' ) && thisNodeId !== '' && document.getElementById(thisNodeId) ) {
+            var RFnodeId = document.getElementById(thisNodeId);
+            RFnodeId.innerHTML = XMLhttp.responseText;
+         } else {
+					 console.warn('Element '+thisNodeId+' does not exist.');
+				 }
+          //alert(XMLhttp.responseText);
+        }
+      };
+      XMLhttp.send(null);
+    }
+  }
+} // END URLget.
+
+// Update__Auto(timer)
+// This must only be called from UpdateAutoOn().
+// Load the file into the HTML node.
+// timer = The delay between reloading the UpdateAutoURL data into the UpdateAutoNodeId.
+function Update__Auto(timer) {
+  //alert("Update__Auto("+timer+")");
+	if ( typeof timer !== 'undefined' ) { UpdateAutoTimer = timer; } else { UpdateAutoTimer = 10000; }
+  UpdateInclude(UpdateAutoURL, UpdateAutoNodeId); // Load the file into the HTML node.
+	//console.log('UpdateAutoFlag='+UpdateAutoFlag);
+  if ( UpdateAutoFlag ) { UpdateSetTimeout = window.setTimeout(Update__Auto,UpdateAutoTimer); } // Set windows to recall Update__Auto(timer) in timer milliseconds.
+} // END Update__Auto.
+
+// Update__AutoStatus(setStatus)
+// setStatus = off, turn off the timer.
+//              on, turn on the timer.
+function Update__AutoStatus(setStatus) {
+  //alert("Update__AutoStatus "+setStatus+" "+UpdateAutoFlag);
+  if ( typeof setStatus !== 'undefined' ) {
+    if ( setStatus === 'off' ) {
+    	/** /
+			//alert("Update__AutoStatus('off')");
+      if ( document.form_UpdateHTMLelement && document.form_UpdateHTMLelement.UpdateAutoFlag ) {
+        document.form_UpdateHTMLelement.UpdateAutoFlag.value = false;
+      }
+    	/**/
+      UpdateAutoFlag = false;
+    } else if ( setStatus === 'on' ) {
+	   	/** /
+  	  //alert("Update__AutoStatus('on')");
+      if ( document.form_UpdateHTMLelement && document.form_UpdateHTMLelement.UpdateAutoFlag ) {
+        document.form_UpdateHTMLelement.UpdateAutoFlag.value = true;
+      }
+    	/**/
+      UpdateAutoFlag = true;
+    }
+  } else {
+   	/** /
+    // Set UpdateAutoFlag to document.form_UpdateHTMLelement.UpdateAutoFlag.value.
+    if ( document.form_UpdateHTMLelement && document.form_UpdateHTMLelement.UpdateAutoFlag ) {
+      thisFlag = document.form_UpdateHTMLelement.UpdateAutoFlag.value;
+      if ( thisFlag == 'true' ) {
+        UpdateAutoFlag = true;
+      } else {
+        UpdateAutoFlag = false;
+      }
+    }
+   	/**/
+  }
+  return UpdateAutoFlag;
+} // END Update__AutoStatus.
+
+// Update__GetHTTPObject()
+// Returns new XMLHttpRequest().
+function Update__GetHTTPObject() {
+  if ( typeof XMLHttpRequest !== undefined ) {
+    return new XMLHttpRequest();
+  }
+  try {
+    return new ActiveXObject("Msxml2.XMLHTTP"); // Internet Explorer 5.x
+  } catch (e) {
+    try {
+      return new ActiveXObject("Microsoft.XMLHTTP"); // Internet Explorer 6.x
+    } catch (e) {}
+  }
+  return false;
+} // END Update__GetHTTPObject;
+
+Update__AutoStatus('off');

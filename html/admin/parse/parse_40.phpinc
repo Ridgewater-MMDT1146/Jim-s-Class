@@ -1,0 +1,27 @@
+<?
+// parse_40.phpinc
+// Get class meeting.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+d_line('Get class meeting.');
+d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+
+$meetingIndex = count($classInfo['meeting']); // Get $classInfo['meeting'] array index.
+#if ( !substr($classLnA[0],1) ) d_Line('ERROR state: '.$state.' line: '.$line.': '.$classLn,'d'); 	d_Var('$classLnA',$classLnA,'d'); // DEBUG class line.
+$classInfo['meeting'][$meetingIndex]['classmeetingStartDate'] = fix_date_year(substr($classLnA[0],1));
+$classInfo['meeting'][$meetingIndex]['classmeetingEndDate'] = fix_date_year($classLnA[1]);
+$classInfo['meeting'][$meetingIndex]['DAYS'] = substr($classLn,31,7);
+$classInfo['meeting'][$meetingIndex]['classmeetingBeginTime'] = trim(substr($classLn,40,7));
+$classInfo['meeting'][$meetingIndex]['classmeetingEndTime'] = trim(substr($classLn,49,7));
+
+$classInfo['meeting'][$meetingIndex]['BLDG'] = trim(substr($classLn,58,6));
+$classInfo['meeting'][$meetingIndex]['ROOM'] = trim(substr($classLn,65,8));
+$classInfo['meeting'][$meetingIndex]['INSTRUCTOR'] = trim(substr($classLn,74));
+
+d_Var('$classInfo',$classInfo,'');
+
+set_state(41); // Check for Instructor only line.
+
+#set_state(99);
+t_End(); // End TRACKing include_filename.phpinc.
+?>

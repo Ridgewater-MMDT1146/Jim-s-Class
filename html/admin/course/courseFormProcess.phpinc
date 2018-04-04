@@ -1,0 +1,63 @@
+<?
+// admin/course/courseFormProcess.phpinc
+// Process the course form.
+t_Begin(); // Begin TRACKing included file.
+if ( $f['uuid'] != $_SESSION['uuid'] ) {
+  // Not a page reload.
+  if ( !$f['courseCreditsMax'] ) $f['courseCreditsMax'] = 'NULL';
+	if ( $f['courseId'] ) {
+    // UPDATE course.
+    $query = "
+        UPDATE `course`
+           SET userId = ".$_SESSION['user']['userId']."
+             , YRTR = '".query_safe($f['YRTR'])."'
+             , departmentId = ".$f['departmentId']."
+             , courseNumber = '".query_safe($f['courseNumber'])."'
+             , courseTitle = '".query_safe($f['courseTitle'])."'
+             , courseCredits = ".$f['courseCredits']."
+             , courseCreditsMax = ".$f['courseCreditsMax']."
+             , courseInactive = '".query_safe($f['courseInactive'])."'
+         WHERE courseId = ".$f['courseId']."
+    ";
+    d_Var('courseUPDATE',$query,'q');
+    $courseUPDATE = query_do($query);
+    d_Var('$courseUPDATE',$courseUPDATE,'l');
+    displayMessage('Course '.$f['YRTR'].' updated.');
+  } else {
+    // INSERT course.
+    $query = "
+      INSERT INTO `course` (
+          userId
+        , YRTR
+        , departmentId
+        , courseNumber
+        , courseTitle
+        , courseCredits
+        , courseCreditsMax
+        , courseInactive
+      ) VALUES (
+          ".$_SESSION['user']['userId']."
+        , '".query_safe($f['YRTR'])."'
+        , ".$f['departmentId']."
+        , '".query_safe($f['courseNumber'])."'
+        , '".query_safe($f['courseTitle'])."'
+        , ".$f['courseCredits']."
+        , ".$f['courseCreditsMax']."
+        , '".query_safe($f['courseInactive'])."'
+      )
+    ";
+    d_Var('courseINSERT',$query,'q');
+    $courseINSERT = query_do($query);
+    d_Var('$courseINSERT',$courseINSERT,'l');
+    $f['courseId'] = $GLOBALS['_QUERY']['insertId'];
+    @d_Var("\$f['courseId']",$f['courseId']);
+    displayMessage('Course '.$f['YRTR'].' added.');
+  }
+  // Remember that the form was processed.
+  $_SESSION['uuid'] = $f['uuid'];
+} else {
+  // Page was reloaded.
+  displayMessage('Page reloaded.','warn');
+}
+t_End(); // End TRACKing included file.
+?>

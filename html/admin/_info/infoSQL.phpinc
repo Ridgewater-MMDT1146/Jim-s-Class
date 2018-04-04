@@ -1,0 +1,69 @@
+<?
+// admin/_info/infoSQL.phpinc
+// Perform SQL queries.
+
+t_Begin(); // Begin TRACKing included file.
+formValue('sql');
+#d_V('sql');
+?>
+<style type="text/css">
+  #id_sql { height:20em; width:60em; }
+</style>
+<a name="sql"></a>
+<form name="sql_form" action="<?=php_self()?>#sql" method="post">
+  <input type="hidden" name="task" value="sql">
+  <input type="hidden" name="database" value="<?=$f['database']?>">
+  <textarea class="code_info" name="sql" id="id_sql"><?=htmlSafe($f['sql'])?></textarea>
+    <br>
+    <input type="submit" name="subtask" value="Submit query">
+</form>
+<?
+if ($f['sql'] != '') {
+  $queryResult = query_do($f['sql'],$f['database']);
+  echo "\$queryResult=",$queryResult,"<br \>\n";
+  if ($queryResult) {
+    if ($GLOBALS['_QUERY']['count']) {
+?>
+    The number of query rows is <?=$GLOBALS['_QUERY']['count']?>.
+    <table>
+      <tr>
+<?
+      $queryInfo = query_row($queryResult);
+      foreach ($queryInfo as $fieldName => $fieldValue) {
+        echo '<th>',$fieldName,"</th>";
+      }
+?>
+      </tr>
+<?
+
+    query_seek($queryResult, 0);
+    while($queryInfo = query_row($queryResult)) {
+?>
+      <tr>
+<?
+      foreach ($queryInfo as $fieldName => $fieldValue) {
+        echo '<td>',$fieldValue,"</td>";
+      }
+?>
+      </tr>
+<?
+    }
+?>
+    </table>
+<?
+    } else {
+?>
+      There were no rows returned.
+<?
+    }
+
+  } else {
+    $GLOBALS['_QUERY']['count'] = false;
+?>
+    There is no result. Info count is <?=$GLOBALS['_QUERY']['count']?>.
+<?
+  }
+}
+t_End(); // End TRACKing included file.
+
+?>

@@ -1,0 +1,53 @@
+<?
+// displayErrorsAndMessages.phpinc
+// purpose_of_page_goes_here
+
+#$f_error = 'This is a test error.';
+#$f_message = 'This is a test message.';
+if (isset($_SESSION['Error'])) {
+	if (isset($f_error)) {
+		$f_error .= $_SESSION['Error'];
+	} else {
+		$f_error = $_SESSION['Error'];
+	}
+	unset($_SESSION['Error']);
+}
+if (isset($_SESSION['Message'])) {
+	if (isset($f_message)) {
+		$f_message .= $_SESSION['Message'];
+	} else {
+		$f_message = $_SESSION['Message'];
+	}
+	unset($_SESSION['Message']);
+}
+if ( ( isset($f_error) && $f_error !='' ) || ( isset($f_message) && $f_message !='' ) ) {
+	if ( isset($f_error) && $f_error !='' ) {
+		if ( isset($f_message) && $f_message !='' ) {
+			$sectionTitle = "ERRORS and MESSAGES";
+		} else {
+			$sectionTitle = "ERRORS";
+		}
+	} else {
+		$sectionTitle = "MESSAGES";		
+	}
+	include('../parse - Copy/common/sectionHeader.phpinc');
+?>
+	<table class="center">
+<?
+	if ( isset($f_error) && $f_error != '' ) {
+		if ( isset($_SESSION['Error']) ) { $_SESSION['Error'] = ''; }
+?>
+			<tr><th class="bold error larger left"><?=$f_error?></th></tr>
+<?
+	}
+	if ( isset($f_message) && $f_message != '' ) {
+?>
+		<tr><th class="pageMessage left"><?=$f_message?></th></tr>
+<?
+	}
+?>
+	</table>
+<?
+	include('../parse - Copy/common/sectionFooter.phpinc');
+}
+?>

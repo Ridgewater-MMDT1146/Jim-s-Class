@@ -1,0 +1,19 @@
+<?
+// admin/database/menu.phpinc
+// Display the admin database menu.
+t_Begin(); // Begin TRACKing included file.
+$menuLoaded = true;
+// phonenumbertype
+if ( $_SERVER['SCRIPT_NAME'] == $HTTP.'/admin/database/phonenumbertype/index.php' ) {
+  $class = ' class="current"';
+} elseif ( strpos($_SERVER['SCRIPT_NAME'],'/admin/database/phonenumbertype/') !== false ) {
+  $class = ' class="parent"';
+} else {
+  $class = '';
+}
+?><a href="<?=$HTTP?>/admin/database/phonenumbertype/"<?=$class?>>phonenumbertype</a><?
+/** /
+?> | <?
+/**/
+t_End(); // End TRACKing included file.
+?>

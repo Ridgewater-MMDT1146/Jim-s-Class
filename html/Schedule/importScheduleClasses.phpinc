@@ -1,0 +1,258 @@
+<?
+// importScheduleClasses.phpinc
+// Import classes into this schedule.
+
+t_Begin(); // Begin TRACKing importScheduleClasses.phpinc.
+
+
+// Get import session info.
+$f['sessionId'] = $f['sessionImportId'];
+require('Schedule/getSession.phpinc');
+$sessionImportInfo = $sessionInfo;
+d_Var('$sessionImportInfo',$sessionImportInfo);
+
+// Get current session info.
+d_V();
+unset($f['departmentId']);
+require('Schedule/getSchedule.phpinc');
+require('Schedule/getSession.phpinc');
+d_Var('$sessionInfo',$sessionInfo);
+
+
+// Get classes in import session.
+$query = "
+    SELECT classId
+				 , departmentCode
+				 , courseNumber
+				 , courseTitle
+         , class.YRTR
+         , classQId
+         , course.courseId
+         , classSection
+         , classEnr
+         , classMax
+         , classStartDate
+         , classEndDate
+         , courseinsttypeId
+				 , departmentCode
+      FROM `class`
+			JOIN `course` on class.courseId = course.courseId
+			JOIN `department` on course.departmentId = department.departmentId
+     WHERE classStartDate >= '".mysql_safe($sessionImportInfo['sessionStart'])."'
+       AND classEndDate <= '".mysql_safe($sessionImportInfo['sessionEnd'])."'
+       AND department.departmentId = ".$f['departmentId']."
+  ORDER BY classQId
+";
+d_Var('classResult',$query,'q');
+$classResult = query_do($query);
+$classCount = $_SESSION['query']['count'];
+d_Var('$classResult',$classResult);
+if ( $classCount ) { // Are there any classes to import?
+	// Yes. Import the classes.
+  mysqli_data_seek($classResult, 0);
+  while ($classInfo = mysqli_fetch_assoc($classResult)) { // Loop thru classes to import.
+		d_Var('$classInfo',$classInfo,'/');
+		// See if class is already there.
+		$query = "
+				SELECT classId
+					FROM `class`
+				 WHERE YRTR = '".mysql_safe($sessionInfo['YRTR'])."'
+					 AND courseId = ".$classInfo['courseId']."
+					 AND classSection = '".mysql_safe($classInfo['classSection'])."'
+		";
+		d_Var('classInfo',$query,'q');
+		$classExistsInfo = query_info($query);
+		d_Var('$classExistsInfo',$classExistsInfo);
+    // Add the class to the schedule.
+		if ( !$classExistsInfo ) { // Should we import this class?
+			// Yes, it is not in this session.
+			// INSERT the class.
+			$query = "
+				INSERT INTO `class` (
+						YRTR
+					, courseId
+					, classSection
+					, classMax
+					, classStartDate
+					, classEndDate
+				) VALUES (
+						'".mysql_safe($sessionInfo['YRTR'])."'
+					, ".$classInfo['courseId']."
+					, '".mysql_safe($classInfo['classSection'])."'
+					, ".$classInfo['classMax']."
+					, '".mysql_safe($sessionInfo['sessionStart'])."'
+					, '".mysql_safe($sessionInfo['sessionEnd'])."'
+				)
+			";
+			d_Var('classINSERT',$query,'q');
+			$classINSERT = query_do($query);
+			@d_Var('$classINSERT',$classINSERT,'l');
+			$f['classId'] = insert_id();
+			d_Var("\$f['classId']",$f['classId']);
+			// Add this class to the schedule.
+			$query = "
+				INSERT INTO `class_schedule` (
+						classId
+					, scheduleId
+				) VALUES (
+						".$f['classId']."
+					, ".$_SESSION['user']['scheduleId']."
+				)
+			";
+			d_Var('class_scheduleINSERT',$query,'q');
+			$class_scheduleINSERT = query_do($query);
+			@d_Var('$class_scheduleINSERT',$class_scheduleINSERT,'l');
+			// Get old class meetings.
+			$query = "
+					SELECT classmeetingId
+							 , classId
+							 , classmeetingStartDate
+							 , classmeetingEndDate
+							 , classmeetingBeginTime
+							 , classmeetingEndTime
+							 , classmeetingOnOff
+							 , roomId
+						FROM `classmeeting`
+					 WHERE classId = ".$classInfo['classId']."
+				ORDER BY classmeetingStartDate
+			";
+			d_Var('classmeetingResult',$query,'q');
+			$classmeetingResult = query_do($query);
+			$classmeetingCount = $_SESSION['query']['count'];
+			d_Var('$classmeetingResult',$classmeetingResult);
+			if ( $classmeetingCount ) { // Are there any classmeetings?
+				// DELETE any existing class meetings for the new class. (Just in case we decide to update classes)
+				$query = "
+								DELETE FROM `classmeeting`
+								 WHERE classId = ".$f['classId']."
+				";
+				d_Var('classmeetingDELETE',$query,'q');
+				$classmeetingDELETE = query_do($query);
+				d_Var('$classmeetingDELETE',$classmeetingDELETE,'l');
+
+				mysqli_data_seek($classmeetingResult, 0);
+				while ($classmeetingInfo = mysqli_fetch_assoc($classmeetingResult)) { // Loop thru classmeeting.
+					#d_Var('$classmeetingInfo',$classmeetingInfo); d_End();
+					// INSERT new meeting.
+				$query = "
+					INSERT INTO `classmeeting` (
+							classId
+						, classmeetingStartDate
+						, classmeetingEndDate";
+				if ( !is_null($classmeetingInfo['classmeetingBeginTime']) ) {
+					$query .= "
+						, classmeetingBeginTime";
+				}
+				if ( !is_null($classmeetingInfo['classmeetingEndTime']) ) {
+					$query .= "
+						, classmeetingEndTime";
+				}
+				if ( !is_null($classmeetingInfo['classmeetingOnOff']) ) {
+					$query .= "
+						, classmeetingOnOff";
+				}
+				if ( !is_null($classmeetingInfo['roomId']) ) {
+					$query .= "
+						, roomId";
+				}
+					$query .= "
+					) VALUES (
+							".$f['classId']."
+						, '".mysql_safe($classmeetingInfo['classmeetingStartDate'])."'
+						, '".mysql_safe($classmeetingInfo['classmeetingEndDate'])."'";
+				if ( !is_null($classmeetingInfo['classmeetingBeginTime']) ) {
+					$query .= "
+						, '".mysql_safe($classmeetingInfo['classmeetingBeginTime'])."'";
+				}
+				if ( !is_null($classmeetingInfo['classmeetingEndTime']) ) {
+					$query .= "
+						, '".mysql_safe($classmeetingInfo['classmeetingEndTime'])."'";
+				}
+				if ( !is_null($classmeetingInfo['classmeetingOnOff']) ) {
+					$query .= "
+						, ".$classmeetingInfo['classmeetingOnOff'];
+				}
+				if ( !is_null($classmeetingInfo['roomId']) ) {
+					$query .= "
+						, ".$classmeetingInfo['roomId'];
+				}
+				$query .= "
+					)
+				";
+				d_Var('classmeetingINSERT',$query,'q');
+				$classmeetingINSERT = query_do($query);
+				@d_Var('$classmeetingINSERT',$classmeetingINSERT,'l');
+				$f['classmeetingId'] = insert_id();
+				d_Var("\$f['classmeetingId']",$f['classmeetingId']);
+					// Get old classmeeting instructors.
+					$query = "
+							SELECT classmeetingId
+									 , userId
+								FROM `classmeetinginstructor`
+							 WHERE classmeetingId = ".$classmeetingInfo['classmeetingId']."
+					";
+					d_Var('classmeetinginstructorResult',$query,'q');
+					$classmeetinginstructorResult = query_do($query);
+					$classmeetinginstructorCount = $_SESSION['query']['count'];
+					d_Var('$classmeetinginstructorResult',$classmeetinginstructorResult);
+					// INSERT new classmeeting instructors.
+					if ( $classmeetinginstructorCount ) { // Is there any classmeeting instructors?
+						mysqli_data_seek($classmeetinginstructorResult, 0);
+						while ($classmeetinginstructorInfo = mysqli_fetch_assoc($classmeetinginstructorResult)) { // Loop thru classmeeting instructors.
+							d_Var('$classmeetinginstructorInfo',$classmeetinginstructorInfo);
+							$query = "
+								INSERT INTO `classmeetinginstructor` (
+										classmeetingId
+									, userId
+								) VALUES (
+										".$f['classmeetingId']."
+									, ".$classmeetinginstructorInfo['userId']."
+								)
+							";
+							d_Var('classmeetinginstructorINSERT',$query,'q');
+							$classmeetinginstructorINSERT = query_do($query);
+							@d_Var('$classmeetinginstructorINSERT',$classmeetinginstructorINSERT,'l');
+						} // Loop thru classmeeting instructors.
+					} // Is there any classmeeting instructors?
+					// Get oldclassmeeting weekdays.
+					$query = "
+							SELECT classmeetingId
+									 , weekdayId
+								FROM `classmeetingweekday`
+							 WHERE classmeetingId = ".$classmeetingInfo['classmeetingId']."
+						ORDER BY weekdayId
+					";
+					d_Var('classmeetingweekdayResult',$query,'q');
+					$classmeetingweekdayResult = query_do($query);
+					$classmeetingweekdayCount = $_SESSION['query']['count'];
+					d_Var('$classmeetingweekdayResult',$classmeetingweekdayResult);
+					// INSERT new classmeeting weekdays.
+					if ( $classmeetingweekdayCount ) { // Is there any classmeeting weekdays?
+						mysqli_data_seek($classmeetingweekdayResult, 0);
+						while ($classmeetingweekdayInfo = mysqli_fetch_assoc($classmeetingweekdayResult)) { // Loop thru classmeeting weekdays.
+							$query = "
+								INSERT INTO `classmeetingweekday` (
+										classmeetingId
+									, weekdayId
+								) VALUES (
+										".$f['classmeetingId']."
+									, ".$classmeetingweekdayInfo['weekdayId']."
+								)
+							";
+							d_Var('classmeetingweekdayINSERT',$query,'q');
+							$classmeetingweekdayINSERT = query_do($query);
+							@d_Var('$classmeetingweekdayINSERT',$classmeetingweekdayINSERT,'l');
+						} // Loop thru classmeeting weekdays.
+					} // Is there any classmeeting weekdays?
+				} // Loop thru classmeeting.
+			} // Are there any classmeetings?
+		} // Should we import this class?
+		#d_End();
+  } // Loop thru classes to import.
+} // Are there any classes to import?
+
+#d_On();
+#pageFooter();
+
+t_End(); // End TRACKing importScheduleClasses.phpinc.
+?>

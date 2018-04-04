@@ -1,0 +1,39 @@
+<?
+// parse_30.phpinc
+// Get class info.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+d_line('Get class info.','a');
+d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+$classInfo['!line'] = $line;
+
+// Get course information.
+$classInfo['classQId'] = $classLnA[0];
+$classInfo['departmentCode'] = $classLnA[1];
+if ( !isset($department[$classInfo['departmentCode']]) ) $department[$classInfo['departmentCode']] = $departmentCurrent; // Check for department.
+$classInfo['courseNumber'] = $classLnA[2];
+$classInfo['classSection'] = $classLnA[3]+0;
+$classInfo['courseTitle'] = trim(substr($classLn,24,27));
+$classInfo['classCredits'] = trim(substr($classLn,52,10));
+$classInfo['class_INSTR_TYPE'] = trim(substr($classLn,63,14));
+$classInfo['classEnr'] = substr($classLn,78,3)+0;
+$classInfo['classMax'] = substr($classLn,83,5)+0;
+
+if ( get_ClassLn() ) {
+	// Get class grading method and start/end dates.
+	d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+	$classInfo['classGRADE_METH'] = $classLnA[0];
+	$classInfo['classStartDate'] = $classLnA[1];
+	$classInfo['classEndDate'] = $classLnA[2];
+	
+}
+d_Var('$classInfo',$classInfo,'');
+
+// Remove class meetings and notes.
+$classInfo['meeting'] = array();
+$classInfo['note'] = array();
+set_state(31); // Check for meeting or note line.
+
+#set_state(99);
+t_End(); // End TRACKing include_filename.phpinc.
+?>

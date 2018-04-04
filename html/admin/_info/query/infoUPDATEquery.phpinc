@@ -1,0 +1,169 @@
+<?
+// admin/_info/form/infoUPDATEquery.phpinc
+// Create the UPDATE query.
+
+t_Begin(); // Begin TRACKing included file.
+d_Var('$fieldArray',$fieldArray);
+d_Var('$tablePrimaryKey',$tablePrimaryKey);
+if ( !isset($indent) ) { $indent = ''; }
+// Begin UPDATE.
+$query .= $indent."\$query = \"
+".$indent."    UPDATE `".$f['table']."`".in();
+// Add fields.
+$set_comma = 'SET '; // Setup comma for SET line 'SET '.
+$qc = false; // Setup qc for UPDATE line.
+d_Var('$query',$query);
+foreach ($fieldArray as $fieldName => $fieldValue) {
+  d_Var('$fieldName',$fieldName);
+  d_Var('$fieldValue',$fieldValue);
+    d_Var("\$fieldValue['type']",$fieldValue['type']);
+    d_Var('count($tablePrimaryKey)',count($tablePrimaryKey));
+  if ( $fieldValue['type'] != 'skip' && substr($fieldName,0,5) != 'Added' && ( count($tablePrimaryKey) <> 1 || ( count($tablePrimaryKey) == 1 && !in_array($fieldName,$tablePrimaryKey) ) ) ) {
+    d_Var("\$fieldValue['conditional']",$fieldValue['conditional']);
+    if ( !isset($fieldArray[$fieldName]['conditional']) ) $fieldValue['conditional'] = 0;
+    d_Var("\$fieldValue['conditional']",$fieldValue['conditional']);
+    $conditionalCurrent = $fieldValue['conditional'];
+    // BEGIN Finish the previous line by including $qcPrevious[1], newline, and anything else that is needed.
+    if ( $qc ) {
+      if ( $conditionalPrevious ) { // Was the previous line conditional?
+        // The previous line was conditional. p__
+        if ( $conditionalCurrent ) { // Is this a conditional field?
+          // This is a conditional field. pc_
+          if ( $qcPrevious[1] == '."' ) {
+            // The previous line was numeric. pcn
+            $query .= $qcPrevious[1].in().$indent.'";'.in();
+          } else {
+            // The previous line was alpha. pca
+            $query .= $qcPrevious[1].in().$indent.'";'.in();
+          }
+        } else {
+          // This is not a conditional field. pn_
+          if ( $qcPrevious[1] == '."' ) {
+            // The previous line was numeric. pnn
+            $query .= $qcPrevious[1].in().$indent.'";'.in().$indent.'$query .= "'.in();
+          } else {
+            // The previous line was alpha. pna
+            $query .= $qcPrevious[1].in().$indent.'";'.in().$indent.'$query .= "'.in();
+          }
+        }
+      } else {
+        // The previous line was notconditional. n__
+        if ( $conditionalCurrent ) { // Is this a conditional field?
+          // This is a conditional field. nc_
+          if ( $qcPrevious[1] == '."' ) {
+            // The previous line was numeric. ncn
+            $query .= $qcPrevious[1].in().$indent.'";'.in();
+          } else {
+            // The previous line was alpha. nca
+            $query .= $qcPrevious[1].in().$indent.'";'.in();
+          }
+        } else {
+          // This is not a conditional field. nn_
+          if ( $qcPrevious[1] == '."' ) {
+            // The previous line was numeric. nnn
+            $query .= $qcPrevious[1].in();
+          } else {
+            // The previous line was alpha. nna
+            $query .= $qcPrevious[1].in();
+          }
+        }
+      }
+      //$query .= in();
+    } else {
+      if ( $conditionalCurrent ) { // Is this a conditional field?
+        if ( isset($tablePrimaryKey[0]) ) {
+          $query .= $indent."       ".$set_comma.$tablePrimaryKey[0].' = ".$f[\''.$tablePrimaryKey[0].'\']."'.in().$indent.'"; // '.$tablePrimaryKey[0].' added because '.$fieldName.' field is conditional.'.in(); // Finish UPDATE line.
+          $set_comma = '  , '; // Change comma to default '  , '.
+        } else {
+          $query .= $indent.'"; // You will need to move some fields because the SET line is conditional and there is no primary key.'.in(); // Finish UPDATE line.
+        }
+      }
+    }
+    // END Finish the previous line by including $qcPrevious[1], newline, and anything else that is needed.
+    // BEGIN Add the current line up to but not including $qc[1].
+    $qc = info_fieldQC($fieldValue['Type']); // Get the field quote chars.
+    // Is this a conditional field?
+    if ( $conditionalCurrent ) {
+      // This is a conditional field.
+      /** /
+      if ( $conditionalPrevious ) { // Was the previous line conditional?
+        // The previous line was conditional.
+          #$query .= .il();
+      } else {
+        // The previous line was not conditional.
+          #$query .= .il();
+      }
+      #d_Var("substr(\$query,-15,1)",substr($query,-15,1));
+      if ( substr($query,-3,1) == '"' || ( $DEBUG_info && substr($query,-15,1) == '"' ) ) { 
+        $query = substr($query,0,strlen($query)-1).is().' '; // remove newline.
+      } else {
+      }
+      /**/
+      $query .= $indent."if (".il();                  // Add if (
+      if ( $f['conditionIs'] == 'f' ) {
+        $query .= " f('".$fieldName."')".il();    // Add isset(fieldName).
+      } elseif ( $f['conditionIs'] == 'isset' ) {
+        $query .= " isset(\$".$fieldName.")".il();    // Add isset(fieldName).
+      } elseif ( $f['conditionIs'] == 'isfalse' ) {
+        $query .= " \$".$fieldName." !== false".il(); // Add fieldName !== false.
+      } else {
+        $query .= " \$".$fieldName.il();              // Add fieldName.
+      }
+      $query .= " ) \$query .= \"".in();              // Add ) $query .= ". and newline
+    } else {
+      // This is not a conditional field.
+      /** /
+      if ( $conditionalPrevious ) { // Was the previous line conditional?
+        // The previous line was conditional.
+      } else {
+        // The previous line was not conditional.
+          #$query .= .il();
+      }
+      /**/
+    }
+    if ( substr($fieldName,-2) != 'On' ) {
+      $query .= $indent."       ".$set_comma.$fieldName." = ".trim($qc[0]).info_userBy($fieldName).il(); // Add normal field line.
+    } else {
+      $query .= $indent."       ".$set_comma.$fieldName." = ".'\'".'.'currentDateTime()'.il(); $qc[1] = '."\''; // Add currentDateTime() line and change $qc[1].
+    }
+    $query .= iqc();
+    // END Add the current line up to but not including $qc[1].
+    $set_comma = '  , '; // Change comma to default '  , '.
+    $conditionalPrevious = $conditionalCurrent; // Remember current conditional value.
+    $qcPrevious = $qc; // Remember current qc values.
+  }
+}
+// BEGIN Finish the last line.
+if ( $conditionalPrevious ) { // Was the previous line conditional?
+  // The previous line was conditional. p__
+  // This is not a conditional field. pn_
+  if ( $qcPrevious[1] == '."' ) {
+    // The previous line was numeric. pnn
+    $query .= $qcPrevious[1].in().$indent.'";'.in().$indent.'$query .= "'.in();
+  } else {
+    // The previous line was alpha. pna
+    $query .= $qcPrevious[1].in().$indent.'";'.in().$indent.'$query .= "'.in();
+  }
+} else {
+  // The previous line was notconditional. n__
+  // This is not a conditional field. nn_
+  if ( $qcPrevious[1] == '."' ) {
+    // The previous line was numeric. nnn
+    $query .= $qcPrevious[1].in();
+  } else {
+    // The previous line was alpha. nna
+    $query .= $qcPrevious[1].in();
+  }
+}
+// END Finish the last line.
+// Add the WHERE section.
+include('admin/_info/query/infoWHERE.phpinc');
+// Finish query.
+$query .= $indent."\";".in();
+if ( $GLOBALS['debuggingAvailable'] ) $query .= $indent."d_Var('".$f['table']."UPDATE',\$query,'q');"."\n";
+$query .= $indent."\$".$f['table']."UPDATE = query_do(\$query);
+";
+if ( $GLOBALS['debuggingAvailable'] ) $query .= $indent."d_Var('$".$f['table']."UPDATE',\$".$f['table']."UPDATE,'l');"."\n";
+d_Var('$query',$query);
+t_End(); // End TRACKing included file.
+?>

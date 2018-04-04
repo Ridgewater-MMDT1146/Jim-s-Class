@@ -1,0 +1,22 @@
+<?
+// site/get_weekdays.phpinc
+// purpose_of_get_weekday.
+
+t_Begin(); // Begin TRACKing get_weekday.phpinc.
+
+$query = "
+    SELECT weekdayId
+         , weekdayNumber
+         , weekdayD
+         , weekdayDay
+         , weekdayWeekday
+      FROM `weekday`
+  ORDER BY weekdayNumber
+";
+d_Var('weekdayResult',$query,'q');
+$weekdayResult = query_do($query);
+$weekdayCount = $GLOBALS['_QUERY']['count'];
+d_Var('$weekdayResult',$weekdayResult);
+
+t_End(); // End TRACKing get_weekday.phpinc.
+?>

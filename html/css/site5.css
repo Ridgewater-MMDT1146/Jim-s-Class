@@ -1,0 +1,15 @@
+@charset "utf-8";
+/* site5.css For use by Jonathan Plotz */
+
+.class_Div { background-color:#eee; border-color:#eee; border-style:solid; border-width:3px; }
+.class_Credential_Conflict { color:#f00 !important; }
+.class_Credential_None { color:#fa0; }
+.class_Instructor_Conflict { background: linear-gradient(#eee,#f00) !important; }
+.class_Instructor_Multiple { background: linear-gradient(#eee,#ff0); }
+.class_Instructor_None { background: linear-gradient(#eee,#fa0); }
+.class_Room_Conflict { border-color:#f00 !important; }
+.class_Room_Multiple { border-color:#ff0; }
+.class_Room_None { border-color:#fa0; }
+
+.class_blue { color: blue; }
+

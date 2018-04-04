@@ -1,0 +1,889 @@
+<?
+// common/functions_debug.phpinc
+// Contains the debug functions that can track your program as it includes other files or calls functions.
+// These functions can also track or display variable values or text messages.
+// Version 2012.05.22.
+
+// DEBUG functions do not as yet exist.
+// Setup @_DEBUG']['track'] for functions.phpinc.
+$backtrace = debug_backtrace();
+d_ad_begin(__FILE__,__LINE__); // Begin functions_debug.phpinc call.
+
+#$GLOBALS['DEBUG_functions_debug'] = true; // ********** Uncomment this line to debug the debug functions.
+if ( !isset($GLOBALS['DEBUG_functions_debug']) ) $GLOBALS['DEBUG_functions_debug'] = false;
+
+// Push code on stack.
+$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false);
+array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+
+#array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false)); // Push the caller code.
+#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.basename(__FILE__).':'.__LINE__.' by '.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].' in '.basename(__FILE__).':'.__LINE__.' as t_End() does not exist'."<br>\n";
+
+if ( $GLOBALS['TRACK'] && $GLOBALS['debuggingAvailable'] ) { // Start this file TRACKing. Use this code when the function t_Begin is unavailable.
+  // Start file <li>.
+  $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent()."<li>";
+  // TRACK file begin.
+	$backtrace = debug_backtrace();
+	// Display filename, line, show/hide divs, filepath, and included by.
+	$_SESSION['TRACK']['number']++;
+	$_SESSION['TRACK']['data'] .= '<b>'.basename(__FILE__).'</b> :'.__LINE__.' <div id="TRACK_HIDE_'.$_SESSION['TRACK']['number'].'" class="d_s_il d_s_l"><a href="javascript: '."divShowInline('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divShow('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('TRACK_HIDE_".$_SESSION['TRACK']['number']."'".');" class="d_s_vt">Expand +</a></div><div id="TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l"><a href="javascript: '."divShowInline('TRACK_HIDE_".$_SESSION['TRACK']['number']."'); divHide('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'".');" class="d_s_w">Collapse -</a></div> <span class="d_s_fp">('.__FILE__.')</span> <span class="d_s_fi">(included by '.$backtrace['0']['file'].":".$backtrace['0']['line'].")</span>\n";
+	// Include show div.
+	$_SESSION['TRACK']['data'] .= '<div id="BEGIN_TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l">'."\n";
+  // Start <ol>.
+  $_SESSION['TRACK']['ol'] += 1; $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent().'<ol class="d_s_op">'."\n";
+}
+
+// ********** BEGIN DOCUMENTATION SECTION **********
+
+// For *.php pages:    TRACKing is started by including the application.phpinc file. It is ended by calling the pageFooter() function.
+// For *.phpinc files: TRACKing is started by calling the t_Begin() function. It is ended by calling the t_End() function.
+// For functions:      TRACKing is started by calling the t_FuncBegin() function. It is ended by calling the t_FuncEnd() function.
+//                     To TRACK the function call and return value use t_FuncEnd($funcResult) just before the return statement.
+
+// Functions:
+// d_End() ................................ End the page by turning on $GLOBALS['_DEBUG']['page']['code'] and calling pageFooter.phpinc.
+// d_File() ............................... Return the filename part of calling file.
+// d_Line($lineText, $flagList) ........... Displays the $lineText as well as the current filename and line. $GLOBALS['_DEBUG']['page']['code'] or $_SESSION['DEBUG']['codeSite'] must be true.
+// d_O($type) ............................. Test if type debugging is on for this page.
+// d_Off($type) ........................... Turn off type debugging code for this page.
+// d_On($type) ............................ Sets $_DEBUG['page']['code'], ['foot'], ['head'], ['lock'], ['memory'], or ['query'] to true.
+// d_V($fIndex, $flagList) ................ Performs d_Var() for $f array with array index [$fIndex].
+// d_Var($varName, $varValue, $flagList) .. Displays the value of a variable, array, or result with the calling file and line number. $GLOBALS['_DEBUG']['page']['code'] or $_SESSION['DEBUG']['codeSite'] must be true.
+// t_Begin($codepage) ..................... Begin tracking for this include file. Should be at the beginning of every .phpinc file. Set $codepage = true to debug this page.
+// t_End() ................................ End tracking for this include file. Should be at the end of every .phpinc file.
+// t_Func($funcResult) .................... Track a function and return value. Call t_Func() just before the return statement.
+// t_FuncBegin() .......................... Begin tracking a function call. This works like t_Begin() but for functions.
+// t_FuncEnd() ............................ End tracking a function call. This works like t_End() but for functions.
+// t_Line($lineText, $flagList) ........... Track the $lineText as well as the current filename and line.
+// t_V($fIndex, $flagList) ................ Track the value for $f array with array index [$fIndex].
+// t_Var($varName, $varValue, $flagList) .. Track the value of a variable, array, or result with the calling file and line number.
+
+// You must link in the debug.css style sheet to ensure debuging and TRACKing information is displayed properly.
+
+// ********** END DOCUMENTATION SECTION **********
+
+// d_currentPageCode()
+// Return the current [code][save][set] value.
+function d_currentPageCode() {
+	if ( isset($GLOBALS['_DEBUG']['code']['stack'][0]) && isset($GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['stack'][0]]['set']) ) {
+		return $GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['stack'][0]]['set'];
+	} else {
+		return false;
+	}
+} // END d_currentPageCode.
+
+// d_DEBUG_PageCode()
+// Display DEBUG info about $DEBUG[page][code] and $DEBUG[code].
+function d_DEBUG_PageCode() {
+	$backtrace = debug_backtrace();
+	#d_Var('$backtrace',$backtrace);
+	d_Line(basename($backtrace[0]['file']).':'.$backtrace[0]['line'],'da');
+	d_Var("\$GLOBALS['_DEBUG']['page']['code']",$GLOBALS['_DEBUG']['page']['code'],'dl');
+	d_Var("\$GLOBALS['_DEBUG']['code']['save'][".$GLOBALS['_DEBUG']['code']['stack'][0]."]['set']",$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['stack'][0]]['set'],'dl');
+	d_Var("\$GLOBALS['_DEBUG']['code']['stack'][0]",$GLOBALS['_DEBUG']['code']['stack'][0],'dl');
+	d_Var("\$GLOBALS['_DEBUG']['code']['save'][".$GLOBALS['_DEBUG']['code']['stack'][0]."]",$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['stack'][0]],'dl');
+	d_Var("\$GLOBALS['_DEBUG']['code']['stack']",$GLOBALS['_DEBUG']['code']['stack'],'dl');
+	d_Var("\$GLOBALS['_DEBUG']['code']['count']",$GLOBALS['_DEBUG']['code']['count'],'dl');
+	d_Var("\$GLOBALS['_DEBUG']['code']['save']",$GLOBALS['_DEBUG']['code']['save'],'dl');
+}// END d_DEBUG_PageCode.
+
+// d_DivBegin($text)
+// Begin an expand div container.
+function d_DivBegin($text) {
+	//return;
+	$backtrace = debug_backtrace();
+	if ( basename($backtrace[1]['file']) == 'Combat_Combat.phpinc' || basename($backtrace[1]['file']) == 'Combat_Select.phpinc' ) return;
+	$DEBUG_d_Div = false;
+	$GLOBALS['_DEBUG']['div']['count']++; // Increment the div id counter.
+	$d_D_SHOW = 'd_Div_'.$GLOBALS['_DEBUG']['div']['count'].'_SHOW';
+	$d_D_HIDE = 'd_Div_'.$GLOBALS['_DEBUG']['div']['count'].'_HIDE';	
+	$GLOBALS['_DEBUG']['div']['end'][$GLOBALS['_DEBUG']['div']['count']] = $d_D_HIDE;
+	array_unshift($GLOBALS['_DEBUG']['div']['stack'],$GLOBALS['_DEBUG']['div']['count']);
+?>
+<div id="<?=$d_D_SHOW?>" class="d_s_l d_s_dd"><a href="javascript: divShow('<?=$d_D_HIDE?>'); divHide('<?=$d_D_SHOW?>');"><span class="d_s_b d_s_an"><?=$text?>:<?=$GLOBALS['_DEBUG']['div']['count']?> +</span></a><? if ( $DEBUG_d_Div ) { echo '<br>'.$d_D_HIDE; } ?></div>
+<div id="<?=$d_D_HIDE?>" class="d_s_l d_s_dd d_s_h"><a href="javascript: divShow('<?=$d_D_SHOW?>'); divHide('<?=$d_D_HIDE?>');"><span class="d_s_b d_s_an"><?=$text?>:<?=$GLOBALS['_DEBUG']['div']['count']?> =</span></a><? if ( $DEBUG_d_Div ) { echo '<br>'.$d_D_HIDE; } ?><br>
+<?
+if ( $DEBUG_d_Div ) d_Var('$backtrace',$backtrace,'d');
+} // END d_DivBegin.
+
+// d_DivEnd($line)
+// Begin an expand div container.
+function d_DivEnd() {
+	//return;
+	$DEBUG_d_Div = false;
+	$pop = count($GLOBALS['_DEBUG']['div']['stack']);
+	if ( $pop ) {
+		$d_DivshStack = array_shift($GLOBALS['_DEBUG']['div']['stack']);
+		$d_D_HIDE = $GLOBALS['_DEBUG']['div']['end'][$d_DivshStack];
+if ( $DEBUG_d_Div ) {
+	$backtrace = debug_backtrace();
+	d_Var('$backtrace',$backtrace,'d');
+}
+?>
+	<? if ( $DEBUG_d_Div ) { echo '<br>'.$d_D_HIDE; } ?></div><!-- id="<?=$d_D_HIDE?>":<?=$d_DivshStack?> -->
+<?
+	}
+/** /
+$backtrace = debug_backtrace();
+#pop##pushpop#echo str_repeat('&nbsp; ',$pop).$d_DivshEnd.' #'.$pop.' '.basename($backtrace[3]['args'][0]).':'.$backtrace[3]['line'].' in d_DivEnd():'.__LINE__."<br>\n";
+if ( $d_DivshEnd == 'd_Div_1_HIDE' ) {
+d_Var('$dDfile',$dDfile);
+d_Var('$dDline',$dDline);
+d_Var('$d_DivshEnd',$d_DivshEnd);
+echo 'stack == <pre>'; print_r($GLOBALS['_DEBUG']['div']['stack']); echo '</pre>';
+echo 'end == <pre>'; print_r($GLOBALS['_DEBUG']['div']['end']); echo '</pre>';
+echo 'code == <pre>'; print_r($GLOBALS['_DEBUG']['track']['code']); echo '</pre>';
+#$e = $GLOBALS['_DEBUG']['div']['stack'][0]-1;
+#_Var("\$GLOBALS['_DEBUG']['div']['stack'][$e]",$GLOBALS['_DEBUG']['div']['stack'][$e],'d');
+d_Var('$backtrace',$backtrace,'d');
+echo '<pre>'; print_r($backtrace); echo '</pre>';
+exit;
+/**/
+} // END d_DivEnd.
+
+// d_End()
+// End the page by turning on $GLOBALS['_DEBUG']['page']['code'] and calling pageFooter.phpinc.
+function d_End() {
+  if ( !isset($GLOBALS['_PAGE']['pageHeaderLoadType']) || $GLOBALS['_PAGE']['pageHeaderLoadType'] == 'NULL' ) {
+		unset($GLOBALS['_PAGE']['pageHeaderLoaded']);
+		pageHeader('d_End()');
+	}
+	$GLOBALS['_DEBUG']['page']['code'] = true;
+	d_Line('d_End()','a',debug_backtrace());
+  $GLOBALS['_DEBUG']['page']['foot'] = true;
+	t_Line('d_End()','a',debug_backtrace());
+  pageFooter();
+}
+
+// d_File()
+// Return the filename part of calling file.
+function d_File($backtrace=false) {
+	if ( !$backtrace ) $backtrace = debug_backtrace(); // Get caller information.
+	#d_Var('$backtrace',$backtrace,'d');
+	$d_File = basename($backtrace[0]['file']);
+	$d_File = explode('.',$d_File);
+	$d_File = array_shift($d_File);
+	return $d_File;
+}
+	
+// d_Line($lineText, $flagList, $backtrace)
+// Displays the $lineText as well as the current filename and line.
+//    $lineText = The text to display.
+//    $flagList = A string with display flags. See d_Var().
+//   $backtrace = Calling file/function backtrace. Default is calling file/function.
+// $forceDisplay = Display output no matter the $DEBUG setting. Default is false.
+function d_Line($lineText='', $flagList='', $backtrace=false, $forceDisplay=false) {
+  if ( $GLOBALS['_DEBUG']['page']['code'] || $_SESSION['DEBUG']['codeSite'] || $forceDisplay || stripos($flagList,'d') !== false ) {
+    if ( !$backtrace ) $backtrace = debug_backtrace(); // Get caller information.
+    d_Var('',$lineText,str_replace(array('a','b','e','i','w'),array('A','B','E','I','W'),$flagList).'n"',$backtrace,$forceDisplay); // Call d_Var with n (Do not show the variable name).
+	}
+}
+
+// d_O($type)
+// Return true if DEBUGging is on for $type.
+// $type = Type of debugging to check. Default is 'code'.
+//         code = code debugging.
+//         foot = footer dubugging.
+//         head = header('Location') dubugging.
+//         lock = TRACK locking dubugging.
+//       memory = memory dubugging.
+//        query = database dubugging.
+function d_O($type='code') {
+  if ( $GLOBALS['_DEBUG']['page'][$type] || $_SESSION['DEBUG'][$type.'Site'] ) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+// d_Off($type)
+// Turn off type debugging code for this page.
+// $type = Type of debugging page to turn off. Default is 'code'.
+//         code = code debugging.
+//         foot = footer dubugging.
+//         head = header('Location') dubugging.
+//         lock = TRACK locking dubugging.
+//       memory = memory dubugging.
+//        query = database dubugging.
+function d_Off($type='code', $track = true) {
+  d__on_off($type, false, debug_backtrace(), $track);
+}
+
+// d_On($type)
+// Turn on type debugging code for this page.
+// $type = Type of debugging page to turn on. Default is 'code'. See d_Off().
+function d_On($type='code', $track = true) {
+  d__on_off($type, true, debug_backtrace(), $track);
+}
+
+// d_Status($forceDisplay)
+// Shows debug status.
+// $forceDisplay = Display output no matter the $DEBUG setting. Default is true.
+function d_Status($forceDisplay=true, $backtrace=false) {
+  if ( !$backtrace ) $backtrace = debug_backtrace();
+	//echo 'In d_Status()'; if ( $forceDisplay ) { echo ' $forceDisplay is true'; } else { echo ' $forceDisplay is false'; } echo "<br>\n";
+	#d_Var('$backtrace',$backtrace,'d');
+	d_Line('d_Status()','/',$backtrace,$forceDisplay);
+  d_Var("\$_DEBUG['page']['code']",$GLOBALS['_DEBUG']['page']['code'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_DEBUG['page']['foot']",$GLOBALS['_DEBUG']['page']['foot'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_DEBUG['page']['head']",$GLOBALS['_DEBUG']['page']['head'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_DEBUG['page']['lock']",$GLOBALS['_DEBUG']['page']['lock'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_DEBUG['page']['memory']",$GLOBALS['_DEBUG']['page']['memory'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_DEBUG['page']['query']",$GLOBALS['_DEBUG']['page']['query'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_SESSION['DEBUG']['codeSite']",$_SESSION['DEBUG']['codeSite'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_SESSION['DEBUG']['footSite']",$_SESSION['DEBUG']['footSite'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_SESSION['DEBUG']['headSite']",$_SESSION['DEBUG']['headSite'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_SESSION['DEBUG']['lockSite']",$_SESSION['DEBUG']['lockSite'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_SESSION['DEBUG']['memorySite']",$_SESSION['DEBUG']['memorySite'],'l',$backtrace,$forceDisplay);
+  d_Var("\$_SESSION['DEBUG']['querySite']",$_SESSION['DEBUG']['querySite'],'l',$backtrace,$forceDisplay);
+	d_Var("\$GLOBALS['_DEBUG']['code']['stack'][0]",$GLOBALS['_DEBUG']['code']['stack'][0],'l',$backtrace,$forceDisplay);
+	for ( $i=0; $i<count($GLOBALS['_DEBUG']['code']['stack']); $i++ ) {
+		$index = $GLOBALS['_DEBUG']['code']['stack'][$i];
+		d_Var($i.': '.$GLOBALS['_DEBUG']['code']['save'][$index]['file'].':'.$GLOBALS['_DEBUG']['code']['save'][$index]['line'].' set=',$GLOBALS['_DEBUG']['code']['save'][$index]['set'],'l',$backtrace,$forceDisplay);
+	}
+	d_Line('','l',$backtrace,$forceDisplay);
+}
+
+// d_V($fIndex, $flagList, $backtrace, $forceDisplay)
+// Performs d_Var() for $f array with array index [$fIndex].
+//       $fIndex = The $f array index.
+//     $flagList = A string with display flags. See d_Var().
+//    $backtrace = Calling file/function backtrace. Default is calling file/function.
+// $forceDisplay = Display output no matter the $DEBUG setting. Default is false.
+function d_V($fIndex=false, $flagList='', $backtrace=false, $forceDisplay=false) {
+  #d_Var('$flagList',$flagList,'Eed');
+	if ( $GLOBALS['_DEBUG']['page']['code'] || $_SESSION['DEBUG']['codeSite'] || $forceDisplay || stripos($flagList,'d') !== false ) {
+    if ( !$backtrace ) $backtrace = debug_backtrace();
+    if ( $fIndex !== false ) {
+      if ( !is_numeric($fIndex) ) {
+        $varName = "\$f['$fIndex']";
+      } else {
+        $varName = "\$f[$fIndex]";
+      }
+      @d_Var($varName, $GLOBALS['f'][$fIndex], $flagList, $backtrace, $forceDisplay);
+    } else {
+      d_Var('$f', $GLOBALS['f'], $flagList, $backtrace, $forceDisplay);
+    }
+  }
+}
+
+// d_Var($varName, $varValue, $flagList, $backtrace, $forceDisplay)
+// Displays and tracks the value of a variable or array with the calling file and line number.
+//      $varName = The name of the variable.
+//     $varValue = The variable.
+//     $flagList = A string with display flags.
+//                 " = Do not show string variable value's within single quotes.
+//                 + = Show array or query in expanded view.
+//                 - = Do not display output, just return it.
+//                 . = 
+//                 / = Show <br> tag before output.
+//                 a = Display name as attention = .d_s_a.
+//                 A = Display value as attention = .d_s_a.
+//                 b = Display name as bold = .d_s_b.
+//                 B = Display value as bold = .d_s_b.
+//                 c = Display value as in color in hex.
+//                 d = Force display ignoring DEBUG status. Does not allow 'l' option
+//                 e = Display name as error = .d_s_e.
+//                 E = Display value as error = .d_s_e.
+//                 f = Display name as false = .d_s_vf.
+//                 F = Display value as false = .d_s_vf.
+//                 h = Do not make value htmlSafe().
+//                 i = Display name as info = .d_s_i.
+//                 I = Display value as info = .d_s_i.
+//                 k = Do not ksorti arrays.
+//                 l = Do not show calling filename and line.
+//                 n = Do not show the variable name.
+//                 p = Show passwords. Othwewise keys with 'password' or 'pw' in the key name are replaced with ********.
+//                 q = Display value as query = .d_s_q.
+//                 r = Display the output in TRACKing. Use with - to TRACK only.
+//                 t = Display name as true = .d_s_vt.
+//                 T = Display value as true = .d_s_vt.
+//                 v = Do not show the variable value.
+//                 w = Display name or line as warn = .d_s_w.
+//                 W = Display value as warn = .d_s_w.
+//    $backtrace = Calling file/function backtrace. Default is calling file/function.
+// $forceDisplay = Display output no matter the $DEBUG setting. Default is false.
+// Examples: '/p' Show a br before output, show passwords, and show calling filename and line.
+//           'ef' Show varName using class="d_s_e" without showing calling filename and line.
+function d_Var($varName, $var='', $flagList='', $backtrace=false, $forceDisplay=false) {
+	/** /
+	if ( $forceDisplay ) {
+		d_Var("\$GLOBALS['_DEBUG']['page']['code']",$GLOBALS['_DEBUG']['page']['code'],'d');
+	}
+	/**/
+	#d_Var("\$GLOBALS['_DEBUG']['page']['code']",$GLOBALS['_DEBUG']['page']['code'],'d');
+	if ( $GLOBALS['_DEBUG']['page']['code'] || $_SESSION['DEBUG']['codeSite'] || $forceDisplay || strpos($flagList,'C') !== false || stripos($flagList,'d') !== false ) {
+		#if ( isset($GLOBALS['test_d_Var']) ) echo __LINE__." d_Var(\$varName='".$varName."', \$var, \$flagList='".$flagList."')<br>";
+		#if ( $GLOBALS['_DEBUG']['page']['code']) { echo "\$GLOBALS['_DEBUG']['page']['code'] is true<br>\n"; } else { echo "\$GLOBALS['_DEBUG']['page']['code'] is false<br>\n"; };
+		#if ( $_SESSION['DEBUG']['codeSite']) { echo "\$_SESSION['DEBUG']['codeSite'] is true<br>\n"; } else { echo "\$_SESSION['DEBUG']['codeSite'] is false<br>\n"; };
+	/** /
+	if ( $varName == '$id' ) {
+		var_dump($varName);
+		var_dump($varArray);
+	}
+	/**/
+		$flag = array();
+		if ( !$backtrace ) $backtrace = debug_backtrace();
+		#echo "\$flagList == [".$flagList."] Called from ".$backtrace[0]['file'].':'.$backtrace[0]['line']."<br>\n";
+		$output = '';
+		// Parse varDisplay.
+		#$flag = array();
+		// " = Do not show string variable value's within single quotes.
+		if ( stripos($flagList,'"') !== false ) { $flag['"'] = '"'; $flag['_q'] = ""; } else { $flag['"'] = ''; $flag['_q'] = "'"; }
+		// + = Show array or query in expanded view.
+		if ( stripos($flagList,'+') !== false ) { $flag['+'] = '+'; $flag['_p'] = 'd_s_h d_s_l'; $flag['_p_'] = 'd_s_l'; } else { $flag['+'] = ''; $flag['_p'] = 'd_s_l'; $flag['_p_'] = 'd_s_h d_s_l'; }
+		// - = Do not display output, just return it.
+		$flag['-'] = (stripos($flagList,"-") !== false ? '-' : false);
+		##// . = Do not display the first array name (used by d_DivVar).
+		##if ( stripos($flagList,'.') !== false ) { $flag['.'] = '.'; $flag['_.'] = true; } else { $flag['.'] = ''; $flag['_.'] = false; }
+		// / = Show <br> tag before output.
+		#if ( stripos($flagList,'/') !== false ) { $flag['/'] = '/'; $flag['_b'] = "<br>\n"; } else { $flag['/'] = ''; $flag['_b'] = "\n"; }
+		if ( stripos($flagList,'/') !== false ) { $flag['/'] = '/'; $flag['_b'] = "<br>"; } else { $flag['/'] = ''; $flag['_b'] = ""; }
+		// c = Display value as a color in hex.
+		$flag['c'] = (strpos($flagList,'c') !== false ? 'c' : false); if ( $flag['c'] ) $flagList .= 'h';
+		$flag['C'] = (strpos($flagList,'C') !== false ? 'C' : false); if ( $flag['C'] ) $flagList .= 'd';
+		// d = Force display ignoring DEBUG status.
+		$flag['d'] = (stripos($flagList,'d') !== false ? 'd' : false); if ( $flag['d'] ) $forceDisplay = true;
+		if ( false && isset($GLOBALS['_PAGE']['pageHeaderLoaded']) ) {
+			echo "\$flagList = ".$flagList.':'.__LINE__.' <span class="d_s_fl">'.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].'</span>'."<br>\n";
+			echo "\$flag['d'] = ".$flag['d'].':'.__LINE__."<br>\n";
+			echo "\$forceDisplay = "; if ( $forceDisplay ) { echo '<span class="d_s_vt">true</span>'; } else { echo '<span class="d_s_vf">false</span>'; } echo ':'.__LINE__."<br>\n";
+		}
+		// f = Do not show calling filename and line.
+		$flag['l'] = (stripos($flagList,'l') !== false && !$flag['d'] ? '' : ' <span class="d_s_fl">'.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].'</span> <span class="d_s_fp">('.$backtrace['0']['file'].')</span>');
+		// h = Do not make value htmlSafe().
+		#echo __LINE__.': '.$flagList."<br>\n";
+		$flag['h'] = (stripos($flagList,'h') !== false ? 'h' : false);
+		#echo __LINE__.': '; $flag['h']; echo "<br>\n";
+		#echo __LINE__.': '; print_r($flag); echo "<br>\n";
+		// k = Do not ksorti arrays.
+		$flag['k'] = (stripos($flagList,'k') !== false ? 'k' : false);
+		// t = Do not show the line but add <li></li> tags and add it to the TRACKing data.
+		if ( stripos($flagList,'r') !== false ) { $flag['r'] = 'r'; $flag['_d'] = ''; $flag['_d_'] = ''; } else { $flag['r'] = ''; $flag['_d'] = d__lb().'<div class="d_s_l">'; $flag['_d_'] = d__lb()."</div>"; }
+		// p = Show passwords. Othwewise keys with 'password' or 'pw' in the key name are replaced with ********.
+		$flag['p'] = (stripos($flagList,'p') !== false ? 'p' : false);
+		// Setup part of the name class. The rest will be setup based on resources or arrays.
+		// Setup the name class.
+		$flag['_np'] = '';
+		if ( strpos($flagList,'n') !== false ) {
+			$flag['_np'] = ' d_s_h';  // Do not show the variable name = .d_s_h.
+		} elseif ( strpos($flagList,'e') !== false ) {
+			$flag['_np'] = 'd_s_e'; // Display value as error = .d_s_e.
+		} elseif ( strpos($flagList,'w') !== false ) {
+			$flag['_np'] = 'd_s_w'; // Display value as warn = .d_s_w.
+		} elseif ( strpos($flagList,'a') !== false ) {
+			$flag['_np'] = 'd_s_a'; // Display value as attention = .d_s_a.
+		} elseif ( strpos($flagList,'i') !== false ) {
+			$flag['_np'] = 'd_s_i'; // Display value as info = .d_s_i.
+		} elseif ( strpos($flagList,'f') !== false ) {
+			$flag['_np'] = 'd_s_vf'; // Display value as false = .d_s_vf.
+		} elseif ( strpos($flagList,'r') !== false ) {
+			$flag['_np'] = 'd_s_vt'; // Display value as true = .d_s_vt.
+		}
+		if ( stripos($flagList,'n') === false && strpos($flagList,'b') !== false ) $flag['_np'] .= ' d_s_b'; // v = Display the name as bold = .d_s_b.
+		// Setup the value class.
+		if ( stripos($flagList,'v') !== false ) {
+			$flag['_v'] = ' d_s_h'; // Do not show the variable value = .d_s_h.
+		} elseif ( strpos($flagList,'E') !== false ) {
+			$flag['_v'] = 'd_s_e'; // Display value as error = .d_s_e.
+		} elseif ( strpos($flagList,'W') !== false ) {
+			$flag['_v'] = 'd_s_w'; // Display value as warn = .d_s_w.
+		} elseif ( strpos($flagList,'A') !== false ) {
+			$flag['_v'] = 'd_s_a'; // Display value as attention = .d_s_a.
+		} elseif ( strpos($flagList,'I') !== false ) {
+			$flag['_v'] = 'd_s_i'; // Display value as info = .d_s_i.
+		} elseif ( strpos($flagList,'F') !== false ) {
+			$flag['_v'] = 'd_s_vf'; // Display value as false = .d_s_vf.
+		} elseif ( strpos($flagList,'T') !== false ) {
+			$flag['_v'] = 'd_s_vt'; // Display value as true = .d_s_vt.
+		} else {
+			$flag['_v'] = 'd_s_d'; // Display value as data = .d_s_d. Default.
+		}
+		if ( stripos($flagList,'v') === false && strpos($flagList,'B') !== false ) $flag['_v'] .= ' d_s_b'; // v = Display the value as bold = .d_s_b.
+		if ( stripos($flagList,'v') === false && stripos($flagList,'q') !== false ) { $flag['_v'] .= ' d_s_q'; if ( !is_array($var) ) { $var = d__htmlspecialchars(rtrim(str_replace("\t","  ",$var)))."\n"; } }// Display value as query = .d_s_q.
+		$flag['_v'] = '<span class="'.trim($flag['_v']).'">';
+		$flag['_v_'] = '</span>';
+		if ( $flag['C'] ) { $flag['_d'] = ''; $flag['_d_'] = ''; $flag['l'] = ''; $flag['_v'] = ''; $flag['_v_'] = ''; }
+		// Setup the equals class.
+		if ( stripos($flagList,'n') !== false || stripos($flagList,'v') !== false ) {
+			$flag['_e'] = '<span class="d_s_h">'; // nv = Do not show the equals = .d_s_h.
+			$flag['_e_'] = '</span>';
+		} else {
+			$flag['_e'] = '';
+			$flag['_e_'] = '';
+		}
+		if ( !isset($flag['a']) ) $flag['a'] = '';
+		if ( !isset($flag['r']) ) $flag['r'] = '';
+		#echo __LINE__.': '.$varName.': '; print_r($flag); echo "<br>\n";
+		// Add newline.
+		$output .= d__lb().$flag['_b'].d__le(); 
+		if ( !is_resource($var) ) {
+			// Not resource.
+			if ( !is_array($var) && !is_object($var) ) {
+				// Not array or object.
+				if ( $flag['c'] ) $var = d__var_color($var, $flag);
+				$output .= d__lb().$flag['_d'].d__var_line($varName,$var,$flag).d__le();
+			} else {
+				// Is array or object.
+				$flag['a'] = 'd_s_an';
+				$divId = str_replace(array("$",":"," ","[","]","/","\\","'"),array("","","_","_","_","_","_",""),strip_tags($varName)).'_'.d__uuid(); // Strip any $, ', [ or ] from the varName.
+				if ( count($var) ) {
+					$output .= d__lb().d__shDivBegin($varName,$var,$flag).d__le();
+					$flag['_d_'] = '</div>'.d__shDivEnd(__LINE__)."\n";#.'ON LINE:'.__LINE__;
+				} else {
+					$output .= d__lb().'<div class="d_s_i d_s_l">'.''.d__var_name_class($varName,$flag).' <span class="d_s_r">(no elements)</span>'.$flag['l'].d__le();
+					$flag['_d_'] = '</div>'."\n";
+				}
+				$flag['_b'] = '';
+				$flag['l'] = '';
+				$flag['_.'] = false;
+				#$output .= d__lb().'d__array call '.$varName.'<pre>'.print_r($var,true).'</pre>'.d__le(); // DEBUG d_Var.
+				if ( is_array($var) ) {
+					$output .= d__lb().d__array($varName, $var, $flag).d__le();
+				} elseif ( is_object($var) && get_class($var) == 'mysqli_result' ) {
+					$varResult = mysqli_fetch_all($var);
+					$output .= d__lb().d__array($varName, $var, $flag).d__le();
+					#$output .= d__lb().d__object_mysqli_result($varName, $var, $flag).d__le();
+				} else {
+					$output .= ' is object class '.get_class($var).'.';
+				}
+				/** /
+				?><pre><? echo 'is_array($var)='.is_array($var);?></pre><?
+				?><pre><? echo 'is_object($var)='.is_object($var);?></pre><?
+				/**/
+			}
+		} else {
+			// Is resource.
+			if ( $flag['r'] == '') $flag['r'] = ' class="d_s_r"';
+			//switch ( get_resource_type($var) ) {
+				//case 'mysql result':
+				#@d_Var('is_resource($var)',is_resource($var),'d');
+				#@d_Var('get_resource_type($var)',get_resource_type($var),'d');
+				#@d_Var('is_object($var)',is_object($var),'d');
+				#@d_Var('get_class($var)',get_class($var),'d');
+			if ( ( is_resource($var) && get_resource_type($var) == 'mysql result' ) || ( is_object($var) && get_class($var) == 'mysqli' ) || ( is_resource($var) && get_resource_type($var) == 'pgsql result' ) ) { // Is this a database resource?
+				// Yes.
+					$flag['a'] = 'd_s_r';
+					$divId = str_replace(array("$",":"," ","[","]","/","\\","'"),array("","","_","_","_","_","_",""),strip_tags($varName)).'_'.d__uuid(); // Strip any $, ', [ or ] from the varName.
+					$num_rows = query__num_rows($var);
+					if ( $num_rows <> 1 ) {
+						$outputElementCount = d__lb().$num_rows.' rows'.d__le();
+					} else {
+						$outputElementCount = d__lb().'1 row'.d__le();
+					}
+					if ($num_rows) {
+						$output .= d__lb().d__shDivBegin($varName,$var,$flag).d__le();
+						$flag['_d_'] = '</div>'.d__shDivEnd(__LINE__)."\n";#.'ON LINE:'.__LINE__;
+					} else {
+						$output .= d__lb().'<div id="'.$divId.'_zero" class="d_s_l">'.''.d__var_name_class($varName,$flag).' <span class="d_s_r">(no results)</span>'.$flag['l'].d__le();
+						$flag['_d_'] = '</div>'."\n";
+					}
+					$flag['_b'] = '';
+					$flag['l'] = '';
+					$flag['_.'] = false;
+					if ($num_rows) {
+						query_seek($var, 0);
+						$row = query_row($var);
+						// Begin the table.
+						$output .= d__lb()."<table>\n  <tr>\n".d__le();
+						// Print the column names as table headers.
+						foreach($row as $key=>$value) {
+							$output .= d__lb()."    <th>$key</th>".d__le();
+						}
+						$output .= d__lb()."\n  </tr>\n".d__le();
+						// Loop through the table printing the field values in table cells.
+						query_seek($var, 0);
+						while ($row = query_row($var)) {
+							$output .= d__lb()."  <tr class=\"top\">\n".d__le();
+							foreach($row as $key=>$value) {
+								#echo __LINE__.': '; print_r($flag); echo "<br>\n";
+								$output .= d__lb()."    <td>".d__var_value($value,$flag['h'],$flag)."</td>".d__le();
+							}
+							$output .= d__lb()."\n  </tr>\n".d__le();
+						}
+						query_seek($var, 0);
+						// End the table.
+						$output .= d__lb()."</table>\n".d__le();
+					}
+				//break;
+				//default:
+			} else { // Is this a database resource?
+				// No.
+					$output .= d__lb()."<span".$flag['r'].">".d__htmlspecialchars($varName)."</span> is resource type ".get_resource_type($var)."\n".d__le();
+					$flag['l'] ='';
+					$flag['_d_'] ='';
+				//break;
+			} // Is this a database resource?
+		}
+		if ( strpos($flag['_v'],'d_s_q') === false ) {
+			$output .= d__lb().$flag['l'].$flag['_d_'].d__le();
+		}
+		if ( ( $GLOBALS['_DEBUG']['page']['code'] || $_SESSION['DEBUG']['codeSite'] || $forceDisplay ) && !$flag['-'] ) {
+			if ( !$flag['C'] ) {
+				echo $output."\n";
+			} else {
+				echo '<!-- '.$output.' -->';
+			}
+		} else {
+		}
+		if ( $flag['r'] ) {
+			if ( isset($_SESSION['TRACK']['data']) ) {
+				#echo "\$_SESSION['TRACK']['data']="; var_dump($_SESSION['TRACK']['data']);
+				#echo '$output='; var_dump($output);
+				if ( is_array($_SESSION['TRACK']['data']) ) $_SESSION['TRACK']['data'] = '';
+				$_SESSION['TRACK']['data'] .= '<li>'.$output."</li>\n";
+			} else {
+				echo d__lb().'<span class="d_s_e">$_SESSION[\'TRACK\'][\'data\'] is unset or NULL.</span>'."<br>\n".$output.d__le();
+			}
+		}
+		if ( !$flag['C'] ) {
+			return $output.__LINE__;
+		} else {
+			return '';
+		}
+	}
+}
+
+// t_Begin($codePage)
+// Begin tracking for this include file. Should be at the beginning of every .phpinc file.
+// $codePage = If true turn on code debugging for the page.
+function t_Begin($codePage=false) {
+  $backtrace = debug_backtrace(); // Get caller information.
+#d_Var("\$GLOBALS['_DEBUG']['code']['stack']",$GLOBALS['_DEBUG']['code']['stack'],'d');
+	// Push code on stack.
+	$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+	$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>basename($backtrace[0]['file']),'line'=>$backtrace[0]['line'],'set'=>$codePage);
+	array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+
+#	array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>basename($backtrace[0]['file']),'line'=>$backtrace[0]['line'],'set'=>$codePage)); // Push the caller page code.
+	if ( !isset($backtrace['2']) || !isset($backtrace['2']['function']) || $backtrace['2']['function'] == 'require' ) {
+		#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].' by '.basename($backtrace['1']['file']).':'.$backtrace['1']['line'].' in t_Begin():'.__LINE__." ['page']['code']=";
+		#if ( $GLOBALS['_DEBUG']['track']['code'][0]['set'] ) { echo '<span class="d_s_vt">true</span>'; } else { echo '<span class="d_s_vf">false</span>'; }
+		#echo "<br>\n";
+	} else {
+		#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].' required by '.$backtrace['2']['function'].'():'.$backtrace['1']['line'].' in t_Begin():'.__LINE__."<br>\n";
+	}
+	$GLOBALS['_DEBUG']['page']['code'] = false; // Turn off page code for this function.
+  $DEBUG_t_Begin = false;
+  // BEGIN t_Begin track calls.
+	if ( $GLOBALS['_DEBUG']['track']['caller'] ) {
+		if ( d_currentPageCode() ) { $pageCode = '<span class="d_s_vt">true</span>'; } else { $pageCode = '<span class="d_s_vf">false</span>'; }
+		$GLOBALS['_DEBUG']['track']['calls'][] = 'tB '.$backtrace[0]['file'].': '.$backtrace[0]['line'].': code='.$pageCode; // Remember the call.
+		array_unshift($GLOBALS['_DEBUG']['track']['stack'],$backtrace[0]['file']); // Prepend the call to the stack.
+	}
+  // END t_Begin track calls.
+	if ( $DEBUG_t_Begin ) {
+		$_SESSION['DEBUG']['footSite'] = true; // Turn on footer DEBUG.
+		$_SESSION['t_BeginLastFile'] = basename($backtrace['0']['file']);
+		$_SESSION['t_BeginLastLine'] = $backtrace['0']['line'];
+		echo '<div class="d_s_l">In t_Begin() ';
+		if ( d_currentPageCode() ) { echo "\$code page is <span class=\"d_s_vt\">true"; } else { echo "\$code page is <span class=\"d_s_vf\">false"; }
+		echo "</span> in call by ".$_SESSION['t_BeginLastFile'].':'.$_SESSION['t_BeginLastLine'].".</div>";
+	}
+	if ( $GLOBALS['TRACK'] ) {
+		if ( $DEBUG_t_Begin ) echo '<div class="d_s_l">$GLOBALS[\'TRACK\'] is <span class="d_s_vt">true</span> in t_Begin:'.__LINE__.'</div>';
+    #d_Status();
+    $GLOBALS['t_include'] = array(); // Store backtrace file and line.
+    $GLOBALS['t_include']['called'] = __FILE__;
+    $GLOBALS['t_include']['callerfile'] = $backtrace['1']['file'];
+    $GLOBALS['t_include']['callerline'] = $backtrace['1']['line'];
+    $GLOBALS['t_include']['calltype'] = $backtrace['1']['function'];
+    if ( isset($GLOBALS['_PAGE']['pageHeaderLoaded']) ) {
+			// Output BEGIN comment to page.
+			echo "\n";
+?>
+<!-- BEGIN "<?=str_replace(array("\\",$_SESSION['ROOT']['directory']),array("/",""),$backtrace['0']['file'])?>" -->
+<?	}
+    if ( isset($_SESSION['TRACK']['data']) ) {
+			// Display filename, line, show/hide divs, filepath, and included by.
+			if ( $DEBUG_t_Begin ) echo '<div class="d_s_l">$GLOBALS[\'TRACK\'][\'data\'] <span class="d_s_vt">is set</span> in t_Begin:'.__LINE__.'</div>';
+			$_SESSION['TRACK']['number']++;
+      $_SESSION['TRACK']['data'] .= t_Indent().'<li><b>'.basename($backtrace['0']['file']).'</b> :'.$backtrace['0']['line'].' <div id="TRACK_HIDE_'.$_SESSION['TRACK']['number'].'" class="d_s_il d_s_l"><a href="javascript: '."divShowInline('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divShow('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('TRACK_HIDE_".$_SESSION['TRACK']['number']."'".');" class="d_s_vt">Expand +</a></div><div id="TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l"><a href="javascript: '."divShowInline('TRACK_HIDE_".$_SESSION['TRACK']['number']."'); divHide('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'".');" class="d_s_w">Collapse -</a></div> <span class="d_s_fp">('.$backtrace['0']['file'].')</span> <span class="d_s_fi">(included by '.$backtrace['1']['file'].":".$backtrace['1']['line'].")</span>\n";
+      $_SESSION['TRACK']['indent'] += 1;
+      $_SESSION['TRACK']['ol'] += 1;
+			// Include show div.
+			$_SESSION['TRACK']['data'] .= '<div id="BEGIN_TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l">'."\n";
+				$_SESSION['TRACK']['data'] .= t_Indent().'<ol class="d_s_op">'."\n"; $_SESSION['TRACK']['indent'] += 1;
+		} else {
+			if ( $DEBUG_t_Begin ) echo '<div class="d_s_l">$GLOBALS[\'TRACK\'][\'data\'] <span class="d_s_vf">un-set</span> in t_Begin:'.__LINE__.'</div>';
+		}
+		#d_Status();
+  } else {
+		if ( $DEBUG_t_Begin ) echo '<div class="d_s_l">$GLOBALS[\'TRACK\'] is <span class="d_s_vf">false</span> in t_Begin:'.__LINE__.'</div>';
+	}
+	#d_Var('$backtrace',$backtrace,'d');
+	$GLOBALS['_DEBUG']['page']['code'] = d_currentPageCode(); // Set back to the caller code.
+	if ( $DEBUG_t_Begin ) {
+		echo '<div class="d_s_l">';
+		if ( $GLOBALS['_DEBUG']['page']['code'] ) {
+			echo "\$GLOBALS['_DEBUG']['page']['code'] reset to <span class=\"d_s_vt\">true</span></div>";
+		} else {
+			echo "\$GLOBALS['_DEBUG']['page']['code'] reset to <span class=\"d_s_vf\">false</span></div>";
+		}
+		echo "</div>";
+	}
+	#d_Var("d_currentPageCode()",d_currentPageCode(),'d');
+	#d_Var("count(\$GLOBALS['_DEBUG']['track']['code'])",count($GLOBALS['_DEBUG']['track']['code']),'d');
+	if ( d_currentPageCode() && count($GLOBALS['_DEBUG']['code']['stack']) > 2 ) {
+		?><div class="left"><br> <span class="d_s_a d_s_b"><?=basename($backtrace[0]['file'])?></span> <span class="d_s_fl"><?=$backtrace[1]['function']?> by <?=basename($backtrace[1]['file'])?>:<?=$backtrace[1]['line']?></span> <span class="d_s_fp"><?=$backtrace[1]['file']?></span></div><?
+		d_DivBegin(basename($backtrace[0]['file'])); // Output expand div.
+	}
+}
+
+// t_End($backtrace, $file, $line)
+// End tracking for this include file. Should be at the end of every .phpinc file.
+// $backtrace = Preset backtrace.  Used by pageFooter_debug.phpinc.
+function t_End($backtrace=false, $tEfile='', $tEline='') {
+	if ( !$backtrace ) $backtrace = debug_backtrace(); // Get caller information.
+	#if ( $tEfile != '' || $tEline != '' && count($GLOBALS['_DEBUG']['div']['stack']) ) echo "t_End($tEfile, $tEline) ".count($GLOBALS['_DEBUG']['div']['stack'])."<br>\n";
+	$GLOBALS['_DEBUG']['page']['code'] = false; // Turn off page code for this function.
+  $DEBUG_t_End = false;
+  // BEGIN t_End track calls.
+	if ( $GLOBALS['_DEBUG']['track']['caller'] ) {
+		if ( d_currentPageCode() ) { $pageCode = '<span class="d_s_vt">true</span>'; } else { $pageCode = '<span class="d_s_vf">false</span>'; }
+		$GLOBALS['_DEBUG']['track']['calls'][] = 'tE '.$backtrace[0]['file'].': '.$backtrace[0]['line'].': code='.$pageCode; // Remember the call.
+		if ( isset($GLOBALS['_DEBUG']['track']['stack'][0]) && $GLOBALS['_DEBUG']['track']['stack'][0] != $backtrace[0]['file'] ) {
+			d_Line('t_End call out of sequence.','de');
+			d_Var("\$GLOBALS['_DEBUG']['track']",$GLOBALS['_DEBUG']['track'],'deh');
+			d_Var('$backtrace',$backtrace,'de');
+		}
+	}
+  // END t_End track calls.
+	if ( $DEBUG_t_End ) {
+		$_SESSION['t_BeginLastFile'] = basename($backtrace['0']['file']);
+		$_SESSION['t_BeginLastLine'] = $backtrace['0']['line'];
+		echo '<div class="d_s_l">In t_End() '."\$GLOBALS['_DEBUG']['page']['code'] was ";
+		if ( d_currentPageCode() ) { echo "<span class=\"d_s_vt\">true"; } else { echo "<span class=\"d_s_vf\">false"; }
+		echo "</span> in call by ".$_SESSION['t_BeginLastFile'].':'.$_SESSION['t_BeginLastLine'].".</div>";
+	}
+  if ( $GLOBALS['TRACK'] ) {
+    if ( !$backtrace ) $backtrace = debug_backtrace(); // Get caller information.
+    if ( $GLOBALS['_DEBUG']['page']['code'] ) {
+      $_SESSION['t_BeginLastFile'] = basename($backtrace['0']['file']);
+      $_SESSION['t_BeginLastLine'] = $backtrace['0']['line'];
+    }
+    if ( isset($GLOBALS['_PAGE']['pageHeaderLoaded']) ) {
+			// Output END comment to page.
+			echo "\n";
+?>
+<!-- END "<?=str_replace(array("\\",$_SESSION['ROOT']['directory']),array("/",""),$backtrace['0']['file'])?>" -->
+<?	}
+    if ( isset($_SESSION['TRACK']['data']) ) {
+      $_SESSION['TRACK']['indent']--;
+      $_SESSION['TRACK']['ol']--;
+      $_SESSION['TRACK']['data'] .= t_Indent()."</ol> <!-- ".$_SESSION['TRACK']['number']."-->\n";
+      $_SESSION['TRACK']['data'] .= t_Indent().'End '.basename($backtrace['0']['file']).':'.$backtrace['0']['line']."\n";
+			$_SESSION['TRACK']['data'] .= t_Indent()."</div><!-- END_TRACK_SHOW_".$_SESSION['TRACK']['number']." -->";
+      $_SESSION['TRACK']['indent']--;
+      $_SESSION['TRACK']['data'] .= t_Indent()."</li>\n";
+    }
+  }
+	#$pop = count($GLOBALS['_DEBUG']['track']['code']);
+	#$GLOBALS['_DEBUG']['Before_pop'] = $GLOBALS['_DEBUG']['track']['code'][0];
+	#d_Var("Before shift \$GLOBALS['_DEBUG']['track']['code'][0]",$GLOBALS['_DEBUG']['track']['code'][0],'d+');
+	// Pop code from stack.
+	if ( d_currentPageCode() ) d_DivEnd($tEfile,$tEline);
+	$pageCodeIndex = array_shift($GLOBALS['_DEBUG']['code']['stack']);
+	$GLOBALS['_DEBUG']['page']['code'] = d_currentPageCode();//$GLOBALS['_DEBUG']['code']['save'][$pageCodeIndex]['set'];
+
+#	$shift = array_shift($GLOBALS['_DEBUG']['track']['code']); // Pop the current page code.
+#	$GLOBALS['_DEBUG']['page']['code'] = d_currentPageCode();
+	#pop##pushpop#echo str_repeat('&nbsp; &nbsp;',$pop).'shift file='.$shift['file'].' line='.$shift['line'].' set='.setValue($shift['set']).':'.__LINE__."<br>\n";
+	#pop##pushpop#echo str_repeat('&nbsp; &nbsp;',$pop).'pop &nbsp; cp #'.$pop.' '.basename($backtrace['0']['file']).':'. $backtrace['0']['line'].' in t_End():'.__LINE__."<br>\n";
+  #$GLOBALS['_DEBUG']['page']['code'] = $GLOBALS['_DEBUG']['track']['code'][0]['set']; // Set to the caller page code
+	#d_Var("\$GLOBALS['_DEBUG']['track']['code'][0]['set']",$GLOBALS['_DEBUG']['track']['code'][0]['set'],'d+');
+	#d_Var("\$GLOBALS['_DEBUG']['page']['code']",$GLOBALS['_DEBUG']['page']['code'],'d');
+}
+
+function setValue($set) {
+	if ( $set ) { return '<span class="d_s_vt">true</span>'; } else { return '<span class="d_s_vf">false</span>'; }
+}
+
+// t_Func($funcResult, $backtrace)
+// Track a function and return value. Call just before the return statement.
+// $funcResult = The function result.
+//  $backtrace = Calling file/function backtrace. Default is calling file/function.
+function t_Func($funcResult, $backtrace=false) {
+	#$GLOBALS['_DEBUG']['page']['code'] = false; // Turn off page code for this function.
+	if ( $GLOBALS['TRACK'] ) {
+		if ( isset($_SESSION['TRACK']['data']) ) {
+			if ( !$backtrace ) $backtrace = debug_backtrace(); // Get caller information.
+			if ( isset($GLOBALS['backtraceShow']) && $GLOBALS['backtraceShow'] ) {
+				d_Var('count($backtrace)',count($backtrace));
+				d_Var('$backtrace',$backtrace);
+			}
+			for ($backtrace_index=0; $backtrace_index<count($backtrace); $backtrace_index++) {
+				if ( isset($backtrace[$backtrace_index]['file']) && isset($backtrace[$backtrace_index]['function']) && $backtrace[$backtrace_index]['function'] != 't_Func' ) break;
+			}
+			$_SESSION['TRACK']['data'] .= t_Indent()."<li><span class=\"d_s_f\">".$backtrace[$backtrace_index]['function']."(";
+			if ( $backtrace[$backtrace_index]['args'] ) {
+				foreach ($backtrace[$backtrace_index]['args'] as $var) {
+					$_SESSION['TRACK']['data'] .= d__var_value($var,'l').",";
+				}
+				$_SESSION['TRACK']['data'] = substr($_SESSION['TRACK']['data'],0,strlen($_SESSION['TRACK']['data'])-1); // Remove excess comma.
+			}
+			$_SESSION['TRACK']['data'] .= ") = </span>".d__var_value($funcResult,'l')."<span class=\"d_s_fl\">: ".basename($backtrace[$backtrace_index]['file']).":".$backtrace[$backtrace_index]['line'].' <span class="d_s_fp"> ('.$backtrace[$backtrace_index]['file'].")</span></span></li>\n";
+		}
+	}
+}
+
+// t_FuncBegin($codePage)
+// Begin tracking a function call. This works like t_Begin() but for functions.
+function t_FuncBegin($codePage=false) {
+	$backtrace = debug_backtrace(); // Get caller information.
+	// Push code on stack.
+	$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+	$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>$backtrace[1]['function'].'() '.basename($backtrace[1]['file']),'line'=>$backtrace[1]['line'],'set'=>$codePage);
+	array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+
+#	array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>$backtrace[1]['function'].'() '.basename($backtrace[1]['file']),'line'=>$backtrace[1]['line'],'set'=>$codePage)); // Push the caller page code.
+	#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cpf #'.count($GLOBALS['_DEBUG']['track']['code']).' '.$backtrace['1']['function'].'():'.$backtrace['0']['line'].' called by '.basename($backtrace['1']['file']).':'.$backtrace['1']['line'].' in t_Func():'.__LINE__." ['page']['code']=";
+	#pop##pushpop#if ( $GLOBALS['_DEBUG']['track']['code'][0]['set'] ) { echo '<span class="d_s_vt">true</span>'; } else { echo '<span class="d_s_vf">false</span>'; }
+	#pop##pushpop#echo "<br>\n";
+	$GLOBALS['_DEBUG']['page']['code'] = false; // Turn off page code for this function.
+  if ( $GLOBALS['TRACK'] ) {
+		// BEGIN t_FuncBegin track calls.
+		if ( $GLOBALS['_DEBUG']['track']['caller'] ) {
+			if ( d_currentPageCode() ) { $pageCode = '<span class="d_s_vt">true</span>'; } else { $pageCode = '<span class="d_s_vf">false</span>'; }
+			$GLOBALS['_DEBUG']['track']['calls'][] = 'fB '.$backtrace[1]['function'].': '.$backtrace[1]['file'].': '.$backtrace[1]['line'].': code='.$pageCode; // Remember the call.
+			array_unshift($GLOBALS['_DEBUG']['track']['stack'],$backtrace[1]['function'].':'.$backtrace[1]['file'].':'.$backtrace[1]['line']); // Prepend the call to the stack.
+		}
+		// END t_FuncBegin track calls.
+    $_SESSION['TRACK']['indent'] += 1;
+		#$OutputCodePage = '<div class="left"><span class="d_s_b d_s_f">'.$backtrace[1]['function'].'(</span>';
+    $_SESSION['TRACK']['data'] .= t_Indent().'<li><span class="d_s_b d_s_f">'.$backtrace[1]['function'].'(</span>';
+    foreach ($backtrace[1]['args'] as $var) {
+      #$OutputCodePage .= d__var_value($var,'l').",";
+			$_SESSION['TRACK']['data'] .= d__var_value($var,'l').",";
+    }
+		#if ( substr($OutputCodePage,-1) == ',') $OutputCodePage = substr($OutputCodePage,0,-1); // Remove excess comma.
+    if ( substr($_SESSION['TRACK']['data'],-1) == ',') $_SESSION['TRACK']['data'] = substr($_SESSION['TRACK']['data'],0,-1); // Remove excess comma.
+    #$OutputCodePage .= '<span class="d_s_b d_s_f">)</span>';
+		$_SESSION['TRACK']['data'] .= '<span class="d_s_b d_s_f">)</span> <span class="d_s_fl">'.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].' <span class="d_s_fp">'.$backtrace['0']['file'].'</span></span>'."\n";
+    if ( $backtrace['1'] && $backtrace['1']['file'] ) {
+      #$OutputCodePage .= ' <span class="d_s_fc">(called by '.$backtrace['1']['file'].':'.$backtrace['1']['line'].'</span>)'."\n";
+			$_SESSION['TRACK']['data'] .= ' <span class="d_s_fc">(called by '.$backtrace['1']['file'].':'.$backtrace['1']['line'].'</span>)'."\n";
+    }
+    $_SESSION['TRACK']['data'] .= '<ol class="d_s_op">'."\n";
+    $_SESSION['TRACK']['indent'] += 1;
+    $_SESSION['TRACK']['ol'] += 1;
+    if ( !isset($GLOBALS['_DEBUG']['track']['Function']) ) $GLOBALS['_DEBUG']['track']['Function'] = array();
+		#echo $OutputCodePage."</div>\n";
+  }
+	$GLOBALS['_DEBUG']['page']['code'] = d_currentPageCode(); // Set back to the caller code.
+}
+
+// t_FuncEnd($backtrace)
+// End tracking a function call. This works like t_End() but for functions.
+// $backtrace = Preset backtrace.  Used by pageFooter_debug.phpinc.
+function t_FuncEnd($backtrace=false,$line='') {
+	if ( !$backtrace ) {
+		$backtrace = debug_backtrace(); // Get caller information.
+	} else {
+		$backtrace[1] = $backtrace; // Use passed backtrace.
+	}
+	$GLOBALS['_DEBUG']['page']['code'] = false; // Turn off page code for this function.
+  if ( $line != '' ) $line = 'Called from line '.$line.' ';
+	if ( $GLOBALS['TRACK'] ) {
+		// BEGIN t_FuncEnd track calls.
+		#if ( !$backtrace ) $backtrace = debug_backtrace(); // Get caller information.
+		/** /
+		if ( stripos($backtrace[0]['file'],'function') === false ) {
+			echo "stripos(\$backtrace[0]['file'],'function') === <span class=\"d_s_vf\">false</span><br>\n";
+		} else {
+			echo "stripos(\$backtrace[0]['file'],'function') === <span class=\"d_s_vt\">found</span><br>\n";
+		}
+		/**/
+		//if ( stripos($backtrace[0]['file'],'function') === false ) { echo "\$backtrace=<pre>"; print_r($backtrace); echo "</pre>\n"; }
+		$codePage = d_currentPageCode(); // Return $GLOBALS['_DEBUG']['track']['code'] state.
+		//if ( stripos($backtrace[0]['file'],'function') === false ) d_Var('$codePage',$codePage,'d');
+		if ( $GLOBALS['_DEBUG']['track']['caller'] ) {
+			if ( $codePage ) { $pageCode = '<span class="d_s_vt">true</span>'; } else { $pageCode = '<span class="d_s_vf">false</span>'; }
+			$GLOBALS['_DEBUG']['track']['calls'][] = 'fE '.$backtrace[1]['function'].': '.$backtrace[1]['file'].': '.$backtrace[1]['line'].': code='.$pageCode; // Remember the call.
+			if ( $GLOBALS['_DEBUG']['track']['stack'][0] != $backtrace[1]['function'].':'.$backtrace[1]['file'].':'.$backtrace[1]['line'] ) {
+				d_Line('t_End call out of sequence.','de');
+				d_Var("\$GLOBALS['_DEBUG']['track']",$GLOBALS['_DEBUG']['track'],'deh');
+				d_Var('$backtrace',$backtrace,'de');
+			}
+			array_shift($GLOBALS['_DEBUG']['track']['stack']); // Remove the call from the stack.
+		}
+		// END t_FuncEnd track calls.
+    $_SESSION['TRACK']['indent']--;
+    $_SESSION['TRACK']['data'] .= t_Indent()."</ol>\n ".$line.'<span class="d_s_f">End '.$backtrace['1']['function'].'()</span> <span class="d_s_fl">'.basename($backtrace['1']['file']).':'.$backtrace['1']['line'].' <span class="d_s_fp">'.$backtrace['1']['file'].'</span></span></li>';
+    $_SESSION['TRACK']['indent']--;
+    $_SESSION['TRACK']['ol']--;
+		$FunctionCodePage = array_shift($GLOBALS['_DEBUG']['track']['Function']); // Return $GLOBALS['_DEBUG']['track']['Function'] state.
+		#d_Var("\$GLOBALS['_DEBUG']['page']['code']",$GLOBALS['_DEBUG']['page']['code'],'d');
+		#d_Var('$code Page',$code Page,'d');
+		#if ( $GLOBALS['_DEBUG']['page']['code'] ) echo '<div class="d_s_f d_s_l">End '.$FunctionCodePage."()</div>\n";
+		if ( !is_null($codePage) ) {
+			$GLOBALS['_DEBUG']['page']['code'] = $codePage;
+		}
+  }
+
+	// Pop code from stack.
+	#	$pop = count($GLOBALS['_DEBUG']['track']['code']);
+	#	$GLOBALS['_DEBUG']['Before_pop'] = $GLOBALS['_DEBUG']['track']['code'][0];
+	#	$GLOBALS['_DEBUG']['page']['code'] = $GLOBALS['_DEBUG']['track']['code'][0]['set'];
+	$pageCodeIndex = array_shift($GLOBALS['_DEBUG']['code']['stack']);
+	# pop##pushpop#echo str_repeat('&nbsp; &nbsp;',$pop).'shift file='.$shift['file'].' line='.$shift['line'].' set='.setValue($shift['set']).':'.__LINE__."<br>\n";
+	# pop##pushpop#echo str_repeat('&nbsp; &nbsp;',$pop).'pop &nbsp; cpf #'.$pop.' '. $backtrace['1']['function'].'():'. $backtrace['0']['line'].' in  t_FuncEnd():'.__LINE__.''."<br>\n";
+	$GLOBALS['_DEBUG']['page']['code'] = d_currentPageCode();//$GLOBALS['_DEBUG']['code']['save'][$pageCodeIndex]['set'];
+}
+
+// t_Line($lineText, $flagList, $backtrace)
+// Track the $lineText as well as the current filename and line.
+//  $lineText = The text to display.
+//  $flagList = A string with display flags. See d_Var().
+// $backtrace = Preset backtrace.  Used by pageFooter_debug.phpinc.
+function t_Line($lineText='', $flagList='', $backtrace=false) {
+  if ( $GLOBALS['TRACK'] ) {
+    $OriginalCodePage = $GLOBALS['_DEBUG']['page']['code']; // Remember code page state in case function turns on DEBUG.
+    $GLOBALS['_DEBUG']['page']['code'] = false; // Turn on code page for this function.
+    if ( !$backtrace ) $backtrace = debug_backtrace(); // Get caller information.
+    d_Var('',$lineText,str_replace(array('a','b','e','i','w'),array('A','B','E','I','W'),$flagList).'-nr"',$backtrace); // Call d_Var with -nt (Do not display output, Do not show the variable name, Display the output in TRACKing)
+    $GLOBALS['_DEBUG']['page']['code'] = $OriginalCodePage; // Return to original code page state if function turned on DEBUG.
+  }
+}
+
+// t_V($fIndex, $flagList, $backtrace, $forceDisplay)
+// Performs t_Var() for $f array with array index [$fIndex].
+//       $fIndex = The $f array index.
+//     $flagList = A string with display flags. See d_Var().
+function t_V($fIndex=false, $flagList='') {
+  if ( $GLOBALS['TRACK'] ) {
+    $OriginalCodePage = $GLOBALS['_DEBUG']['page']['code']; // Remember code page state in case function turns on DEBUG.
+    $GLOBALS['_DEBUG']['page']['code'] = false; // Turn on code page for this function.
+    if ( $fIndex !== false ) {
+      if ( !is_numeric($fIndex) ) {
+        $varName = "\$f['$fIndex']";
+      } else {
+        $varName = "\$f[$fIndex]";
+      }
+      @d_Var($varName, $GLOBALS['f'][$fIndex].'-r', $flagList, debug_backtrace());
+    } else {
+      d_Var('$f', $GLOBALS['f'], $flagList.'-r', debug_backtrace());
+    }
+    $GLOBALS['_DEBUG']['page']['code'] = $OriginalCodePage; // Return to original code page state if function turned on DEBUG.
+	}
+}
+
+// t_Var($varName, $var, $flagList)
+// Track the value of a variable, array, or result with the calling file and line number.
+//  $varName = The name of the variable.
+// $varValue = The variable.
+// $flagList = A string with display flags. See d_Var().
+function t_Var($varName, $varValue, $flagList='') {
+  if ( $GLOBALS['TRACK'] ) {
+    $OriginalCodePage = $GLOBALS['_DEBUG']['page']['code']; // Remember code page state in case function turns on DEBUG.
+    $GLOBALS['_DEBUG']['page']['code'] = false; // Turn on code page for this function.
+    d_Var($varName,$varValue,$flagList.'-r',debug_backtrace()); // Call d_Var with -r (Do not display output, Display the output in TRACKing)
+    $GLOBALS['_DEBUG']['page']['code'] = $OriginalCodePage; // Return to original code page state if function turned on DEBUG.
+  }
+}
+
+require('common/functions_debug_sub.phpinc');
+
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

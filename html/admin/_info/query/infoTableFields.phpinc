@@ -1,0 +1,29 @@
+<?
+// infoTableFields.phpinc
+// Get table field info if we dont already have it.
+t_Begin(); // Begin TRACKing included file.
+if ( !isset($fieldArray) || ( isset($forceQuery) && $forceQuery ) ) {
+  $fieldQuery="SHOW COLUMNS FROM `".$f['table']."`";
+  $fieldResult = query_do($fieldQuery,$f['database']);
+  $fieldCount = $GLOBALS['_QUERY']['count'];
+  if ( $fieldCount && !isset($fieldArray) ) {
+		#d_Line('$fieldArray = array()','oe',false,true);
+    $fieldArray = array();
+    $tablePrimaryKey = array();
+    #d_Var('$fieldResult',$fieldResult,'k');
+    query_seek($fieldResult, 0);
+    while ( $fieldInfo = query_row($fieldResult) ) {
+      if ( $fieldInfo['Key'] == 'PRI' ) $tablePrimaryKey[] = $fieldInfo['Field']; // Set the Id fields.
+      $fieldArray[$fieldInfo['Field']] = array();
+      $fieldArray[$fieldInfo['Field']]['Type'] = $fieldInfo['Type']; // Keep Type.
+      $fieldArray[$fieldInfo['Field']]['Null'] = $fieldInfo['Null']; // Keep Null.
+      $fieldArray[$fieldInfo['Field']]['Key'] = $fieldInfo['Key']; // Keep Key.
+      $fieldArray[$fieldInfo['Field']]['Default'] = $fieldInfo['Default']; // Keep Default.
+      $fieldArray[$fieldInfo['Field']]['Extra'] = $fieldInfo['Extra']; // Keep Extra.
+      formValue('',$fieldInfo['Field'].'_type','type');
+      if ( !$type ) $fieldArray[$fieldInfo['Field']]['type'] = 'use'; // Set to use in query.
+    } // while ( $fieldInfo = query_row($fieldResult) )
+  } // if ( $fieldCount )
+} // if ( !isset($fieldArray) )
+t_End(); // End TRACKing included file.
+?>

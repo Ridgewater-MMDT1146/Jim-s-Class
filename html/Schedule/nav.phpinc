@@ -1,0 +1,38 @@
+<?
+// nav.phpinc
+// Schedule nav.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// include_filename_content_goes_here.
+?>
+<ul class="nav nav-sidebar">
+	<li><a href="?task=NewSchedule" role="button" class="btn btn-xs">New schedule</a></li>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule/Building" role="button" class="btn btn-xs">Building</a></li>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule/Class" role="button" class="btn btn-xs">Class</a></li>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule/Course" role="button" class="btn btn-xs">Course</a></li>
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule/Department" role="button" class="btn btn-xs">Department</a></li>
+</ul>
+<ul class="nav nav-sidebar-second">
+	<li style="color:#D14719">Jim Martinson</li><!---->
+	<li style="color:#A1A140">Allen Benusa</li><!---->
+	<li style="color:#94704D">Rocky Hyberger</li><!---->
+	<li style="color:#949CB5">Amy Maher</li><!---->
+	<li style="color:#70AAAA">Sam Espana</li><!---->
+	<li style="color:#FF4D4D">Joyce Leske</li> <!---->
+	<li style="color:#CC7AA3">Jeff Polman</li><!---->
+</ul>
+<hr>
+<ul class="list-group">
+	<li class="list-group-item list-group-item-success">Jim Martinson</li> 
+	<li class="list-group-item list-group-item-info">Allen Benusa</li>
+	<li class="list-group-item list-group-item-warning">Rocky Hyberger</li>
+	<li class="list-group-item list-group-item-danger">Amy Maher</li>
+	<li class="list-group-item list-group-item-primary">Sam Espana</li>
+	<li class="list-group-item list-group-item-info">Joyce Leske</li>
+	<li class="list-group-item list-group-item-danger">Jeff Polman</li>
+</ul>
+<?
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

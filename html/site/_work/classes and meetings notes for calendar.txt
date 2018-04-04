@@ -1,0 +1,64 @@
+// displayCalandar()
+// Display the classes on the calendar.
+// ***** NEEDS TO DEAL WITH Days as these are an array for meetings.
+//       meetings[scId][m].count and meetings[scId][m].display need to also be arrays.
+
+var classes = new Object();
+	classes[3] = { courseId:3130, Section:41 };
+	classes[4] = { courseId:2827, Section:41 };
+
+var meetings = new Object();
+	meetings[3] = new Array();
+		meetings[3].push( { bTime:'13:30:00', eTime:'14:45:00', OnOff:'', Bldg:'', room:'327', days:[ 'M','W' ] } );
+	meetings[4] = new Array();
+		meetings[4].push( { bTime:'14:00:00', eTime:'15:30:00', OnOff:'', Bldg:'', room:'327', days:[ 'W','F' ] } );
+var calendar_dayview = 'Work week';
+var calendar_timebegin = 9.00;
+var calendar_timeend = 17.00;
+var calendar_timeincrement = 30;
+var calendar_incrementheight = 30;
+var days = 'MTWHF';
+
+
+<div id="calendar_class_3_M810" class="calendar_class">
+CST2146-41&nbsp;3cr
+&nbsp;327<br>
+1:30pm-2:45pm</div>
+<div id="calendar_class_3_W810" class="calendar_class">
+CST2146-41&nbsp;3cr
+&nbsp;327<br>
+1:30pm-2:45pm</div>
+<div id="calendar_class_4_W840" class="calendar_class">
+CST2643-41&nbsp;3cr
+&nbsp;327<br>
+2:00pm-3:30pm</div>
+<div id="calendar_class_4_F840" class="calendar_class">
+CST2643-41&nbsp;3cr
+&nbsp;327<br>
+2:00pm-3:30pm</div>
+
+$f['departmentId'] == 15 
+$f['form'] is NULL 
+$f['scheduleId'] == 1 
+$f['sessionId'] == 21 
+$f['subtask'] is NULL 
+$f['task'] is NULL 
+$f['uuid'] is NULL 
+
+
+if ( !f('campusId') ) $f['campusId'] = -1;
+if ( !f('buildingId') ) $f['buildingId'] = -1;
+f('courseId'); // Ensure 'courseId' exists.
+f('instructorId');
+if ( !f('roomId') ) $f['roomId'] = -1;
+f('scheduleclassId');
+f('scheduleId');
+f('scheduleclassSection');
+f('scheduleclassStartDate');
+f('scheduleclassEndDate');
+f('scheduleclassmeetingId');
+f('scheduleclassmeetingBeginTime');
+f('scheduleclassmeetingEndTime');
+if ( !f('weekdayIds') || !is_array($f['weekdayIds']) ) $f['weekdayIds'] = array();
+f('userFullname');
+/**/

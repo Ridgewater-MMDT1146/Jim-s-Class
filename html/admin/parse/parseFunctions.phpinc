@@ -1,0 +1,103 @@
+<?
+// parseFunctions.phpinc
+// include_purpose.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+$f_error = false;
+
+#$DEBUG_parse_functions = true;
+if ( !isset($DEBUG_parse_functions) ) $DEBUG_parse_functions = false;
+
+// function get_ClassLn()
+// Returns true if there is a new non-blank line in the file ($classLn_Array).
+// Sets:      $classLn = The class line.
+//           $classLnA = An array with the class line parsed into tokens (white space).
+//       $classLnAsize = The size of the $classLnA array.
+// Note: $classLnCount must contain the size of the $classLn_Array array.
+//             $f_error must be false.
+//                $line must contain the index into the $classLn_Array array.
+//          An $f_error will be set and the $state changed to 99 if the end of the $classLn_Array array is exceeded.
+function get_ClassLn() {
+	global $classLn_Array;
+	global $classLn;
+	global $classLnA;
+	global $classLnAsize;
+	global $classLnCount;
+	global $f_error;
+	global $line;
+	global $state;
+	global $get_ClassLn;
+	$blankLine = true;
+	while ( !$f_error && $blankLine ) {
+		$line++;
+		if ( $line < $classLnCount ) {
+			$classLn = rtrim($classLn_Array[$line]);
+			if ( trim($classLn) != '' ) {
+				$blankLine = false;
+				$classLnA = preg_split("/[\s]+/",trim($classLn));
+				$classLnAsize = count($classLnA);
+				$debug_backtrace = debug_backtrace(); $debug_file = basename($debug_backtrace['0']['file']); $debug_line = $debug_backtrace['0']['line'];
+				#if ( $state == 30 ) echo $line.': '.$classLn.' <span class="pv_fl">'.basename($debug_file).":".$debug_line."</span><br>\n";
+				#d_Var('$classLn',$classLn,'/d');
+				$get_ClassLn = true;
+				return $get_ClassLn;
+			}
+		} else {
+			#$f_error = 'Parse past end of DARS.<span class=\"pv_fl\"> '.basename(__FILE__).':'.__LINE__.'</span>';
+			set_state(99);
+			#$classLn_Array[$line] = false;
+			#$classLn = '';
+			#$classLnA = array();
+			#$classLnAsize = 0;
+			$get_ClassLn = false;
+			return $get_ClassLn;
+		}
+	}
+}
+
+// function set_state($value)
+// Sets $statePrevious to the current state.
+// Sets $state to $value.
+function set_state($value) {
+	global $state;
+	global $statePrevious;
+	$statePrevious = $state;
+	$state = $value;
+	return;
+}
+
+// function fix_date_year($date)
+// Fix date mm/dd/yy or mm/dd/yyyy to yyyy-mm-dd.
+// $date = A date in mm/dd/yy or mm/dd/yyyy format.
+function fix_date_year($date) {
+	#d_Var('$date',$date,'d');
+	$fix_date_year = explode('/',$date);
+	if ( strlen($fix_date_year[2]) == 2 ) {
+		// Two digit year. Convert to four digit year.
+		if ( $fix_date_year[2] > 80 ) {
+			$fix_date_year[2] = '19'.$fix_date_year[2];
+		} else {
+			$fix_date_year[2] = '20'.$fix_date_year[2];
+		}
+	}
+	$fix_date_year = $fix_date_year[2].'-'.$fix_date_year[0].'-'.$fix_date_year[1];
+	return $fix_date_year;
+}
+
+// function in_ClassLn($string)
+// Checks to see if the $string is in $classLn.
+// $string = The string to check for.
+function in_ClassLn($string) {
+	global $classLn;
+	if (strstr($classLn,$string)) { 
+		#d_Line('Found.','ad');
+		return true;
+	} else {
+		#d_Line('Not found.','ed');
+		return false;
+		}
+}
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

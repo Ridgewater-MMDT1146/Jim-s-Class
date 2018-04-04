@@ -1,0 +1,100 @@
+<?
+// group/groupForm.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+if (!isset($f['userpermissionId'])) formValue('userpermissionId');
+if ($f['userpermissionId'] == '') $f['userpermissionId'] = 0;
+if ($f['form'] != 'form_group') {
+  // form_group not called by itself. Preload data for form.
+  if ($f['userpermissionId']) {
+    // $f['userpermissionId'] set. This is an edit form. Load form_group data from database.
+    $query = "
+    SELECT * FROM `userpermission` WHERE userpermissionId = ".$f['userpermissionId']."
+    ";
+    $groupResult = query_do($query);
+    $groupCount = $GLOBALS['_QUERY']['count'];
+    if ($groupCount) {
+      // Load form_phonenumber data from data record.
+      $groupInfo = query_row($groupResult);
+      $f['userpermissionName'] = $groupInfo['userpermissionName'];
+      $f['groupDescription'] = $groupInfo['groupDescription'];
+    } else {
+      // There was no record for $f['userpermissionId']. This is an error.
+?>
+      <span class="bold error">ERROR!. No record for $f['userpermissionId']=<?=$f['userpermissionId']?> found.</span><br>
+      <span class="bold error">Please contact the site administrator<? if (isset($_SESSION['APP']['ADMIN']['email'])) { echo ' at '.$_SESSION['APP']['ADMIN']['email']; } else { echo '.'; } ?>.</span><br>
+<?  
+    }
+  } else {
+    // $f['userpermissionId'] is 0. This is an add form. Set form_group data to default values.
+      $f['userpermissionName'] = '';
+      $f['groupDescription'] = '';
+  }
+} else {
+  formValue('userpermissionId');
+  formValue('userpermissionName');
+  formValue('groupDescription');
+}
+pageHeader("Group administration");
+if ( $f['userpermissionName'] != 'Admin' ) { $adminDisabled = ''; } else { $adminDisabled = ' disabled'; }
+?>
+<p>
+<div id="container" style="border:1px solid red; display:table; margin:auto;">
+<div id="groupdiv" style="float:left">
+<fieldset><legend>Group</legend>
+<form name="form_group" id="form_group" action="<?=php_self()?>" method="post" enctype="multipart/form-data">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="form" value="form_group">
+<table>
+<input type="hidden" name="userpermissionId" id="userpermissionId" value="<?=htmlSafe($f['userpermissionId'])?>">
+<? if (isset($f['userpermissionName_Error'])) { ?>
+  <tr><td></td><td class="error"><?=$f['userpermissionName_Error']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Name:</td>
+    <td><input type="text" class="" name="userpermissionName" id="userpermissionName" value="<?=htmlSafe($f['userpermissionName'])?>"<?=$adminDisabled?>></td>
+  </tr>
+<? if (isset($f['groupDescription_Error'])) { ?>
+  <tr><td></td><td class="error"><?=$f['groupDescription_Error']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">Description:</td>
+    <td><input type="text" class="" name="groupDescription" id="groupDescription" value="<?=htmlSafe($f['groupDescription'])?>"></td>
+  </tr>
+  <tr><td class="center" colspan="2">
+<?
+if ($f['userpermissionId']) {
+?>
+    <input type="submit" name="task" value="Update group">
+    <input type="submit" name="task" value="Delete group"<?=$adminDisabled?>>
+        <br>
+<?
+} else {
+?>
+    <input type="submit" name="task" value="Add group">
+<?
+}
+if ($f['form'] == 'form_group') {
+?>
+    <input type="submit" name="task" value="Done">
+<?
+} else {
+?>
+    <input type="submit" name="task" value="Cancel">
+<?
+}
+?>
+  </tr>
+</table>
+</form>
+</fieldset>
+</div><!-- id=groupdiv -->
+<?
+if ($f['userpermissionId']) require('groupUserForm.phpinc');
+?>
+</div><!-- id="container" -->
+<?
+
+pageFooter();
+?>

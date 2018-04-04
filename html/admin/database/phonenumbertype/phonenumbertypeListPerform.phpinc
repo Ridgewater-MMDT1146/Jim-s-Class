@@ -1,0 +1,56 @@
+<?
+// admin/database/phonenumbertypeListPerform.phpinc
+// Process the phonenumbertype form.
+t_Begin(); // Begin TRACKing included file.
+
+// Process the phonenumbertype form.
+if ( $f['uuid'] != $_SESSION['uuid'] ) { // Page was not reloaded.
+  // Not a page reload.
+  foreach ( $f['phonenumbertype'] as $phonenumbertypeId => $temp ) {
+    // Is this an UPDATE or an INSERT?
+    if ( $phonenumbertypeId && isset($f['phonenumbertype'][$phonenumbertypeId]) ) {
+      // UPDATE phonenumbertype.
+      $f['ModifiedOn'] = currentDateTime();
+      $query = "
+          UPDATE `phonenumbertype`
+             SET phonenumbertypeName = '".query_safe($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName'])."'
+               , phonenumbertypeDescription = '".query_safe($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeDescription'])."'
+               , phonenumbertypeInactive = ".$f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive']."
+               , ModifiedOn = '".query_safe($f['ModifiedOn'])."'
+               , ModifiedBy = ".$_SESSION['user']['trueId']."
+           WHERE phonenumbertypeId = ".$phonenumbertypeId."
+      ";
+      $phonenumbertypeUpdate = query_do($query);
+      #d_Var('$query',$query,'q');
+      #d_Var('$phonenumbertypeUpdate',$phonenumbertypeUpdate);
+    } else {
+      // INSERT phonenumbertype.
+      $f['AddedOn'] = currentDateTime();
+      $query = "
+          INSERT INTO `phonenumbertype` (
+                 phonenumbertypeName
+               , phonenumbertypeDescription
+               , phonenumbertypeInactive
+               , AddedOn
+               , AddedBy
+          ) VALUES (
+                 '".query_safe($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeName'])."'
+               , '".query_safe($f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeDescription'])."'
+               , ".$f['phonenumbertype'][$phonenumbertypeId]['phonenumbertypeInactive']."
+               , '".query_safe($f['AddedOn'])."'
+               , ".$_SESSION['user']['trueId']."
+          )
+      ";
+      $phonenumbertypeInsert = query_do($query);
+      d_Var('$query',$query,'q');
+      d_Var('$phonenumbertypeInsert',$phonenumbertypeInsert);
+    }
+  }
+  $_SESSION['uuid'] = $f['uuid'];
+} else { // Page was not reloaded.
+  // Page was reloaded.
+} // Page was not reloaded.
+displayInfo('The phonenumbertypes have been updated.');
+
+t_End(); // End TRACKing included file.
+?>

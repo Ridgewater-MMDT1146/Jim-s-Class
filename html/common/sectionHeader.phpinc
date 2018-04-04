@@ -1,0 +1,17 @@
+<?
+// common/sectionHeader.phpinc
+// Begin section header.
+t_Begin(); // Begin TRACKing included file.
+if ( $sectionWidth ) $sectionWidth = ' style="width:'.$sectionWidth.'px;"';
+if ( !isset($GLOBALS['sectionHeaderCount']) ) $GLOBALS['sectionHeaderCount'] = 0;
+$GLOBALS['sectionHeaderCount']++;
+$GLOBALS['sectionFooterCount'] = $GLOBALS['sectionHeaderCount'];
+?>
+<div class="section" id="sectionId_<?=$GLOBALS['sectionHeaderCount']?>"<?=$sectionWidth?>><table class="section"><tr><td><?
+if ( $sectionTitle ) {
+?><div class="center sectionTitle"><?=$sectionTitle?></div><?
+}
+unset($sectionWidth);
+if ( !isset($displayHeader) ) $displayHeader = true;
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

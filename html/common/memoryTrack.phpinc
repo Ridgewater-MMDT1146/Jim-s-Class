@@ -1,0 +1,54 @@
+<?
+// common/memoryTrack.phpinc
+// Track memory usage.
+
+t_Begin(); // Begin TRACKing included file.
+
+/* * /
+unset($_SESSION['memory']); unset($_SESSION['memoryindex']);
+/* */
+if (!isset($_SESSION['memory'])) {
+  $_SESSION['memory'] = array();
+  $_SESSION['memory']['start'] = memory_get_usage()."-".memory_get_peak_usage(true);
+  $_SESSION['memory']['count'] = 0;
+}
+$_SESSION['memory']['now'] = memory_get_usage()."-".memory_get_peak_usage(true);
+$_SESSION['memory']['count']++;
+$backtrace = debug_backtrace();
+if ( isset($backtrace['0']['file']) ) {
+  $thisFile = $backtrace['0']['file'];
+  $thisLine = $backtrace['0']['line'];
+} else {
+  $thisFile = 'unknown';
+  $thisLine = 'n/a';
+}
+#d_Var('$backtrace',$backtrace,'+');
+?>
+<table>
+  <tr>
+    <td colspan="2" class="center">Memory Usage Track from <?=basename($thisFile)?>:<?=$thisLine?> #<?=$_SESSION['memory']['count']?>.<br><span class="d_s_fp"><?=$thisFile?></span></td>
+  </tr>
+  <tr>
+    <td class="right">Starting memory usage:</td>
+    <td class="number"><?=number_format($_SESSION['memory']['start'])?></td>
+  </tr>
+<?
+if ($_SESSION['memory']['start'] != $_SESSION['memory']['now']) {
+?>
+  <tr>
+    <td class="right">Current memory usage:</td>
+    <td class="number"><?=number_format($_SESSION['memory']['now'])?></td>
+  </tr>
+  <tr>
+    <td class="right">Memory limit:</td>
+    <td class="number"><?=number_format(ini_get('memory_limit')*1024*1024)?></td>
+  </tr>
+<?
+}
+?>
+</table>
+<?
+// Save memory!
+#if ( isset($_SESSION['TRACK']) ) unset($_SESSION['TRACK']);
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

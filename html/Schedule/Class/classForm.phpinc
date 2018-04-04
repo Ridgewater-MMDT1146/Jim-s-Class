@@ -1,0 +1,129 @@
+<?
+// classForm.phpinc
+// Display the class Add/Edit form.
+t_Begin(); // Begin TRACKing included file.
+include('classFormPreset.phpinc');
+?>
+ 
+<script> 
+$(function(){
+	$("#id_classStartDate").datepicker();
+	$("#id_classEndDate").datepicker();
+	$(".search-single").chosen({search_contains:true})
+	$(".search-multi").chosen({search_contains:true})	
+});
+</script>
+  
+<table class="popup-form"><tr><td><fieldset><legend><? if ($f['classId'] ) { ?>Edit<? } else { ?>Add<? } ?> Class</legend>
+<form name="form_class" id="id_form_class" action="<?=php_self()?>" method="post">
+<input type="hidden" name="form" value="form_class">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="classId" id="id_classId" value="<?=htmlSafe($f['classId'])?>">
+<input type="hidden" name="classQId" id="id_classQId" value="<?=htmlSafe($f['classQId'])?>">
+<input type="hidden" name="courseinsttypeId" id="id_courseinsttypeId" value="<?=htmlSafe($f['courseinsttypeId'])?>">
+<table>
+<? if ( isset($formError['YRTR']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['YRTR']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">YRTR</td>
+    <td><input type="text" class="" name="YRTR" id="id_YRTR" value="<?=htmlSafe($f['YRTR'])?>" maxlength="5" style="width:3.48em;"></td>
+  </tr>
+  
+  
+ <? if ( isset($formError['courseId']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['coursePrerequisite']?></td></tr>
+<? } ?>
+<tr>
+    <td class="label">Course</td>
+  <td>
+    <select type="text" class="search-single" data-placeholder="Select a course" name="courseId" id="id_courseId" >
+    <option value=""></option>
+    <?
+	// Get courses
+	$query = "
+		SELECT courseId, departmentCode, courseNumber, courseTitle
+		FROM course as c, department as d
+		WHERE d.departmentId = c.departmentId
+		ORDER BY DepartmentCode, courseNumber;
+	";
+	$courseIdResult = query_do($query);
+	$courseIdCount = $GLOBALS['_QUERY']['count'];
+    if ( $courseIdCount ) {
+      query_seek($courseIdResult, 0);
+      while ($courseIdInfo = query_row($courseIdResult)) {
+    ?>    
+      	<option value="<?=$courseIdInfo['courseId']?>"><?=$courseIdInfo['departmentCode']?><?=$courseIdInfo['courseNumber']?> <?=$courseIdInfo['courseTitle']?></option>
+    <?
+      }
+	  mysqli_free_result($prereqResult);
+    }
+    ?>
+  </td>
+</tr>
+    
+<? if ( isset($formError['classSection']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classSection']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Section</td>
+    <td><input type="text" class="" name="classSection" id="id_classSection" value="<?=htmlSafe($f['classSection'])?>" maxlength="2" style="width:1.5em;"></td>
+  </tr>
+<? if ( isset($formError['classEnr']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classEnr']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Enr</td>
+    <td><input type="text" class="" name="classEnr" id="id_classEnr" value="<?=htmlSafe($f['classEnr'])?>" maxlength="3" style="width:2.25em;"></td>
+  </tr>
+<? if ( isset($formError['classMax']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classMax']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">Max</td>
+    <td><input type="text" class="" name="classMax" id="id_classMax" value="<?=htmlSafe($f['classMax'])?>" maxlength="3" style="width:2.25em;"></td>
+  </tr>
+<? if ( isset($formError['classStartDate']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classStartDate']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">StartDate</td>
+    <td><input type="text" class="" name="classStartDate" id="id_classStartDate" value="<?=htmlSafe($f['classStartDate'])?>" maxlength="24" style="width:10.89em;"></td>
+  </tr>
+<? if ( isset($formError['classEndDate']) ) { ?>
+  <tr><td></td><td class="error"><?=$formError['classEndDate']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="label">EndDate</td>
+    <td><input type="text" class="" name="classEndDate" id="id_classEndDate" value="<?=htmlSafe($f['classEndDate'])?>" maxlength="24" style="width:10.89em;"></td>
+  </tr>
+  <tr>
+    <td class="center" colspan="2">
+<?
+      if ( $f['classId'] ) {
+?>
+      <input type="submit" name="task" value="Update class">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Add class">
+<?
+      }
+      if ( $f['form'] != 'form_class' || isset($formError) || isset($f['postId']) ) {
+?>
+      <input type="submit" name="task" value="Cancel">
+<?
+      } else {
+?>
+      <input type="submit" name="task" value="Done">
+<?
+      }
+?>
+    </td>
+  </tr>
+</table>
+</form>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

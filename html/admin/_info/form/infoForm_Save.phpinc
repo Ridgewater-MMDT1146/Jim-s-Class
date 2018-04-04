@@ -1,0 +1,24 @@
+<?
+// admin/_info/form/infoForm_Save.phpinc
+// Save form settings for later use.
+t_Begin(); // Begin TRACKing included file.
+
+d_Var('$f',$f);
+d_Var('$fieldArray',$fieldArray);
+
+formValue('_infoformId');
+
+?>
+<form name="form_formSave" action="<?=php_self()?>" class="inline_info" method="post">
+<input type="hidden" name="form" value="form_formSave">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="_infoformId" value="<?=$f['_infoformId']?>">
+<input type="hidden" name="task" value="Save info form">
+<input type="submit" name="subtask" value="Save form" onClick="formSubmit(this);">
+<input type="submit" name="subtask" value="Cancel">
+</form>
+<?
+
+pageFooter();
+t_End(); // End TRACKing included file.
+?>

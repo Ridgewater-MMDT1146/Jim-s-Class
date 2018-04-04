@@ -1,0 +1,106 @@
+<?
+// admin/user/userGroupForm.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+// Get users in userpermission.
+  $query = "
+    SELECT userId,
+           userFirstname,
+           userLastname
+      FROM `user`
+     WHERE userId IN (
+            SELECT userId
+              FROM user_userpermission
+              WHERE userpermissionId = ".$f['userpermissionId']."
+           )
+    ORDER BY userFirstname, userLastname
+  ";
+$userInGroupResult = query_do($query);
+$userInGroupCount = $GLOBALS['_QUERY']['count'];
+#d_Var('$query',$query,'q');
+#d_Var('$userInGroupResult',$userInGroupResult);
+// Get users not in the userpermission.
+$query = "
+    SELECT userId,
+           userFirstname,
+           userLastname
+      FROM `user`
+      WHERE userId NOT IN (
+            SELECT userId
+              FROM user_userpermission
+              WHERE userpermissionId = ".$f['userpermissionId']."
+            )
+        AND userInactive = 0 OR userInactive IS NULL
+  ORDER BY userFirstname, userLastname
+";
+$userNotInGroupResult = query_do($query);
+$userNotInGroupCount = $GLOBALS['_QUERY']['count'];
+#d_Var('$query',$query,'q');
+#d_Var('$userNotInGroupResult',$userNotInGroupResult);
+
+?>
+<div id=usergroupdiv style="float:left">
+<fieldset><legend>Group's users</legend>
+<form name="form_groupuser" id="form_groupuser" action="<?=php_self()?>" method="post" enctype="multipart/form-data">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="form" value="form_groupuser">
+<input type="hidden" name="userpermissionId" id="userpermissionId" value="<?=$f['userpermissionId']?>">
+<table>
+  <tr>
+      <td style="text-align:center;"> <!-- Groups the user is in -->
+<select name="inGroup[]" multiple="multiple" size="5">
+<?
+if ($userInGroupCount) {
+  query_seek($userInGroupResult, 0);
+  while ($user_userpermissionInfo = query_row($userInGroupResult)) {
+?>
+  <option value="<?=$user_userpermissionInfo['userId']?>" onClick="if ( <?=$user_userpermissionInfo['userId']?> == 1 && <?=$f['userpermissionId']?> == 1 ) { alert('<?=$user_userpermissionInfo['userFirstname']?> <?=$user_userpermissionInfo['userLastname']?> cannot be removed from the group Admin'); this.selected=false; }"<? if ( $user_userpermissionInfo['userId'] == 1 && $f['userpermissionId'] == 1 ) {?> disabled<? } ?>><?=$user_userpermissionInfo['userFirstname']?> <?=$user_userpermissionInfo['userLastname']?></option>
+<?
+  }
+}
+?>
+</select>
+<br>
+<input type="submit" name="task" id="task" value="Remove from group">
+        </td>
+      <td style="text-align:center;"> <!-- Groups the user is NOT in -->
+<select name="notGroup[]" multiple="multiple" size="5">
+<?
+if ($userNotInGroupCount) {
+  query_seek($userNotInGroupResult, 0);
+  while ($user_userpermissionInfo = query_row($userNotInGroupResult)) {
+?>
+  <option value="<?=$user_userpermissionInfo['userId']?>"><?=$user_userpermissionInfo['userFirstname']?> <?=$user_userpermissionInfo['userLastname']?></option>
+<?
+  }
+}
+?>
+</select>
+<br>
+<input type="submit" name="task" id="task" value="Add to group">
+        </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align:center;">
+<?
+if ($f['form'] == 'form_groupuser') {
+?>
+    <input type="submit" name="task" value="Done">
+<?
+} else {
+?>
+    <input type="submit" name="task" value="Cancel">
+<?
+}
+?>
+        </td>
+    </tr>
+</table>
+
+</form>
+</fieldset>
+</div><!-- id=usergroupdiv -->
+<?
+t_End(); // End TRACKing included file.
+?>

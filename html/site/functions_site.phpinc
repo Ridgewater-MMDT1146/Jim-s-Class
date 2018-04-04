@@ -1,0 +1,193 @@
+<?
+// site/functions_site.phpinc
+// Contains the functions used by this website.
+t_Begin(); // Begin TRACKing included file.
+
+// attention($text, $cssAdd)
+// Returns $text in "attention" class span.
+//   $text = The text to show in attention span.
+// $cssAdd = Additional css to add to span.
+function attention($text, $cssAdd='') {
+	if ( $cssAdd ) $cssAdd = ' '.$cssAdd;
+	return '<span class="attention'.$cssAdd.'">'.$text.'</span>';
+}
+
+// bold($text, $cssAdd)
+// Returns $text in "bold" class span.
+//   $text = The text to show in bold span.
+// $cssAdd = Additional css to add to span.
+function bold($text, $cssAdd='') {
+	if ( $cssAdd ) $cssAdd = ' '.$cssAdd;
+	return '<span class="bold'.$cssAdd.'">'.$text.'</span>';
+}
+
+// info($text, $cssAdd)
+// Returns $text in "info" class span.
+//   $text = The text to show in info span.
+// $cssAdd = Additional css to add to span.
+function info($text, $cssAdd='') {
+	if ( $cssAdd ) $cssAdd = ' '.$cssAdd;
+	return '<span class="info'.$cssAdd.'">'.$text.'</span>';
+}
+
+// error($text, $cssAdd)
+// Returns $text in "error" class span.
+//   $text = The text to show in error span.
+// $cssAdd = Additional css to add to span.
+function error($text, $cssAdd='') {
+	if ( $cssAdd ) $cssAdd = ' '.$cssAdd;
+	return '<span class="error'.$cssAdd.'">'.$text.'</span>';
+}
+
+// query_to_list_quoted($result,$field,$addNull)
+// Returns a comma separated list with values in single quotes (') from a query result.
+// $result = The query result to use to build the list.
+// $addNull = true to include null or empty values. Default is false.
+// $defaultValue = the default value to use for null or empty values. Default = '';
+function query_to_list_quoted($result, $field='', $addNull=false, $defaultValue='') {
+  $backtrace = debug_backtrace(); $file = basename($backtrace['0']['file']); $filepath = $backtrace['0']['file']; $line = $backtrace['0']['line'];
+  $resultList = '';
+  #echo "\$result=",$result,": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  #echo "query__num_rows($result)=",query__num_rows($result),": ",basename(__FILE__),": ",__LINE__,"<br>\n";
+  if (query__num_rows($result)) {
+    query_seek($result, 0);
+    if ($field == '') {
+      while ($row = query_row($result)) {
+        #echo "\$row="; print_r($row); echo ": ",basename(__FILE__),":",__LINE__,"<br>\n";
+        foreach ($row as $value) {
+          if ($value != '' || $addNull) if ($value != '' ) { $resultList .= ",'".$value."'"; } else { $resultList .= ",'".$defaultValue."'"; }
+        }
+      }
+    } else {
+      while ($row = query_row($result)) {
+        if ($row[$field] != '' || $addNull) if ($row[$field] != '' ) { $resultList .= ",'".$row[$field]."'"; } else { $resultList .= ",'".$defaultValue."'"; }
+      }
+    }
+  }
+  $resultList = substr($resultList,1);
+  t_Func($resultList);
+  return $resultList;
+}
+
+// warn($text, $cssAdd)
+// Returns $text in "warn" class span.
+//   $text = The text to show in warn span.
+// $cssAdd = Additional css to add to span.
+function warn($text, $cssAdd='') {
+	if ( $cssAdd ) $cssAdd = ' '.$cssAdd;
+	return '<span class="warn'.$cssAdd.'">'.$text.'</span>';
+}
+
+// array_orderby($array, $fieldName, $sortOrder [, $fieldName, $sortOrder]... )
+// Sort an associative array by multiple keys.
+//     $array = the array to sort.
+// $fieldName = a key name in the array to sort by.
+// $sortOrder = the sort order for the field (ASC or DESC).
+// $fieldName, $sortOrder may be repeated as needed for multiple field sort.
+// Example: $array = array_orderby($array, 'firstField', DESC, 'secondField', ASC);
+//          returns $array sorted by firstField decending, secondField ascending.
+function array_orderby() {
+	$args = func_get_args();
+	$array = array_shift($args);
+	foreach ( $args as $n => $field ) {
+		if ( $args[$n] == 'ASC' || $args[$n] == 'DESC' ) $args[$n] = 'SORT_'.$args[$n];
+		if ( is_string($field) ) {
+			$tmp = array();
+			foreach ( $array as $key => $row ) $tmp[$key] = $row[$field];
+			$args[$n] = $tmp;
+		}
+	}
+	$args[] = &$array;
+	call_user_func_array('array_multisort', $args);
+	return array_pop($args);
+}
+
+// explodeTrim($seperator, $string)
+// Performs like the explode function except each array element is trimmed.
+function explodeTrim($seperator, $string) {
+	$explode = explode($seperator, $string);
+	for ( $i = 0; $i < count($explode); $i++ ) {
+		$explode[$i] = trim($explode[$i]);
+	}
+	return $explode;
+}
+
+// function hasPermission($permission)
+// Returns true if the user has the permission, else false.
+function hasPermission($permission) {
+	if ( isset($_SESSION['user']['permission']) && in_array($permission,$_SESSION['user']['permission']) ) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+// is_valid_id($IdValue, $field, $allowzero, $table, $database)
+// Returns true if the $IdValue is a valid Id in the table or zero, else returns false.
+//   $IdValue = The Id value.
+//     $field = The name of the Id field in the table.
+// $allowzero = Allow zero $IdValue if true else do not allow a zero $IdValue.
+//     $table = The table name. If not given then the $field is used as the table name with the trailing 'Id' removed.
+//  $database = The database name. If not given the default database is used.
+function is_valid_id($IdValue, $field, $allowzero=false, $table=false, $database=false) {
+  if ( !$table ) {
+    // Determine the table name from the $field.
+    if ( substr($field,-2) == 'Id' ) {
+      $table = substr($field,0,-2);
+    } else {
+      $table = false;
+    }
+  }
+  $_valid_Id = false;
+  if ( $table && is_numeric($IdValue) && $IdValue >= 0 && $IdValue <= 99999999999 ) {
+    if ( $IdValue != 0 ) {
+      $query = "
+          SELECT ".$field."
+            FROM `".$table."`
+           WHERE ".$field." = ".$IdValue."
+      ";
+      $Result = query_do($query);
+      $Count = $_SESSION['query']['count'];
+      if ($Count == 1) $_valid_Id = true;
+    }
+  }
+  if ( $table && $allowzero && $IdValue == 0 ) $_valid_Id = true;
+  return $_valid_Id;
+}
+
+// ttMake($abbrText, $tooltipText, $abbrClass, $tooltipClass, $onClick)
+// Returns the abbr tooltip html code.
+//     $abbrText = Text/html to show in the <abbr></abbr> tag.
+//                 If an empty string then no <abbr></abbr> tag is created, and
+//                 only the onMouseOver/onMouseOut is created.
+//  $tooltipText = Tooltip text/html to show on hover.
+//    $abbrClass = Class of the <abbr> tag. Default is no class.
+// $tooltipClass = Class of the tooltip. Default is no class.
+//      $onClick = Javascript to execute OnClick of the abbr.
+function ttMake($abbrText, $tooltipText, $abbrClass='', $tooltipClass='', $onClick=false) {
+  if ( $abbrClass ) $abbrClass = ' class="'.$abbrClass.'"';
+  if ( $tooltipClass ) $tooltipClass = ", '".$tooltipClass."'";
+	if ( $abbrText ) { $tooltip = '<abbr'.$abbrClass; } else { $tooltip = ''; }
+  $tooltip .= ' onMouseOver="ttShow('."'".str_replace(array('"',"'","\n","\r","||"),array('&quot;',"\\'",'~~n','','<br>'),$tooltipText)."'".$tooltipClass.');" onMouseOut="ttHide();"';
+  if ( $onClick ) $tooltip .= ' onClick="'.$onClick.'"';
+  if ( $abbrText ) $tooltip .= '>'.$abbrText.'</abbr>';
+  return $tooltip;
+}
+
+// ttSafe($ttText)
+// Return ttText in single quotes with double and single quote characters excaped for use in the ttShow() function.
+// " is changed to &quot;,
+// ' is changed to \'.
+// {newline} is changed to ~~n.
+// {return} is removed.
+// || is changed to '<br>'.
+function ttSafe($ttText, $DEBUG_ttText = false) {
+	$ttText = "'".str_replace(array('"',			"'",		"\n",		"\r",	"||"),
+														array('&quot;',	"\\'",	'~~n',	'',		'<br>'),$ttText)."'";
+	if ( $DEBUG_ttText ) d_Var('$ttText',$ttText,'d');
+	t_Func($ttText);
+	return $ttText;
+}
+
+t_End(); // End TRACKing included file.
+?>

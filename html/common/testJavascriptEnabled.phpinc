@@ -1,0 +1,234 @@
+<?
+// common/testJavascriptEnabled.phpinc
+// Warn user to enable Javascript.
+
+t_Begin(); // Begin TRACKing included file.
+
+if ( !isset($GLOBALS['_DEBUG']) ) $GLOBALS['_DEBUG'] = array();
+#$GLOBALS['_DEBUG']['testJavascriptEnabled'] = true; // Uncomment this line to DEBUG testJavascriptEnabled.
+if ( !isset($GLOBALS['_DEBUG']['testJavascriptEnabled']) ) $GLOBALS['_DEBUG']['testJavascriptEnabled'] = false;
+
+if ( $GLOBALS['_DEBUG']['testJavascriptEnabled'] ) echo "\$_SESSION['APP']['REQUIRES']['javascript'] = ".$_SESSION['APP']['REQUIRES']['javascript'].': '.basename(__FILE__).':'.__LINE__."<br>\n";
+
+if ( isset($_POST['javascript']) && $_POST['javascript'] == 'true' ) {
+  $_SESSION['APP']['REQUIRES']['javascript'] = 'OK';
+  $_SESSION['BROWSER'] = array();
+  $_SESSION['BROWSER']['name'] = $_POST["BrowserName"];
+  $_SESSION['BROWSER']['version'] = $_POST["BrowserVersion"];
+  $_SESSION['BROWSER']['OS'] = $_POST["BrowserOS"];
+} else {
+?>
+  <br>
+  <b>If this message remains for more than a second or two then:</b><br>
+  <br>
+  <b>Javascript is disabled on your browser.</b><br>
+  <b class="attention">Javascript is disabled on your browser.</b><br>
+  <b class="error">Javascript is disabled on your browser.</b><br>
+  <br>
+  <span class="appName bold"><?=$_SESSION['APP']['shortname']?></span> makes extensive use of Javascript and will not work correctly if Javascript is disabled.<br>
+  <br>
+  <b>Until you enable Javascript, this is the only page you will see.</b><br>
+  Once you get Javascript enabled, you can reload this page or click on a menu item above to continue.<br>
+  <br>
+  <form name="form_testjavascript" action="<?=php_self()?>" method="post">
+    <input type="hidden" name="javascript" value="">
+    <input type="hidden" name="ScreenWidth" value="">
+    <input type="hidden" name="ScreenHeight" value="">
+    <input type="hidden" name="BrowserName" value="">
+    <input type="hidden" name="BrowserVersion" value="">
+    <input type="hidden" name="BrowserOS" value="">
+    <? if ( $GLOBALS['_DEBUG']['testJavascriptEnabled'] ) { ?><div><?=basename(__FILE__)?> is in DEBUG mode. ($GLOBALS['_DEBUG']['testJavascriptEnabled'] == true)</div><? } ?>
+    <div id="id_testJavascript">The Initialize() function did not run.</div>
+		<input type="button" name="n_submit" id="id_submit" value="No javascript" onclick="" style="display:none;">
+</form>
+<script type="text/javascript">
+	<!--
+	function Initialize() {
+<?
+if ( $GLOBALS['_DEBUG']['testJavascriptEnabled'] ) {
+?>
+		document.getElementById('id_testJavascript').style.display = 'none';
+		document.getElementById('id_submit').value = 'Click to continue to load page';
+		document.getElementById('id_submit').onclick = function () { document.form_testjavascript.submit(); };
+		document.getElementById('id_submit').style.display = 'block';
+<?
+}
+?>
+		document.form_testjavascript.javascript.value = 'true';
+		document.form_testjavascript.ScreenWidth.value = window.innerWidth != null? window.innerWidth: document.body != null?   document.body.clientWidth:null;
+		document.form_testjavascript.ScreenHeight.value = window.innerHeight != null? window.innerHeight: document.body != null? document.body.clientHeight:null;
+		
+		var BrowserDetect = {
+			init: function () {
+				this.browser = this.searchString(this.dataBrowser) || "An unknown browser";
+				// Now check using stackoverflow code.
+				var isFirefox = typeof InstallTrigger !== 'undefined';   // Firefox 1.0+
+				console.log('isFirefox='+isFirefox);
+				if ( isFirefox ) {
+					this.browser = 'Firefox';
+				} else {
+					var isChrome = !!window.chrome && !isOpera;              // Chrome 1+
+					console.log('isChrome='+isChrome);
+					if ( isChrome ) {
+						this.browser = 'Chrome';
+					} else {
+						var isIE = /*@cc_on!@*/false || !!document.documentMode; // At least IE6
+						console.log('isIE='+isIE);
+						if ( isIE ) {
+							this.browser = 'Explorer';
+						} else {
+							var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0; // At least Safari 3+: "[object HTMLElementConstructor]"
+							console.log('isSafari='+isSafari);
+							if ( isSafari ) {
+								this.browser = 'Safari';
+							} else {
+								var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0; // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
+								console.log('isOpera='+isOpera);
+								if ( isOpera ) {
+									this.browser = 'Opera';
+								}
+							}
+						}
+					}
+				}
+				this.version = this.searchVersion(navigator.userAgent)
+					|| this.searchVersion(navigator.appVersion)
+					|| "an unknown version";
+				this.OS = this.searchString(this.dataOS) || "an unknown OS";
+			},
+			searchString: function (data) {
+				for (var i=0;i<data.length;i++)  {
+					var dataString = data[i].string;
+					var dataProp = data[i].prop;
+					this.versionSearchString = data[i].versionSearch || data[i].identity;
+					if (dataString) {
+						if (dataString.indexOf(data[i].subString) != -1)
+							return data[i].identity;
+					}
+					else if (dataProp)
+						return data[i].identity;
+				}
+			},
+			searchVersion: function (dataString) {
+				var index = dataString.indexOf(this.versionSearchString);
+				if (index == -1) return;
+				return parseFloat(dataString.substring(index+this.versionSearchString.length+1));
+			},
+			dataBrowser: [
+				{
+					string: navigator.userAgent,
+					subString: "Chrome",
+					identity: "Chrome"
+				},
+				{   string: navigator.userAgent,
+					subString: "OmniWeb",
+					versionSearch: "OmniWeb/",
+					identity: "OmniWeb"
+				},
+				{
+					string: navigator.vendor,
+					subString: "Apple",
+					identity: "Safari",
+					versionSearch: "Version"
+				},
+				{
+					prop: window.opera,
+					identity: "Opera",
+					versionSearch: "Version"
+				},
+				{
+					string: navigator.vendor,
+					subString: "iCab",
+					identity: "iCab"
+				},
+				{
+					string: navigator.vendor,
+					subString: "KDE",
+					identity: "Konqueror"
+				},
+				{
+					string: navigator.userAgent,
+					subString: "Firefox",
+					identity: "Firefox"
+				},
+				{
+					string: navigator.vendor,
+					subString: "Camino",
+					identity: "Camino"
+				},
+				{    // for newer Netscapes (6+)
+					string: navigator.userAgent,
+					subString: "Netscape",
+					identity: "Netscape"
+				},
+				{
+					string: navigator.userAgent,
+					subString: "MSIE",
+					identity: "Explorer",
+					versionSearch: "MSIE"
+				},
+				{
+					string: navigator.userAgent,
+					subString: "Gecko",
+					identity: "Mozilla",
+					versionSearch: "rv"
+				},
+				{     // for older Netscapes (4-)
+					string: navigator.userAgent,
+					subString: "Mozilla",
+					identity: "Netscape",
+					versionSearch: "Mozilla"
+				}
+			],
+			dataOS : [
+				{
+					string: navigator.platform,
+					subString: "Win",
+					identity: "Windows"
+				},
+				{
+					string: navigator.platform,
+					subString: "Mac",
+					identity: "Mac"
+				},
+				{
+						 string: navigator.userAgent,
+						 subString: "iPhone",
+						 identity: "iPhone/iPod"
+					},
+				{
+					string: navigator.platform,
+					subString: "Linux",
+					identity: "Linux"
+				}
+			]
+		
+		};
+		BrowserDetect.init();  
+		document.form_testjavascript.BrowserName.value = BrowserDetect.browser;
+		document.form_testjavascript.BrowserVersion.value = BrowserDetect.version;
+		document.form_testjavascript.BrowserOS.value = BrowserDetect.OS;
+
+		console.log('BrowserDetect.browser='+BrowserDetect.browser);
+		console.log('BrowserDetect.version='+BrowserDetect.version);
+		console.log('BrowserDetect.OS='+BrowserDetect.OS);
+
+<?
+if ( !$GLOBALS['_DEBUG']['testJavascriptEnabled'] ) {
+?>
+		document.form_testjavascript.submit();
+<?
+}
+?>
+	}
+	Initialize();
+	// -->
+</script>
+<?
+  pageFooter();
+	exit;
+}
+
+if ( $GLOBALS['_DEBUG']['testJavascriptEnabled'] ) d_On('foot');
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

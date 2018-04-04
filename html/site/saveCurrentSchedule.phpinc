@@ -1,0 +1,45 @@
+<?
+// site/saveCurrentSchedule.phpinc
+// Place scheduleId in $_SESSION['user']['scheduleId'] and userdata.
+
+t_Begin(); // Begin TRACKing saveCurrentSchedule.phpinc.
+
+$_SESSION['user']['scheduleId'] = $f['scheduleId'];
+
+// Check for userdata entry.
+$query = "
+    SELECT userId
+      FROM `userdata`
+     WHERE userId = ".$_SESSION['user']['userId']."
+";
+d_Var('userdataInfo',$query,'q');
+$userdataInfo = query_info($query);
+d_Var('$userdataInfo',$userdataInfo);
+if ( $userdataInfo ) {
+	// UPDATE userdata scheduleId.
+	$query = "
+			UPDATE `userdata`
+				 SET scheduleId = ".$f['scheduleId']."
+			 WHERE userId = ".$_SESSION['user']['userId']."
+	";
+	d_Var('userdataUPDATE',$query,'q');
+	$userdataUPDATE = query_do($query);
+	d_Var('$userdataUPDATE',$userdataUPDATE,'l');
+} else {
+	// INSERT userdata.
+	$query = "
+		INSERT INTO `userdata` (
+				userId
+			, scheduleId
+		) VALUES (
+				'".$_SESSION['user']['userId']."'
+			, ".$f['scheduleId']."
+		)
+	";
+	d_Var('userdataINSERT',$query,'q');
+	$userdataINSERT = query_do($query);
+	d_Var('$userdataINSERT',$userdataINSERT,'l');
+}
+
+t_End(); // End TRACKing saveCurrentSchedule.phpinc.
+?>

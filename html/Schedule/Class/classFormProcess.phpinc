@@ -1,0 +1,65 @@
+<?
+// classFormProcess.phpinc
+// Process the class form.
+t_Begin(); // Begin TRACKing included file.
+if ( $f['uuid'] != $_SESSION['uuid'] ) {
+  // Not a page reload.
+  if ( $f['classId'] ) {
+    // UPDATE class.
+    $query = "
+        UPDATE `class`
+           SET YRTR = '".query_safe($f['YRTR'])."'
+             , classQId = '".query_safe($f['classQId'])."'
+             , courseId = ".$f['courseId']."
+             , classSection = '".query_safe($f['classSection'])."'
+             , classEnr = ".$f['classEnr']."
+             , classMax = ".$f['classMax']."
+             , classStartDate = '".query_safe($f['classStartDate'])."'
+             , classEndDate = '".query_safe($f['classEndDate'])."'
+             , courseinsttypeId = ".$f['courseinsttypeId']."
+         WHERE classId = ".$f['classId']."
+    ";
+    d_Var('classUPDATE',$query,'q');
+    $classUPDATE = query_do($query);
+    d_Var('$classUPDATE',$classUPDATE,'l');
+    displayMessage('Class '.$f['classQId'].' updated.');
+  } else {
+    // INSERT class.
+    $query = "
+      INSERT INTO `class` (           AND
+          YRTR
+        , classQId
+        , courseId
+        , classSection
+        , classEnr
+        , classMax
+        , classStartDate
+        , classEndDate
+        , courseinsttypeId
+      ) VALUES (
+          '".query_safe($f['YRTR'])."'
+        , '".query_safe($f['classQId'])."'
+        , ".$f['courseId']."
+        , '".query_safe($f['classSection'])."'
+        , ".$f['classEnr']."
+        , ".$f['classMax']."
+        , '".query_safe($f['classStartDate'])."'
+        , '".query_safe($f['classEndDate'])."'
+        , ".$f['courseinsttypeId']."
+      )
+    ";
+    d_Var('classINSERT',$query,'q');
+    $classINSERT = query_do($query);
+    d_Var('$classINSERT',$classINSERT,'l');
+    $f['classId'] = mysql_insert_id();
+    d_Var("\$f['classId']",$f['classId']);
+    displayMessage('Class '.$f['classQId'].' added.');
+  }
+  // Remember that the form was processed.
+  $_SESSION['uuid'] = $f['uuid'];
+} else {
+  // Page was reloaded.
+  displayMessage('Page reloaded.','warn');
+}
+t_End(); // End TRACKing included file.
+?>

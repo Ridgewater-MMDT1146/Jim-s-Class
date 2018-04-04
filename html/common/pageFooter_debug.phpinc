@@ -1,0 +1,207 @@
+<?
+// common/pageFooter_debug.phpinc
+// Displays debug information.
+// Version 2015.05.08.
+
+t_Begin(true); // Begin TRACKing pageFooter_debug.phpinc file.
+
+//$GLOBALS['DEBUG_pageFooter_debug'] = true; // ********** Uncomment this line to debug the pageFooter_debug.
+if ( !isset($GLOBALS['DEBUG_pageFooter_debug']) ) $GLOBALS['DEBUG_pageFooter_debug'] = false;
+
+// ********** Uncomment the line below to escape bad html tags.
+#$pageFooter_debug_escape_html = true; // Comment this line to disable escape of bad html tags.
+if ( !isset($pageFooter_debug_escape_html) ) $pageFooter_debug_escape_html = false;
+
+// Show DEBUG output.
+$GLOBALS['_DEBUG']['codeSiteSave'] = $_SESSION['DEBUG']['codeSite'];
+if ( $pageFooter_debug_escape_html ) {
+?>
+	<!-- Cleanup any unended td, tr, table, div, ol, and ul tags -->
+	</td></tr></table></div></ol></ul></td></tr></table></div></ol></ul></td></tr></table></div></ol></ul>
+	</td></tr></table></div></ol></ul></td></tr></table></div></ol></ul></td></tr></table></div></ol></ul>
+<?
+}
+?>
+<div id="d_s_pf" style="page-break-before:always;">
+<?
+d_Line('Showing pageFooter_debug.phpinc because '.$pageFooter_debug.' === <span class="d_s_vt">true</span>','dh');
+
+
+/**/
+// Cleanup $_DEBUG['track']
+$pageFooter_debug_backtrace = debug_backtrace(); // Backtrace used to end TRACKing.
+#echo "\$pageFooter_debug_backtrace()=<pre>"; print_r($pageFooter_debug_backtrace); echo "</pre>\n";
+d_ad_end(__FILE__,__LINE__); // End TRACKing pageFooter_debug.phpinc file call.
+#t_End(false, __FILE__, __LINE__);
+#d_ad_end($pageFooter_debug_backtrace[0]['file'],$pageFooter_debug_backtrace[0]['line']); // End TRACKing pageFooter.phpinc file call.
+// Code to END tracking a file when function t_End() is not available.
+if ( $GLOBALS['TRACK'] && $GLOBALS['debuggingAvailable'] ) { // End this file TRACKing.  Use this code when the function t_End() is unavailable.
+  // End file <ol>.
+  $_SESSION['TRACK']['ol'] -= 1; $_SESSION['TRACK']['data'] .= t_Indent()."</ol>\n";
+    // TRACK file end.
+  $_SESSION['TRACK']['data'] .= t_Indent()."End ".basename(__FILE__).":".__LINE__."\n"; $_SESSION['TRACK']['indent'] -= 1;
+  // End file <li>.
+  $_SESSION['TRACK']['indent'] -= 1; $_SESSION['TRACK']['data'] .= t_Indent()."</li>\n";
+}
+/**/
+
+/**/
+if ( $GLOBALS['TRACK'] ) {
+  // Cleanup t_End using backtrace.
+  for ( $backtrace_index=0; $backtrace_index<count($pageFooter_debug_backtrace); $backtrace_index++ ) {
+    $backtrace[0] = $pageFooter_debug_backtrace[$backtrace_index];
+    if ( preg_replace('/^.*\.([^.]+)$/D', '$1', $backtrace['0']['file']) != 'php' ) {
+      // Add t_End for calling .phpinc file.
+      if ( isset($GLOBALS['DEBUG_pageFooter_debug']) && $GLOBALS['DEBUG_pageFooter_debug'] ) $backtrace['0']['file'] .= ' (pageFooter_debug:'.__LINE__.') Close .phpinc ';
+      if ( !strpos($backtrace['0']['file'],'functions.phpinc') ) {
+        $GLOBALSDEBUGpagecode =$GLOBALS['_DEBUG']['page']['code'];
+				t_End($backtrace);
+        $GLOBALS['_DEBUG']['page']['code'] = $GLOBALSDEBUGpagecode; // Restore $_DEBUG['page']['code'] after t_End() turned it off.
+      } else {
+        // Add t_FuncEnd for pageFooter() function.
+        $backtrace['0']['function'] = 'pageFooter';
+        $GLOBALSDEBUGpagecode =$GLOBALS['_DEBUG']['page']['code'];
+        t_FuncEnd($backtrace['0']);
+        $GLOBALS['_DEBUG']['page']['code'] = $GLOBALSDEBUGpagecode; // Restore $_DEBUG['page']['code'] after t_End() turned it off.
+      }
+    } else {
+      // Add t_End for starting .php file.
+      if ( isset($GLOBALS['DEBUG_pageFooter_debug']) && $GLOBALS['DEBUG_pageFooter_debug'] ) $backtrace['0']['file'] .= ' (DEBUG_pageFooter:'.__LINE__.') Close .php ';
+      $_SESSION['TRACK']['firstFile'] = $_SESSION['TRACK']['indent']--;
+      $_SESSION['TRACK']['ol']--;
+      $_SESSION['TRACK']['data'] .= t_Indent()."</ol>\n";
+      $_SESSION['TRACK']['data'] .= t_Indent()."<b>End ".basename($backtrace['0']['file']).'</b> <span class="d_s_fp">('.$backtrace['0']['file'].")</span>";
+      $_SESSION['TRACK']['indent']--;
+      $_SESSION['TRACK']['data'] .= t_Indent()."</li><br>\n";
+      echo "<br>\n";
+    }
+  }
+}
+d_ad_end($pageFooter_debug_backtrace[count($pageFooter_debug_backtrace)-1]['file'],$pageFooter_debug_backtrace[count($pageFooter_debug_backtrace)-1]['line']); // End TRACKing ititiating file call.
+/**/
+unset($_SESSION['TRACK']['firstFile']);
+d_On('code',false);
+
+// Display the most common variable and info.
+$page_time_to_generate = microtime(true) - $GLOBALS['page_time_begin']; // Calculate page generation time.
+d_Var('Page generation time',round($page_time_to_generate,3),'');
+d_Var("\$_SERVER['PHP_SELF']",$_SERVER['PHP_SELF'],'l');
+if ( isset($_SESSION['previouslocation']) ) { d_Var("\$_SESSION['previouslocation']",$_SESSION['previouslocation'],'d'); } // Display previouslocation from headerLocation().
+d_Var("\$f['form']",$GLOBALS['f']['form'],'l');
+d_Var("\$f['task']",$GLOBALS['f']['task'],'l');
+d_Var("\$f['subtask']",$GLOBALS['f']['subtask'],'l');
+d_Var("\$f['uuid']",$GLOBALS['f']['uuid'],'l');
+d_Var("\$_SESSION['uuid']",$_SESSION['uuid'],'l');
+d_Var('session_id()',session_id(),'l');
+
+// Display DEBUG on off changes.
+if ( isset($GLOBALS['_DEBUG']['set']['Type']) ) {
+?>
+    <div id="DEBUG_HIDE" class="d_s_h d_s_l"><br><a href="javascript: divShow('DEBUG_BEGIN_SHOW'); divHide('DEBUG_HIDE');"><span class="d_s_b d_s_an">$_DEBUG['set']</span><span class="d_s_an"> (<?=count($GLOBALS['_DEBUG']['set']['Type'])?> element<? if ( count($GLOBALS['_DEBUG']['set']['Type']) != 1 ) { ?>s<? } ?>) +</span></a></div>
+    <div id="DEBUG_BEGIN_SHOW" class="d_s_l"><br><a href="javascript: divShow('DEBUG_HIDE'); divHide('DEBUG_BEGIN_SHOW');"><span class="d_s_b d_s_an">$_DEBUG['set']</span><span class="d_s_an"> (<?=count($GLOBALS['_DEBUG']['set']['Type'])?> element<? if ( count($GLOBALS['_DEBUG']['set']['Type']) != 1 ) { ?>s<? } ?>) =</span></a><br>
+<?
+	for ($i=0; $i<count($GLOBALS['_DEBUG']['set']['Type']); $i++) {
+  if ( isset( $GLOBALS['_DEBUG']['set']['State'][$i]) && $GLOBALS['_DEBUG']['set']['State'][$i] ) { $GLOBALS['_DEBUG']['set']['State'][$i] = '<span class="d_s_vt">true</span>'; } else { $GLOBALS['_DEBUG']['set']['State'][$i] = '<span class="d_s_vf">false</span>'; }
+?>
+  <?=$GLOBALS['_DEBUG']['set']['Type'][$i]?>=<?= $GLOBALS['_DEBUG']['set']['State'][$i]?><span class="d_s_fl">: <?=basename($GLOBALS['_DEBUG']['set']['File'][$i])?>:<?=$GLOBALS['_DEBUG']['set']['Line'][$i]?></span> <span class="d_s_fp">(<?=$GLOBALS['_DEBUG']['set']['File'][$i]?>)</span><br>
+<?
+  }
+?>
+    </div><!-- END_TRACK_SHOW -->
+<?
+}
+
+// Display TRACKing information.
+if ( $GLOBALS['TRACK'] && isset($_SESSION['TRACK']) ) {
+  if (!isset($_SESSION['TRACK']['count'])) $_SESSION['TRACK']['count'] = 0;
+?>
+    <div id="TRACK_HIDE" class="d_s_l"><br><a href="javascript: divShow('BEGIN_TRACK_SHOW'); divHide('TRACK_HIDE');"><span class="d_s_b d_s_an">$TRACK[<?=$_SESSION['TRACK']['count']?>]</span> <span class="d_s_an">+</span></a></div>
+    <div id="BEGIN_TRACK_SHOW" class="d_s_h d_s_l"><br><a href="javascript: divShow('TRACK_HIDE'); divHide('BEGIN_TRACK_SHOW');"><span class="d_s_b d_s_an">$TRACK[<?=$_SESSION['TRACK']['count']?>]</span> <span class="d_s_an">=</span></a><br>
+<?
+    echo $_SESSION['TRACK']['data'];
+?>
+    </div><!-- END_TRACK_SHOW -->
+<?
+} else {
+	if ( isset($debuggingAvailable) && $debuggingAvailable ) {
+?>
+  <br><span class = "d_s_b d_s_e">$TRACK=off</span><br>
+<?
+	}
+}
+if ( !$_SESSION['DEBUG']['lockSite'] ) { unset($_SESSION['TRACK']); }
+unset($_SESSION['FIRST_FILE']);
+
+// Display GET and POST variables.
+#$GLOBALS['_DEBUG']['Show_Pass_words'] = 'p'; // Set to 'p' to show passwords in $_GET, $_POST, and $f arrays.
+if ( !isset($GLOBALS['_DEBUG']['Show_Pass_words']) ) $GLOBALS['_DEBUG']['Show_Pass_words'] = '';
+d_Var('$_GET',$_GET,'/bfk'.$GLOBALS['_DEBUG']['Show_Pass_words'],false,true);      // Display $_GET variable.
+d_Var('$_POST',$_POST,'/bfk'.$GLOBALS['_DEBUG']['Show_Pass_words'],false,true);    // Display $_POST variable.
+d_Var('$f',$GLOBALS['f'],'/bf'.$GLOBALS['_DEBUG']['Show_Pass_words'],false,true);    // Display $f array variable.
+
+// Display PAGE, QUERY, SESSION, SERVER, COOKIE, FILES, and REQUEST variables.
+d_Var('$_PAGE',$GLOBALS['_PAGE'],'/bld'); // Display $_PAGE variable.
+d_Var('$_QUERY',$GLOBALS['_QUERY'],'/bld'); // Display $_QUERY variable.
+d_Var('$_DEBUG',$GLOBALS['_DEBUG'],'/bldh'); // Display $_QUERY variable.
+d_Var('$_SESSION',$_SESSION,'/bld');   // Display $_SESSION variable.
+d_Var('$_SERVER',$_SERVER,'/bld');   // Display $_SERVER variable.
+d_Var('$_COOKIE',$_COOKIE,'/bld');   // Display $_COOKIEs.
+d_Var('$_FILES',$_FILES,'/bld');     // Display $_FILES variable.
+d_Var('$_REQUEST',$_REQUEST,'/bld'); // Display $_REQUEST variable.
+
+// Display included files.
+d_Var('included_files',get_included_files(),'/blkd'); // Display included files.
+
+// Display $GLOBALS.
+?>
+ <div id="GLOBALS_HIDE" class="d_s_l"><br><a href="javascript: divShow('BEGIN_GLOBALS_SHOW'); divHide('GLOBALS_HIDE');"><span class="d_s_an">GLOBALS</span> <span class="d_s_an">+</span></a></div>
+ <div id="BEGIN_GLOBALS_SHOW" class="d_s_h d_s_l"><br><a href="javascript: divShow('GLOBALS_HIDE'); divHide('BEGIN_GLOBALS_SHOW');"><span class="d_s_an">GLOBALS</span> <span class="d_s_an">=</span></a>
+<?
+$__var = array();
+foreach ($GLOBALS as $globalKey => $globalValue) {
+  #echo "$globalKey<br>\n";
+	if ($globalKey != 'GLOBALS' &&
+      $globalKey != 'TRACK' &&
+      $globalKey != 'included_files' &&
+      $globalKey != 'globalKey' &&
+      $globalKey != 'globalValue' &&
+      $globalKey != 'var' &&
+      substr($globalKey,0,1) != '_' &&
+      substr($globalKey,0,5) != 'HTTP_') {
+    if ( is_array($globalValue) ) uksort($globalValue, 'strcasecmp'); #ksort($globalValue);
+    $__var[$globalKey] = $globalValue;
+  }
+}
+uksort($__var, 'strcasecmp');
+$_SESSION['TRACK']['data'] = array();
+foreach ($__var as $key => $value) {
+  #echo $key."<br>\n";
+	d_Var('$'.$key,$value,'ld');
+}
+?>
+ </div><!-- END_GLOBALS_SHOW -->
+<?
+/** /
+// Display PHP constants.
+$PHPconstants = get_defined_constants();
+#ksort($PHPconstants);
+uksort($PHPconstants, 'strcasecmp');
+?>
+<div id="CONSTANTS_HIDE" class="d_s_l"><br><a href="javascript: divShow('BEGIN_CONSTANTS_SHOW'); divHide('CONSTANTS_HIDE');"><span class="d_s_an d_s_b">CONSTANTS</span>+</a></div>
+<div id="BEGIN_CONSTANTS_SHOW" class="d_s_h d_s_l"><br><a href="javascript: divShow('CONSTANTS_HIDE'); divHide('BEGIN_CONSTANTS_SHOW');"><span class="d_s_an d_s_b">CONSTANTS</span>=</a>
+<?
+foreach ($PHPconstants as $constantKey => $constantValue) {
+  if (is_array($constantValue)) uksort($constantValue, 'strcasecmp'); #ksort($constantValue);
+  d_Var($constantKey,$constantValue,'ld');
+}
+?>
+</div><!-- END_CONSTANTS_SHOW -->
+<?
+/**/
+// The end.
+?>
+<br>include_path=<?=ini_get('include_path')?><br>
+</div><!-- d_s_pf -->
+<?
+$_SESSION['DEBUG']['codeSite'] = $GLOBALS['_DEBUG']['codeSiteSave'];
+?>

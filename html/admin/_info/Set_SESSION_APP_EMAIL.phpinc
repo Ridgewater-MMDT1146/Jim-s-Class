@@ -1,0 +1,66 @@
+<?
+// admin/_info/Set_SESSION_APP_EMAIL.phpinc
+// Perform SQL queries.
+
+t_Begin(); // Begin TRACKing included file.
+
+#$DEBUG_Set_SESSION_APP_EMAIL = true;
+if ( !isset( $DEBUG_Set_SESSION_APP_EMAIL) ) $DEBUG_Set_SESSION_APP_EMAIL = false;
+if ( $DEBUG_Set_SESSION_APP_EMAIL ) d_On();
+
+if ( $_SERVER['REMOTE_ADDR'] == $_SERVER['SERVER_ADDR'] ) { // Is this a "localhost" site?
+	// This is a localhost site. Try to find out where we are.
+	// See if shell_exec is available.
+	$disabled = explode(', ', ini_get('disable_functions'));
+	if ( !in_array('shell_exec', $disabled) ) {
+		// Use shell_exec to het host IP addtess.
+		$windows_cmd_to_execute = 'cmd /c ipconfig /all|find "DNS Suffix Search List. . . . . . :"'; // This is command to execute.
+		$result_command = explode("\n",str_replace('DNS Suffix Search List. . . . . . : ','',shell_exec($windows_cmd_to_execute))); // This executes the command.
+		$location = trim($result_command[0]);
+		d_Var('From "'.$windows_cmd_to_execute.'": $location',$location);
+	} else {
+		d_Var('From "$_SERVER[\'SERVER_ADDR\']": $ipaddress',$ipaddress);
+		$ipaddress = explode('.',$_SERVER['SERVER_ADDR']);
+		switch ( $ipaddress[0] ) {
+			case '10':
+				$location = 'ridgewater.local';
+			break;
+			case '192':
+				switch ( $ipaddress[1] ) {
+					case '1':
+						$location = 'home';
+					break;
+					default:
+						$location = 'localdomain';
+					break;
+				}
+			break;
+		}
+	}
+	switch ($location) {
+		case 'home': // Use mediacom mailer.
+			$_SESSION['APP']['EMAIL']['Host'] = 'mail.mediacombb.net';
+			$_SESSION['APP']['EMAIL']['SMTPAuth'] = false;
+		break;
+		case 'localdomain': // In VM? 
+		case 'ridgewater': // Use Ridgewater mailer.
+			//$_SESSION['APP']['EMAIL']['Host'] = '134.29.172.135';
+			$_SESSION['APP']['EMAIL']['Host'] = 'bunsen.ridgewater.edu';
+			//$_SESSION['APP']['EMAIL']['Host'] = 'gloat.ridgewater.edu';
+			$_SESSION['APP']['EMAIL']['SMTPAuth'] = true;
+			$_SESSION['APP']['EMAIL']['Username'] = 'CST';
+			$_SESSION['APP']['EMAIL']['Password'] = 'ridge1234';
+		break;
+		case 'localdomain': // In VM? 
+		default: // There is no mailer?
+			$_SESSION['APP']['EMAIL']['Host'] = '';
+			$_SESSION['APP']['EMAIL']['SMTPAuth'] = true;
+			$_SESSION['APP']['EMAIL']['Username'] = '';
+			$_SESSION['APP']['EMAIL']['Password'] = '';
+		break;
+	}
+}
+if ( $DEBUG_Set_SESSION_APP_EMAIL ) d_Off();
+
+t_End(); // End TRACKing included file.
+?>

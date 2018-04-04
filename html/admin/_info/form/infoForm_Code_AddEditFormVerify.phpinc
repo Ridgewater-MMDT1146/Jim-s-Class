@@ -1,0 +1,51 @@
+<?
+// infoForm_Code_AddEditFormVerify.phpinc
+// Display the verify code.
+t_Begin(); // Begin TRACKing included file.
+//$f_or_formValue = '
+$f_or_formValue = 'f';
+$codeOutput = "
+<?
+// ".$f['filenameBase']."FormVerify.phpinc
+// Verify the ".basename($f['filenameBase'])." form.
+t_Begin(); // Begin TRACKing included file.
+unset(\$formError); // Begin with no errors.";
+foreach ($fieldArray as $fieldName => $fieldValue) {
+  #d_Var('$fieldValue',$fieldValue);
+  if ( $fieldValue['type'] != 'default' && $fieldValue['type'] != 'skip' ) {
+    $codeOutput .= '
+
+// Verify '.$fieldName.'.';
+		if ( $f_or_formValue == 'f' ) {
+			// use f();
+	    $codeOutput .= '
+f(\''.$fieldName.'\');';
+		} else {
+			// use formValue();
+	    $codeOutput .= '
+formValue(\''.$fieldName.'\');';
+		}
+    $codeOutput .= ' $is_valid = is_valid(\''.$fieldName.'\',$f[\''.$fieldName.'\'],\''.$fieldName.'\',\''.$tableName.'\'';
+if ( $fieldValue['Key'] == 'PRI' ) $codeOutput .= ',true';
+$codeOutput .= ');
+if ( $is_valid !== true ) { $formError[\''.$fieldName.'\'] = $is_valid; } // ENTRY ERROR! The '.$fieldName.' is not valid.';
+  }
+}
+$codeOutput .= "
+
+t_End(); // End TRACKing included file.
+?>
+";
+// form_verify_code.
+if ( !isset($f['form_verify_code_value']) ) $f['form_verify_code_value'] = 0;
+?>
+<a name="form_verify_code_name"></a>
+<input type="hidden" name="form_verify_code_value" id="form_verify_code_value_id" value="<?=$f['form_verify_code_value']?>">
+<table><tr><td><fieldset><legend><a href="#form_verify_code_name" name="form_verify_code" onClick="return info_Set(this);"><div id="form_verify_code_status" class="inline"><? if ( !$f['form_verify_code_value']) { ?>+<? } else { ?>-<? } ?></div> <?=$f['filenameBase']?>FormVerify code</a><input type="submit" name="subtask" value="Update form" onClick="info_gotoName(this,'form_verify_code_name');"></legend>
+<div id="form_verify_code_show" class="<? if ( !$f['form_verify_code_value']) { ?>d_s_h <? } ?>d_s_l">
+<textarea class="code_info" wrap="off"><?=htmlSafe(trim($codeOutput))."\n"?></textarea>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

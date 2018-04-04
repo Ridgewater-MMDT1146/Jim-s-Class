@@ -1,0 +1,332 @@
+<?
+// User/authenticate.phpinc
+// Authenticate the user for access to this page.
+#$DEBUG_AuthenticateUser = true; // ********** Uncomment this line to debug authentication.
+if ( !isset($DEBUG_AuthenticateUser)) { $DEBUG_AuthenticateUser = false; }
+t_Begin($DEBUG_AuthenticateUser); // Begin TRACKing included file.
+if (!isset($authorizedPermissions)) $authorizedPermissions = '';
+if (!isset($authorizedUsers)) $authorizedUsers = '';
+// Is a login attempt?
+if ( $f['form'] == 'form_login' && ( $f['task'] == 'Login' || $f['task'] == 'Password' ) ) { // Is login.
+	// Yes, check if username or first/last.
+	if ( strpos($f['username'],' ') ) { // Is this a first laxt login?
+		d_V('username');
+		$spaceFountAt = strpos($f['username'],' ');
+		d_Var("strpos(\$f['username'],' ')",$spaceFountAt);
+		$f['userFirstname'] = substr($f['username'],0,$spaceFountAt);
+		d_V('userFirstname');
+		$f['userLastname'] = substr($f['username'],$spaceFountAt+1);
+		d_V('userLastname');
+		// Check first/last and password.
+		$query = "
+		SELECT user.*
+				 , scheduleId
+			FROM `user`
+ LEFT JOIN `userdata` ON user.userId = userdata.userId
+		 WHERE userFirstname = '".query_safe($f['userFirstname'])."'
+		   AND userLastname = '".query_safe($f['userLastname'])."'
+			 AND ( userPassword = '".query_safe(sha1($f['password']))."' OR userPassword = '' OR userPassword IS NULL )
+		";
+	} else { // Is this a first laxt login?
+		// No, check username and password.
+		$query = "
+		SELECT user.*
+				 , scheduleId
+			FROM `user`
+ LEFT JOIN `userdata` ON user.userId = userdata.userId
+		 WHERE userUsername = '".query_safe($f['username'])."'
+			 AND ( userPassword = '".query_safe(sha1($f['password']))."' OR userPassword = '' OR userPassword IS NULL )
+		";
+	} // Is this a first laxt login?
+	#if ( $authorizedPermissions == "PUBLIC" ) $authorizedPermissions = "USER";
+	d_Var('$query',$query,'q');
+	$login_result = query_do($query);
+	$login_result_count = $GLOBALS['_QUERY']['count'];
+	d_Var('$login_result_count',$login_result_count);
+	d_Var('$login_result',$login_result);
+	d_V('password','p');
+	if ( $login_result_count == 1 ) { // Was login successful?
+    // Yes, Login is successful.
+    t_Line('<span class="d_s_i">Login is successful.</span>','h');
+		/** /?><pre><? print_r($login_result); ?></pre><?/**/
+		query_seek($login_result, 0);
+		$login_row = query_row($login_result);		
+		// Is password being set.
+		if ($f['task'] == 'Password') { 
+			// Yes, set password.
+			if ($f['password'] == $f['password2']) { // Do the passwords match?
+				// Yes
+				t_Line('<span class="d_s_i">Setting the password.</span>','h');
+				$query = "
+					UPDATE `user`
+						 SET userPassword = '".query_safe(sha1($f['password']))."'
+						 , ModifiedOn = '".query_safe(currentDateTime())."'
+						 , modifiedBy = ".$login_row['userId']."
+					 WHERE userId = ".$login_row['userId']."
+				";
+				#d_Var('$query',$query,'q');
+				$userUpdate = query_do($query);
+			} else { // Do the passwords match?
+				// No.
+				$f['password'] = false; // Force password request.
+			} // Do the passwords match?
+		}
+		// Yes. This is a login attempt.
+		t_Line('<span class="d_s_i">This is a login attempt.</span>','h');
+		$authorizedPermissions = 'USER';
+		// Attempt to login the user.
+		$isAuthorized = false;
+		#pageHeader("authenticate");
+		#d_V('userUsername');
+		#d_V('userPassword');
+		#pageFooter();
+    // BEGIN Create $_SESSION['user'] variables.
+    // Create $_SESSION['user'] variables from user table.
+    foreach ( $login_row as $key => $value ) {
+      if ( strpos($key,'user') === 0 && $key != 'userId' && !stristr($key, 'password') && !stristr($key, 'pw') ) {
+        $_SESSION['user'][substr($key,4)] = $value;
+      }
+    }
+    $_SESSION['user']['userId'] = $login_row['userId'];
+    $_SESSION['user']['trueId'] = $login_row['userId'];
+    if ( !$_SESSION['user']['Nickname'] ) {
+      $_SESSION['user']['Fullname'] = trim($login_row['userFirstname']." ".trim($login_row['userMiddlename']." ".$login_row['userLastname']));
+    } else {
+      $_SESSION['user']['Fullname'] = trim($login_row['userNickname']." ".$login_row['userLastname']);
+      $_SESSION['user']['Firstname'] = $login_row['userNickname'];
+    }
+    $_SESSION['user']['permission'] = array();
+		if ( $f['password'] && $f['password'] != '[|]AAAA' ) $_SESSION['user']['permission'][] = 'USER';
+    if ( $_SESSION['user']['Username'] != 'Admin' ) {
+      // Get groups for this user.
+      $query = "
+        SELECT userpermissionName
+          FROM `userpermission`
+      INNER JOIN user_userpermission ON user_userpermission.userpermissionId = userpermission.userpermissionId
+         WHERE userId = ".$_SESSION['user']['userId']."
+      ORDER BY userpermissionName
+      ";
+      // Get departments for this user.
+      $queryDept = "
+        SELECT department.departmentId
+						 , departmentCode
+          FROM `user_department`
+					JOIN `department` ON user_department.departmentId = department.departmentId
+         WHERE userId = ".$_SESSION['user']['userId']."
+      ORDER BY departmentCode
+      ";
+    } else {
+      // Get all groups for Admin user.
+      $query = "
+        SELECT userpermissionName
+          FROM `userpermission`
+      ORDER BY userpermissionName
+      ";
+      // Get departments for Admin user.
+      $queryDept = "
+        SELECT departmentId
+						 , departmentCode
+          FROM `department`
+      ORDER BY departmentCode
+      ";
+    }
+    // Add permissions to user variables.
+    $user_userpermissionResult = query_do($query);
+    $user_userpermissionCount = $GLOBALS['_QUERY']['count'];
+    if ($user_userpermissionCount) {
+			query_seek($user_userpermissionResult, 0);
+      while ($user_userpermissionInfo = query_row($user_userpermissionResult)) {
+        $_SESSION['user']['permission'][] = $user_userpermissionInfo['userpermissionName'];
+      }
+    } else {
+      $user_userpermissionInfo = '';
+    }
+    // Add departments to user variables.
+    $user_departmentResult = query_do($queryDept);
+    $user_departmentCount = $GLOBALS['_QUERY']['count'];
+    if ($user_departmentCount) {
+			query_seek($user_departmentResult, 0);
+      while ($user_departmentInfo = query_row($user_departmentResult)) {
+        $_SESSION['user']['department'][$user_departmentInfo['departmentCode']] = $user_departmentInfo['departmentId'];
+      }
+    } else {
+      $user_departmentInfo = '';
+    }
+		// Save scheduleId.
+		$_SESSION['user']['scheduleId'] = $login_row['scheduleId'];
+    // Create $_SESSION['user'] variables from userdata table.
+    require('User/userdataInfo.phpinc');
+    // END Create $_SESSION['user'] variables.
+    // Save login data.
+		$f['userLoginDate'] = currentDateTime();
+    $f['userLoginCount'] = ($_SESSION['user']['LoginCount']) ? $_SESSION['user']['LoginCount']+1 : 1;
+		// Calc decimal IP address.
+		$octet = explode(".",$_SERVER['REMOTE_ADDR']);
+		$f['userLoginIPDecimal'] = $octet[0]*256*256*256 + $octet[1]*256*256 + $octet[2]*256 + $octet[3];
+		$query = "
+				UPDATE `user`
+					 SET userLoginCount = ".$f['userLoginCount']."
+				     , userLoginDate = '".query_safe($f['userLoginDate'])."'
+						 , userLoginIPAddress = '".query_safe($_SERVER['REMOTE_ADDR'])."'
+					   , userLoginIPDecimal = ".$f['userLoginIPDecimal']."
+					   , userLoginPHPSESSID = '".$_COOKIE['PHPSESSID']."'
+				 WHERE userId = ".$_SESSION['user']['trueId']."
+		";
+		$userUpdate = query_do($query);
+	} else { // Was login successful?
+		// No, login failed.
+		$isAuthorized = false;
+	}
+	$f['task'] = '';
+	$authorizedPermissions="USER";
+} else { // Is login.
+  // This is not a login attempt.
+  t_Line('<span class="d_s_i">This is not a login attempt ($f[\'form\']='.$f['form'].').</span>','h');
+} // Is login.
+		
+// Check authorization.
+d_Var('$authorizedPermissions',$authorizedPermissions);
+if ( !($authorizedPermissions == "PUBLIC") ) {
+  // This page requires authentication.
+  // Authenticate the user to the page.
+  // See if the user is logged in.
+  if ( isset($_SESSION['user']['userId']) && $_SESSION['user']['userId'] ) {
+    // The user is logged in.
+    t_Line('<span class="d_s_i">The user is logged in. Authenticate page.</span>','h');
+    // For security, start by assuming the visitor is NOT authorized.
+    $isAuthorized = false;
+    #d_Var('$authorizedUsers',$authorizedUsers);
+    #d_Var('$authorizedPermissions',$authorizedPermissions);
+    #d_Var("\$_SESSION['user']['permission']",$_SESSION['user']['permission']);
+
+    // Check if this user authorized is by being in the Admin userpermission.
+    /**/ // Remove the space between * / on the left if you do not want auto-authentication for the Admin userpermission.
+    if (in_array('Admin', $_SESSION['user']['permission'])) {
+      t_Line('<span class="d_s_vt">Page authorized. User is an Admin</span>','h');
+      $isAuthorized = true;
+    }
+    /**/
+
+    // Check if this user authorized is by being in the $authorizedPermissions.
+    if (!$isAuthorized && !empty($_SESSION['user']['permission']) && !empty($authorizedPermissions)) {
+      if (!($authorizedPermissions == 'USER')) {
+        $authorizedGroupArray = Explode(",", $authorizedPermissions);
+        foreach ( $_SESSION['user']['permission'] as $key => $thisGroup ) {
+          if (in_array($thisGroup, $authorizedGroupArray)) {
+            t_Line('<span class="d_s_vt">Page authorized. User group found in page $authorizedPermissions.</span>','h');
+            $isAuthorized = true;
+          }
+        }
+      } else {
+        t_Line('<span class="d_s_vt">Page authorized. $authorizedPermissions = "USER"</span>','h');
+        $isAuthorized = true;
+      }
+    }
+
+    // Check if this user authorized is by being in the $authorizedUsers.
+    /** / // Remove the space between * / on the left if you do not want authentication by $authorizedUsers.
+    if (!$isAuthorized && !empty($_SESSION['user']['Username']) && !empty($authorizedUsers)) {
+      $authorizedUserArray = Explode(",", $authorizedUsers);
+      #d_Var("\$_SESSION['user']['Username']",$_SESSION['user']['Username']);
+      #d_Var('$authorizedUserArray',$authorizedUserArray);
+      if (in_array($_SESSION['user']['Username'], $authorizedUserArray)) {
+        t_Line('<span class="d_s_vt">Page authorized. User name found in page $authorizedUsers</span>','h');
+        $isAuthorized = true;
+      }
+    }
+    /**/
+
+/** /
+
+    // Check if this user authorized is by the database.
+    if (!$isAuthorized) {
+      // Verify page access using the database.
+      #d_Var("\$_SERVER['PHP_SELF']",$_SERVER['PHP_SELF']);
+      // See if this page has a database entry.
+      // Remove /index.php.
+      $f['pageURL'] = str_replace("/index.php","",$_SERVER['PHP_SELF']);
+      #d_V('pageURL');
+      // Remove the trailing /.
+      if ( substr($f['pageURL'],strlen($f['pageURL'])-1,1) == '/' ) $f['pageURL'] = substr($f['pageURL'],0,strlen($f['pageURL'])-1);
+      #d_V('pageURL');
+      // Remove the leading /.
+      if ( substr($f['pageURL'],0,1) == '/' ) $f['pageURL'] = substr($f['pageURL'],1);
+      #d_V('pageURL');
+      $query = "
+        SELECT pageId
+          FROM `page`
+         WHERE pageURL = '".$f['pageURL']."'
+      ";
+      $pageResult = query_do($query);
+      $pageCount = $GLOBALS['_QUERY']['count'];
+      if ($pageCount) {
+        query_seek($pageResult, 0);
+        $pageInfo = query_row($pageResult);
+        $f['pageId'] = $pageInfo['pageId'];
+        // Get group data for this page.
+        $query = "
+          SELECT userpermission.userpermissionName
+            FROM `userpermission`
+            INNER JOIN `group_page` ON group_page.userpermissionId = userpermission.userpermissionId
+           WHERE group_page.pageId = ".$f['pageId']."
+        ";
+        $group_pageResult = query_do($query);
+        #d_Var('$group_pageResult',$group_pageResult);
+        $group_pageCount = $GLOBALS['_QUERY']['count'];
+        if ($group_pageCount) {
+          #d_Var("\$_SESSION['user']['permission']",$_SESSION['user']['permission']);
+          query_seek($group_pageResult, 0);
+          while ($group_pageInfo = query_row($group_pageResult)) {
+            if (in_array($group_pageInfo['userpermissionName'],$_SESSION['user']['permission'])) {
+              t_Line('<span class="d_s_vt">Page authorized. User group found in page groups from database.</span>','h');
+              $isAuthorized = true;
+              #d_Var("\$group_pageInfo['userpermissionName']",$group_pageInfo['userpermissionName']);
+              #d_Var('$isAuthorized',$isAuthorized);
+            }
+          }
+        }
+      }
+    }
+
+/**/
+	
+    d_Var('$isAuthorized',$isAuthorized);
+
+    if ( $isAuthorized && $_SESSION['user']['Inactive'] ) {
+      // The user is logged in. but not active.
+      $isAuthorized = false;
+      t_Line('<span class="d_s_vt">The user is not active.</span>','h');
+      $messageError = $_SESSION['user']['Fullname']." is no longer an active ".$_SESSION['APP']['shortname'].' ';
+    }
+    if ( $isAuthorized ) {
+      // The user is logged in. The user is authorized.
+      t_Line('<span class="d_s_vt">The user is authorized.</span>','h');
+      // Update login history.
+			// Check for password.
+			if ( !in_array('USER',$_SESSION['user']['permission']) ) { // 'USER' is only set if the user has a password.
+				d_Line('userPassword is empty.');
+				require("password.phpinc");
+			} else {
+				d_Line('userPassword is OK.');
+			}
+      #require('User/userLoginHistory.phpinc');
+    } else {
+      // The user is logged in. The user is not authorized.
+      t_Line('<span class="d_s_vf">The user is not authorized.</span>','h');
+      require("User/unauthorized.phpinc");
+    }
+  } else {
+    // The user is not logged in.
+    t_Line('<span class="d_s_i">The user is not logged in. Display the login form.</span>','h');
+    if ( !isset($isAuthorized) ) $isAuthorized = NULL;
+		require("login.phpinc");
+  }
+} else {
+  // This page is public and does not require authentication.
+  t_Line('<span class="d_s_vt">Page authorized. $authorizedPermissions = "PUBLIC"</span>','h');
+}
+
+if ( isset($_SESSION['user']) ) { t_Var("\$_SESSION['user']",$_SESSION['user']); } else { t_Line("\$_SESSION['user'] is unset",'e'); }
+
+t_End(); // End TRACKing included file.
+?>

@@ -1,0 +1,23 @@
+<?
+// admin/nav.phpinc
+// Admin nav.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// include_filename_content_goes_here.
+?>
+<div class="row">
+	<div class="col-sm-2 col-md-2 sidebar"> 
+		<ul class="nav nav_sidebar">
+			<li ><a class="btn btn-xs" href="<?=$_SESSION['ROOT']['http']?>/admin/credential">Credentials</a></li>
+			<li ><a class="btn btn-xs" href="<?=$_SESSION['ROOT']['http']?>/admin/course">Courses</a></li>
+			<li ><a class="btn btn-xs" href="<?=$_SESSION['ROOT']['http']?>/admin/parse">Parse</a></li>
+			<li ><a class="btn btn-xs" href="<?=$_SESSION['ROOT']['http']?>/admin/_info">_info</a></li>
+			<li ><a class="btn btn-xs" href="<?=$_SESSION['ROOT']['http']?>/site/_work">_work</a></li>
+		</ul>
+	</div>
+</div><!-- end row -->
+<?
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

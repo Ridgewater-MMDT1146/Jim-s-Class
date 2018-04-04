@@ -1,0 +1,97 @@
+<?
+// admin/page/pageForm.phpinc
+
+if (!isset($f['pageId'])) formValue('pageId');
+if ($f['pageId'] == '') $f['pageId'] = 0;
+#d_V('pageId');
+if ($f['form'] != 'form_page') {
+  // form_page not called by itself. Preload data for form.
+  if ($f['pageId']) {
+    // $f['pageId'] set. This is an edit form. Load form_page data from database.
+    $query = "
+    SELECT * FROM `page`
+     WHERE pageId = ".$f['pageId']."
+    ";
+    $pageResult = query_do($query);
+    $pageCount = $GLOBALS['_QUERY']['count'];
+    if ($pageCount) {
+      // Load form_phonenumber data from data record.
+      $pageInfo = query_row($pageResult);
+      $f['pageURL'] = 'http://'.$_SERVER['SERVER_NAME'].'/'.$pageInfo['pageURL'];
+      #if (substr($f['pageURL'],strlen($f['pageURL'])-9,9) == 'index.php') $f['pageURL'] = str_replace('index.php','',$f['pageURL']);
+      $f['pageDescription'] = $pageInfo['pageDescription'];
+    } else {
+      // There was no record for $f['pageId']. This is an error.
+?>
+      <span class="bold error">ERROR!. No record for $f['pageId']=<?=$f['pageId']?> found.</span><br>
+      <span class="bold error">Please contact the site administrator<? if (isset($_SESSION['APP']['ADMIN']['email'])) { echo ' at '.$_SESSION['APP']['ADMIN']['email']; } else { echo '.'; } ?>.</span><br>
+<?  
+    }
+  } else {
+    // $f['pageId'] is 0. This is an add form. Set form_page data to default values.
+      $f['pageURL'] = '';
+      $f['pageDescription'] = '';
+  }
+}
+pageHeader("Page access admin");
+?>
+<p>
+<div id="container" style="border:1px solid red; display:table; margin:auto;">
+<div id="groupdiv">
+<fieldset><legend>Page</legend>
+<form name="form_page" id="form_page" action="<?=php_self()?>" method="post">
+<input type="hidden" name="uuid" value="<?=uuid()?>">
+<input type="hidden" name="form" value="form_page">
+<table>
+<input type="hidden" name="pageId" id="pageId" value="<?=htmlSafe($f['pageId'])?>">
+<? $disabled = ''; $readonly = ''; ?>
+<? if (isset($f['pageURL_Error'])) { ?>
+  <tr><td></td><td class="error"><?=$f['pageURL_Error']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">pageURL:</td>
+    <td><input type="text" class="" name="pageURL" id="pageURL" value="<?=htmlSafe($f['pageURL'])?>"<?=$disabled?><?=$readonly?> style="width:60em;"></td>
+  </tr>
+<? $disabled = ''; $readonly = ''; ?>
+<? if (isset($f['pageDescription_Error'])) { ?>
+  <tr><td></td><td class="error"><?=$f['pageDescription_Error']?></td></tr>
+<? } ?>
+  <tr>
+    <td class="right">pageDescription:</td>
+    <td><input type="text" class="" name="pageDescription" id="pageDescription" value="<?=htmlSafe($f['pageDescription'])?>"<?=$disabled?><?=$readonly?> style="width:60em;"></td>
+  </tr>
+  <tr><td class="center" colspan="2">
+<?
+if ($f['pageId']) {
+?>
+    <input type="submit" name="task" value="Update page">
+    <input type="submit" name="task" value="Delete page">
+<?
+} else {
+?>
+    <input type="submit" name="task" value="Add page">
+<?
+}
+if ($f['form'] == 'form_group') {
+?>
+    <input type="submit" name="task" value="Done">
+<?
+} else {
+?>
+    <input type="submit" name="task" value="Cancel">
+<?
+}
+?>
+  </tr>
+</table>
+</form>
+</fieldset>
+</div><!-- id=userdiv -->
+<?
+if ($f['pageId']) require('admin/page/pageGroupForm.phpinc');
+?>
+</div><!-- id="container" -->
+<?
+
+pageFooter();
+?>

@@ -1,0 +1,63 @@
+<?
+// infoForm_Code_AddEditFormPreset_Data.phpinc
+// Create the form value load from database code.
+t_Begin(); // Begin TRACKing included file.
+$f['tableQueryDisplay'] = '      '.str_replace("\n","\n      ",trim($tableQuery));
+$codeOutput .= '
+'.$indent.'  $query = "
+'.$indent.'    '.trim(htmlSafe($f['tableQueryDisplay']));
+$query = htmlSafe($f['tableQueryDisplay']);
+if ( count($tablePrimaryKey) ) {
+  $conditionPrefix = 'WHERE';
+  foreach ( $tablePrimaryKey as $PrimaryKey ) {
+    $codeOutput .= '
+'.$indent.'     '.$conditionPrefix.' '.$PrimaryKey.' = ".$f'."['".$PrimaryKey."']".'."';
+    $query .= ' '.trim($conditionPrefix.' '.$PrimaryKey.' = \'.$f'."['".$PrimaryKey."']".'.\'');
+    $conditionPrefix = '  AND';
+  }
+} else {
+  $codeOutput .= '
+'.$indent.'     WHERE 1=1';
+}
+  $codeOutput .= '
+'.$indent.'  ";
+'.$indent.'  $'.$IdTable.'Result = query_do($query,\''.$f['database'].'\');
+'.$indent.'  $'.$IdTable.'Count = $_SESSION[\'query\'][\'count\'];';
+	if ( $arrayName == 'f' ) {
+	  $codeOutput .= '
+'.$indent.'  /**/ // Remove this section if original data is obtained above.';
+	}
+  $codeOutput .= '
+'.$indent.'  if ( $'.$IdTable.'Count == 1 ) {
+'.$indent.'    // Load original data from record.
+'.$indent.'    query_seek($'.$IdTable.'Result, 0);
+'.$indent.'    $'.$IdTable.'Info = query_row($'.$IdTable.'Result);';
+      $orderBy = 'orderByField';
+      foreach ($fieldArray as $fieldName => $fieldValue) {
+        //if ( !in_array($fieldName,$tablePrimaryKey) && $fieldValue['type'] != 'skip' && substr($fieldName,strlen($fieldName)-2,2) != 'On' && substr($fieldName,strlen($fieldName)-2,2) != 'By' ) {
+        if ( !in_array($fieldName,$tablePrimaryKey) && $fieldValue['type'] != 'skip' ) {
+          $codeOutput .= '
+'.$indent.'    $'.$arrayName.'[\''.$fieldName.'\'] = $'.$IdTable.'Info[\''.$fieldName.'\'];';
+      if ( $orderBy == '' && strlen(stristr($fieldName,'name')) ) $orderBy=$fieldName;
+        }
+      }
+$codeOutput .= '
+'.$indent.'  } else {';
+if ( count($tablePrimaryKey) ) {
+  $PrimaryKeyValueList = '';
+  foreach ( $tablePrimaryKey as $PrimaryKey ) {
+    $PrimaryKeyValueList = listAppend($PrimaryKeyValueList,$PrimaryKey.'=\'.$f'."['".$PrimaryKey."']").'.\'';
+  }
+  $codeOutput .= '
+'.$indent.'    // The record count was not 1. This is an error.
+'.$indent.'    programmingError(\'Record count (\'.$'.$IdTable.'Count.\') for '.listAnd($PrimaryKeyValueList).' was not 1.\');
+  }';
+} else {
+  $codeOutput .= '
+'.$indent.'    // There was no record returned by query. This is an error.
+'.$indent.'    programmingError(\'No record found for "'.trim($query).'".\');';
+  $codeOutput .= '
+    }';
+}
+t_End(); // End TRACKing included file.
+?>

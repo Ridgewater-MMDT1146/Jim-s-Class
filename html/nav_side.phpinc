@@ -1,0 +1,23 @@
+<?
+// nav_side.phpinc
+// Main nav.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+
+// include_filename_content_goes_here.
+?>
+<ul class="nav">
+	<? if ( isset($_SESSION['user']['userId']) && $_SESSION['user']['userId'] ) { ?>
+<!--
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/assignments" role="button" class="btn btn-xs">Assignments</a></li>
+	<li><a href="#" role="button" class="btn btn-xs">Search</span><span class="sr-only">(current)</span></a></li>
+-->
+	<li><a href="<?=$_SESSION['ROOT']['http']?>/Schedule" role="button" class="btn btn-xs">Schedule</a></li>
+	 <? } else {
+	 ?> 
+	 <?	} ?>
+</ul>
+<?
+
+t_End(); // End TRACKing include_filename.phpinc.
+?>

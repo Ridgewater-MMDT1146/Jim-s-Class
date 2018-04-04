@@ -1,0 +1,84 @@
+<?
+// admin/_info/form/infoForm_Form_AddEditForm_Settings.phpinc
+// Display the form settings form.
+# Display the form settings form.
+if (false)  $f['defaultButtons'] = 1; # Begin with defaultButtons checked.
+t_Begin(); // Begin TRACKing included file.
+// Preset variables for first form call.
+if ( $f['form'] != 'form_definition' ) {
+  // Set NULL checkbox to default.
+  $f['defaultButtons'] = 1; // Begin with defaultButtons checked.
+}
+// Get form values.
+if ( !isset($f['buttonType']) ) { formValue('buttonType'); if ( !isset($f['buttonType']) ) $f['buttonType'] = 'submit'; }
+if ( !isset($f['defaultButtons']) ) { formValue('defaultButtons'); }
+if ( !isset($f['displayFormUsing']) ) { formValue('displayFormUsing'); if ( !isset($f['displayFormUsing']) ) $f['displayFormUsing'] = 'table'; }
+if ( !isset($f['showError']) ) { formValue('showError'); if ( !isset($f['showError']) ) $f['showError'] = 'before'; }
+if ( !isset($f['add_edit_form_settings_value']) ) { formValue('add_edit_form_settings_value'); if ( !isset($f['add_edit_form_settings_value']) ) $f['add_edit_form_settings_value'] = 1; } // Set to show if unset.
+?>
+<a name="form_settings_name"></a>
+<input type="hidden" name="add_edit_form_settings_value" id="add_edit_form_settings_value_id" value="<?=$f['add_edit_form_settings_value']?>">
+<table><tr><td><fieldset><legend><a href="#form_settings" name="add_edit_form_settings" onClick="return info_Set(this);"><div id="add_edit_form_settings_status" class="inline"><? if ( !$f['add_edit_form_settings_value']) { ?>+<? } else { ?>-<? } ?></div> <?=basename($f['filenameBase'])?>Form form settings</a><input type="submit" name="subtask_form_settings" value="Update form" onClick="info_gotoName(this,'form_settings_name');"></legend>
+<div id="add_edit_form_settings_show" class="<? if ( !$f['add_edit_form_settings_value']) { ?>d_s_h <? } ?>d_s_l">
+<?
+?>
+<table>
+  <tr>
+    <td><abbr onMouseOver="ttShow('Displays the form using a table.')" onMouseOut="ttHide();" onClick="ttHide();"><input type="radio" name="displayFormUsing" value="table"<? if ( $f['displayFormUsing'] == 'table' ) { ?> checked<? } ?>>Display using table</abbr></td>
+    <td><abbr class="disabled" onMouseOver="ttShow('Displays the form using css.')" onMouseOut="ttHide();" onClick="ttHide();"><input type="radio" name="displayFormUsing" value="css"<? if ( $f['displayFormUsing'] == 'css' ) { ?> checked<? } ?>>Display using css</abbr></td>
+  </tr>
+  <tr>
+    <td><input type="radio" name="buttonType" value="submit"<? if ( $f['buttonType'] == 'submit' ) { ?> checked<? } ?>>Buttons use submit</td>
+    <td><input type="radio" name="buttonType" value="button"<? if ( $f['buttonType'] == 'button' ) { ?> checked<? } ?>>Buttons are buttons</td>
+  </tr>
+  <tr>
+    <td colspan="2"><input type="checkbox" name="defaultButtons" value="1"<? if ( isset($f['defaultButtons']) ) { ?> checked<? } ?>>Add default buttons <input type="button" value="Update <?=basename($f['filenameBase'])?>" class="smaller"<? if ( !isset($f['defaultButtons']) ) { ?> disabled<? } ?>> <input type="button" value="Add <?=basename($f['filenameBase'])?>" class="smaller"<? if ( !isset($f['defaultButtons']) ) { ?> disabled<? } ?>> <input type="button" value="Cancel" class="smaller"<? if ( !isset($f['defaultButtons']) ) { ?> disabled<? } ?>> <input type="button" value="Done" class="smaller"<? if ( !isset($f['defaultButtons']) ) { ?> disabled<? } ?>></td>
+  </tr>
+  <tr>
+    <td><input type="radio" name="showError" value="before"<? if ( $f['showError'] == 'before' ) { ?> checked<? } ?>>Show error before field</td>
+    <td><input type="radio" name="showError" value="after"<? if ( $f['showError'] == 'after' ) { ?> checked<? } ?>>Show error after field</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <th class="" colspan="4">Add/Edit submit buttons</th>
+  </tr>
+  <tr>
+    <td class="bold_info right_info small_info">name</td>
+    <td class="bold_info small_info">value</td>
+    <td class="bold_info right_info small_info">name</td>
+    <td class="bold_info small_info">value</td>
+  </tr>
+  <tr>
+<?
+for ($i=1; $i<=$maximumSubmitButtonPairs; $i++) {
+  $j = $i +  $maximumSubmitButtonPairs;
+  if ($i != $maximumSubmitButtonPairs) {
+    $style = '';
+  } else {
+    $style = ' grayline_info';
+  }
+  formValue('name_i');
+  formValue('value_i');
+  formValue('name_j');
+  formValue('value_j');
+?>
+  <tr>
+    <td class="right_info small_info<?=$style?>"><b><?=$i?>: </b><input type="text" name="submit_<?=$i?>_name" class="small_info width100px_info" value="<?=htmlSafe($f['name_i'])?>"></td>
+    <td class="small_info<?=$style?>"><input type="text" name="submit_<?=$i?>_value" class="small_info width100px_info" value="<?=htmlSafe($f['value_i'])?>"></td>
+    <td class="right_info small_info<?=$style?>"><b><?=$j?>: </b><input type="text" name="submit_<?=$j?>_name" class="small_info width100px_info" value="<?=htmlSafe($f['name_j'])?>"></td>
+    <td class="small_info<?=$style?>"><input type="text" name="submit_<?=$j?>_value" class="small_info width100px_info" value="<?=htmlSafe($f['value_j'])?>"></td>
+  </tr>
+<?
+}
+?>
+</table>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

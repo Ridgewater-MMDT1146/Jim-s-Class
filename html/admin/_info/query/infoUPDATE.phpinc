@@ -1,0 +1,25 @@
+<?
+// admin/_info/form/infoUPDATE.phpinc
+// Display the UPDATE query.
+
+t_Begin(); // Begin TRACKing included file.
+include('admin/_info/query/infoTableFields.phpinc'); // Get table field info.
+$indent = '';
+$query = '';
+$queryType = 'UPDATE';
+$conditionalPrevious = false;
+$qcPrevious = false;
+?>
+<a name="conditional_settings"></a>
+<form name="form_definition" action="<?=php_self()?>" method="post">
+<?
+include('admin/_info/query/infoConditional.phpinc');
+include('admin/_info/query/infoUPDATEquery.phpinc');
+?>
+<table><tr><td><fieldset><legend><?=$f['database']?> <?=$f['table']?> UPDATE</legend>
+<textarea class="code_info" wrap="off"><?=$query?></textarea>
+</fieldset></td></tr></table>
+</form>
+<?
+t_End(); // End TRACKing included file.
+?>

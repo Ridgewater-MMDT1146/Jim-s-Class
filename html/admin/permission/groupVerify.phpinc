@@ -1,0 +1,19 @@
+<?
+// admin/group/groupVerify.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+
+formValue('userpermissionId');
+formValue('userpermissionName');
+formValue('groupDescription');
+
+$error = false;
+// Verify userpermissionName
+if ($f['userpermissionName'] == '') {
+  //error
+  $f['userpermissionName_Error'] = '<span class="error">The group name cannot be blank.</span>';
+  $error = true;
+}
+
+t_End(); // End TRACKing included file.
+?>

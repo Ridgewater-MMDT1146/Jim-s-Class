@@ -1,0 +1,59 @@
+<?
+// admin/course/courseFormVerify.phpinc
+// Verify the course form.
+t_Begin(); // Begin TRACKing included file.
+unset($formError); // Begin with no errors.
+
+// Verify courseId.
+f('courseId'); $is_valid = is_valid('courseId',$f['courseId'],'courseId','course',true);
+if ( $is_valid !== true ) { $formError['courseId'] = $is_valid; } // ENTRY ERROR! The courseId is not valid.
+
+// Verify userId.
+f('userId'); $is_valid = is_valid('userId',$f['userId'],'userId','course');
+if ( $is_valid !== true ) { $formError['userId'] = $is_valid; } // ENTRY ERROR! The userId is not valid.
+
+// Verify YRTR.
+f('YRTR'); $is_valid = is_valid('YRTR',$f['YRTR'],'YRTR','course');
+if ( $is_valid !== true ) { $formError['YRTR'] = $is_valid; } // ENTRY ERROR! The YRTR is not valid.
+if ( !isset($formError['YRTR']) ) {
+  if ( !$f['YRTR'] ) $formError['YRTR'] = 'The course YRTR cannot be blank.';
+}
+
+// Verify departmentId.
+f('departmentId'); $is_valid = is_valid('departmentId',$f['departmentId'],'departmentId','course');
+if ( $is_valid !== true ) { $formError['departmentId'] = $is_valid; } // ENTRY ERROR! The departmentId is not valid.
+if ( !isset($formError['departmentId']) ) {
+  if ( !$f['departmentId'] ) $formError['departmentId'] = 'The department cannot be blank.';
+}
+
+// Verify courseNumber.
+f('courseNumber'); $is_valid = is_valid('courseNumber',$f['courseNumber'],'courseNumber','course');
+if ( $is_valid !== true ) { $formError['courseNumber'] = $is_valid; } // ENTRY ERROR! The courseNumber is not valid.
+if ( !isset($formError['courseNumber']) ) {
+  if ( !$f['courseNumber'] ) $formError['courseNumber'] = 'The course number cannot be blank.';
+}
+
+// Verify courseTitle.
+f('courseTitle'); $is_valid = is_valid('courseTitle',$f['courseTitle'],'courseTitle','course');
+if ( $is_valid !== true ) { $formError['courseTitle'] = $is_valid; } // ENTRY ERROR! The courseTitle is not valid.
+if ( !isset($formError['courseTitle']) ) {
+  if ( !$f['courseTitle'] ) $formError['courseTitle'] = 'The course title cannot be blank.';
+}
+
+// Verify courseCredits.
+f('courseCredits'); $is_valid = is_valid('courseCredits',$f['courseCredits'],'courseCredits','course');
+if ( $is_valid !== true ) { $formError['courseCredits'] = $is_valid; } // ENTRY ERROR! The courseCredits is not valid.
+if ( !isset($formError['courseCredits']) ) {
+  if ( !$f['courseCredits'] ) $formError['courseCredits'] = 'The course credits cannot be blank.';
+}
+
+// Verify courseCreditsMax.
+f('courseCreditsMax'); $is_valid = is_valid('courseCreditsMax',$f['courseCreditsMax'],'courseCreditsMax','course');
+if ( $is_valid !== true ) { $formError['courseCreditsMax'] = $is_valid; } // ENTRY ERROR! The courseCreditsMax is not valid.
+
+// Verify courseInactive.
+f('courseInactive'); $is_valid = is_valid('courseInactive',$f['courseInactive'],'courseInactive','course');
+if ( $is_valid !== true ) { $formError['courseInactive'] = $is_valid; } // ENTRY ERROR! The courseInactive is not valid.
+
+t_End(); // End TRACKing included file.
+?>

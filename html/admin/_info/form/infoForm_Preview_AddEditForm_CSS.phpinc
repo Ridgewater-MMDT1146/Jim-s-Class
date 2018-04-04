@@ -1,0 +1,8 @@
+<?
+// admin/_info/form/infoForm_Preview_AddEditForm_CSS.phpinc
+t_Begin(); // Begin TRACKing included file.
+?>
+ <tr><td colspan="5" class="warn">form css preview not available.</td></tr>
+<?
+t_End(); // End TRACKing included file.
+?>

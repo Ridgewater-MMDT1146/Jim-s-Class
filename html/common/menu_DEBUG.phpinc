@@ -1,0 +1,74 @@
+<?
+// common/menu_DEBUG.phpinc
+// Display the debugging menu.
+
+t_Begin(); // Begin TRACKing menu_DEBUG.phpinc file.
+
+#d_Var("\$GLOBALS['pageCall']",$GLOBALS['pageCall'],'d');
+
+#if ( $GLOBALS['pageCall'] ) {
+	// Debugging menu.
+	if ( $GLOBALS['TRACK'] && $GLOBALS['debuggingAvailable'] ) {
+		#echo "\n";
+		button('!','This menu is for DEBUG functions.<br>It is only visible when the site is in DEBUG mode.',false,'','btn-xs d_s_i');
+		?> <?
+		// codeOn/Off
+		if ($_SESSION['DEBUG']['codeSite']) {
+			menuItem('codeOff','?debug=codeOff','Turn off code debugging for the site.','btn-xs d_s_vt');
+		} else {
+			menuItem('codeOn','?debug=codeOn','Turn on code debugging for the site.','btn-xs d_s_vf');
+		}
+		// footOn/Off
+		if ($_SESSION['DEBUG']['footSite']) {
+			menuItem('footOff','?debug=footOff','Turn off footer debugging for the site.','btn-xs d_s_vt');
+		} else {
+			menuItem('footOn','?debug=footOn','Turn on footer debugging for the site.','btn-xs d_s_vf');
+		}
+		// headOn/Off
+		if ($_SESSION['DEBUG']['headSite']) {
+			menuItem('headOff','?debug=headOff','Turn off header(\'Location\') debugging link for the site.','btn-xs d_s_vt');
+		} else {
+			menuItem('headOn','?debug=headOn','Turn on header(\'Location\') debugging link for the site.','btn-xs d_s_vf');
+		}
+		// lockOn/Off
+		if ($_SESSION['DEBUG']['lockSite']) {
+			menuItem('lockOff','?debug=lockOff','Turn off TRACK locking debugging for the site.','btn-xs d_s_vt');
+		} else {
+			menuItem('lockOn','?debug=lockOn','Turn on TRACK locking debugging for the site.','btn-xs d_s_vf');
+		}
+		// memoryOn/Off
+		if ($_SESSION['DEBUG']['memorySite']) {
+			menuItem('MemoryOff','?debug=MemoryOff','Turn off memory debugging for the site.','btn-xs d_s_vt');
+		} else {
+			menuItem('MemoryOn','?debug=MemoryOn','Turn on memory debugging for the site.','btn-xs d_s_vf');
+		}
+		if ($_SESSION['DEBUG']['querySite']) {
+			menuItem('MySQLOff','?debug=MySQLOff','Turn off MySQL debugging for the site.','btn-xs d_s_vt');
+		} else {
+			menuItem('MySQLOn','?debug=MySQLOn','Turn on MySQL debugging for the site.','btn-xs d_s_vf');
+		}
+		if ( $_SESSION['APP']['REQUIRES']['postdata'] ) { 
+			menuItem('clear','?clear','Clear all postdata.','button');
+		}
+		menuItem('appload','?appload','Reload $_SESSION[\'APP\'] and $_SESSION[\'DATABASE\'].','btn-xs');
+		menuItem('session','?session','Clear the session.','btn-xs');
+		if ( !isset($menuLoaded) ) {
+			if ( isset($_SESSION['user']['userId']) && in_array('Admin',$_SESSION['user']['permission']) ) {
+				// Admin
+				menuItem('Admin','/admin/','Administration tasks','btn-xs');
+			}
+			// Login/Logout
+			if ( isset($_SESSION['user']['userId']) && $_SESSION['user']['userId'] ) {
+				menuItem('Logout','/?Logout','Logout of '.$_SESSION['APP']['longname'],'btn-xs');
+			} else {
+				menuItem('Login','/?Login','Login to '.$_SESSION['APP']['longname'],'btn-xs');
+			}
+		}
+		?> <?
+		button('!','This menu is for DEBUG functions.<br>It is only visible when the site is in DEBUG mode.',false,'','btn-xs d_s_i');
+		$GLOBALS['DEBUG']['menu'] = true;
+	}
+#}
+
+t_End(); // End TRACKing included file.
+?>

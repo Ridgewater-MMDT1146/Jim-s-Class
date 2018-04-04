@@ -1,0 +1,69 @@
+<?
+// admin/_info/parse/parseFunctions.phpinc
+// Function for file parsing.
+t_Begin(); // Begin TRACKing included file.
+// parseForFunctions($fileContents)
+// parse text searching for php function calls.
+// $text = The text to parse.
+// Returns an array of function names.
+#function parseForFunctions($text) {
+function parseForFunctions($file) {
+  $parseForFunctions = array();
+  /** /
+  // Glue the text together.
+  $alltext = '';
+  $startingText = array();
+  foreach ( $text as $line ) {
+    $alltext .= '<br>'.$string = str_replace(array('\n','\r'),array('',''),$line);
+    $startingText[] = $line;
+  }
+  // Strip all comments.
+  $noComments = trim(preg_replace('/#.* /','',preg_replace('#//.*#','',preg_replace('#/\*(?:[^*]*(?:\*(?!/))*)*\*/#','',($alltext)))));
+  /** /
+  d_Var('$noComments',str_replace(array('\n','\r','<br>'),array('','',''),$noComments),'');
+  $ncText = explode('<br>',substr($noComments,4));
+  d_Var('$ncText',$ncText);
+  /**/
+  /*
+  * T_ML_COMMENT does not exist in PHP 5.
+  * The following three lines define it in order to
+  * preserve backwards compatibility.
+  *
+  * The next two lines define the PHP 5 only T_DOC_COMMENT,
+  * which we will mask as T_ML_COMMENT for PHP 4.
+  */
+  if (!defined('T_ML_COMMENT')) {
+     define('T_ML_COMMENT', T_COMMENT);
+  } else {
+     define('T_DOC_COMMENT', T_ML_COMMENT);
+  }
+  $source = file_get_contents($file);
+  #d_Var('$source',$source);
+  $tokens = token_get_all($source);
+  d_Var('$tokens',$tokens);
+  foreach ($tokens as $token) {
+     if (is_string($token)) {
+         // simple 1-character token
+         #echo $token;
+     } else {
+         // token array
+         list($id, $text) = $token;
+         switch ($id) { 
+             case T_COMMENT: 
+             case T_ML_COMMENT: // we've defined this
+             case T_DOC_COMMENT: // and this
+                 // no action on comments
+               break;
+             case T_FUNCTION:
+               #d_Var('$token',$token);
+             default:
+                 // anything else -> output "as is"
+                 #echo $text;
+               break;
+         }
+     }
+  }
+  return $parseForFunctions;
+}
+t_End(); // End TRACKing included file.
+?>

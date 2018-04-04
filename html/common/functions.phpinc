@@ -1,0 +1,1016 @@
+<?
+// common/functions.phpinc
+// Contains the functions most commonly used by all web pages.
+// Last change 2015.05.08
+
+// DEBUG functions do not as yet exist.
+// Setup @_DEBUG']['track'] for functions.phpinc.
+
+// Push code on stack.
+$GLOBALS['_DEBUG']['code']['count']++; // Increment the code counter.
+$GLOBALS['_DEBUG']['code']['save'][$GLOBALS['_DEBUG']['code']['count']] = array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false);
+array_unshift($GLOBALS['_DEBUG']['code']['stack'],$GLOBALS['_DEBUG']['code']['count']);
+
+#array_unshift($GLOBALS['_DEBUG']['track']['code'],array('file'=>basename(__FILE__),'line'=>__LINE__,'set'=>false)); // Push the caller code.
+$backtrace = debug_backtrace();
+#pushpop#echo str_repeat('&nbsp; &nbsp;',count($GLOBALS['_DEBUG']['track']['code'])).'push cp #'.count($GLOBALS['_DEBUG']['track']['code']).' '.basename(__FILE__).':'.__LINE__.' by '.basename($backtrace['0']['file']).':'.$backtrace['0']['line'].' in '.basename(__FILE__).':'.__LINE__.' as t_End() does not exist'."<br>\n";
+d_ad_begin(__FILE__,__LINE__); // Begin TRACKing functions.phpinc call.
+if ( $GLOBALS['TRACK'] && $GLOBALS['debuggingAvailable'] ) { // Start this file TRACKing. Use this code when the function t_Begin is unavailable.
+  // Start file <li>.
+  $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent()."<li>";
+  // TRACK file begin.
+	$backtrace = debug_backtrace();
+	// Display filename, line, show/hide divs, filepath, and included by.
+	$_SESSION['TRACK']['number']++;
+	$_SESSION['TRACK']['data'] .= '<b>'.basename(__FILE__).'</b> :'.__LINE__.' <div id="TRACK_HIDE_'.$_SESSION['TRACK']['number'].'" class="d_s_il d_s_l"><a href="javascript: '."divShowInline('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divShow('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('TRACK_HIDE_".$_SESSION['TRACK']['number']."'".');" class="d_s_vt">Expand +</a></div><div id="TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l"><a href="javascript: '."divShowInline('TRACK_HIDE_".$_SESSION['TRACK']['number']."'); divHide('TRACK_SHOW_".$_SESSION['TRACK']['number']."'); divHide('BEGIN_TRACK_SHOW_".$_SESSION['TRACK']['number']."'".');" class="d_s_w">Collapse -</a></div> <span class="d_s_fp">('.__FILE__.')</span> <span class="d_s_fi">(included by '.$backtrace['0']['file'].":".$backtrace['0']['line'].")</span>\n";
+	// Include show div.
+	$_SESSION['TRACK']['data'] .= '<div id="BEGIN_TRACK_SHOW_'.$_SESSION['TRACK']['number'].'" class="d_s_h d_s_l">'."\n";
+  // Start <ol>.
+  $_SESSION['TRACK']['ol'] += 1; $_SESSION['TRACK']['indent'] += 1; $_SESSION['TRACK']['data'] .= t_Indent().'<ol class="d_s_op">'."\n";
+}
+
+if ( $GLOBALS['debuggingAvailable'] ) { require('common/functions_debug.phpinc'); } else { require('common/functions_debug_dummy.phpinc'); }
+require('common/functions_arraylist.phpinc');
+require('common/functions_datetime.phpinc');
+require('common/functions_query.phpinc');
+#echo '<span class="d_s_fl">'.__FILE__.':'.__LINE__."</span> "."<br>\n"; // DEBUG: Display file:line to track working/crashing code.
+// Include site specific functions.
+if ( isset($_SESSION['ROOT']['directory']) && file_exists($_SESSION['ROOT']['directory'].'/site/functions_site.phpinc') ) require('site/functions_site.phpinc');
+
+// button($btnValue, $btnTip, $btnClick, $btnAction, $btnClass, $btnId, $btnEnabled)
+// Display a button.
+//   $btnValue = Value of the button.
+//     $btnTip = Button tooltip .
+//   $btnClick = Button click javascript. If empty or false there in no onclick.
+//  $btnAction = New form action. Only works if $btnClick is an empty string.
+//   $btnClass = Button class.
+function button($btnValue, $btnTip='', $btnClick='', $btnAction='', $btnClass='', $btnId='', $btnEnabled=true) {
+	echo buttonBack($btnValue, $btnTip, $btnClick, $btnAction, $btnClass, $btnId, $btnEnabled);
+}
+
+// buttonBack($btnValue, $btnTip, $btnClick, $btnAction, $btnClass, $btnId, $btnEnabled)
+// Return a button.
+//   $btnValue = Value of the button.
+//     $btnTip = Button tooltip .
+//   $btnClick = Button click javascript. If empty or false there in no onclick.
+//  $btnAction = New form action. Only works if $btnClick is an empty string.
+//   $btnClass = Button class.
+function buttonBack($btnValue, $btnTip='', $btnClick='', $btnAction='', $btnClass='', $btnId='', $btnEnabled=true) {
+	if ( $btnTip != '' ) $btnTip = ttMake('',$btnTip);
+	if ( $btnId != '' ) $btnId = ' id="'.$btnId.'"';
+	if ( strpos($btnClass,'wait') === false ) { // Is the button not class wait?
+		// Yes, show normal button.
+		if ( $btnClick !== false ) {
+			if ( $btnClick == '' ) {
+				$btnClick = ' onClick="'."formSubmit(this,'".$btnValue."'";
+				if ( $btnAction != '' ) {
+				if ( stripos($btnAction,'http:') === false ) { if ( substr($btnAction,0,1) != '/' ) { $btnAction = '/'.$btnAction; } $btnAction = $_SESSION['ROOT']['http'].$btnAction; } // Prepend $_SESSION['ROOT']['http'] and / if needed.
+					$btnClick .= ",'".$_SESSION['ROOT']['http'].str_replace('"','#quot;',$btnAction)."'";
+				}
+				$btnClick .= ");".'"';
+			} else {
+				$btnClick = ' onClick="'.str_replace('"','#quot;',$btnClick).'"';
+			}
+		} else {
+			$btnClass .= ' noClick';
+		}
+		if ( $btnClass != '' ) $btnClass = ' class="'.htmlSafe($btnClass).'"';
+		if ( $btnEnabled ) { $btnDisabled = ''; } else { $btnDisabled = ' disabled'; }
+		$button = '<input type="button" value="'.htmlSafe($btnValue).'"'.$btnId.$btnClass.$btnClick.$btnTip.$btnDisabled.'>';
+	} else { // Is the button not class wait?
+		// No, show wait.
+		$button = '<input type="button" value="'.htmlSafe($btnValue).'" class="wait"'.$btnId.$btnTip.'>';
+	} // Is the button not class wait?
+	$button .= ' ';
+	return $button;
+}
+
+// buttonSubmit($btnValue, $btnTip, $btnClick, $btnAction, $btnClass, $btnId, $btnEnabled)
+// Display a submit button.
+//   $btnValue = Value of the button.
+//     $btnTip = Button tooltip .
+//   $btnClick = Button click javascript. If empty or false there in no onclick.
+//  $btnAction = New form action. Only works if $btnClick is an empty string.
+//   $btnClass = Button class.
+function buttonSubmit($btnValue, $btnTip='', $btnClick='', $btnAction='', $btnClass='', $btnId='', $btnEnabled=true) {
+	echo str_replace('"button"','"submit"',buttonBack($btnValue, $btnTip, $btnClick, $btnAction, $btnClass, $btnId, $btnEnabled));
+}
+
+// clearMessages()
+// Clear all messages;
+function clearMessages() {
+  #d_Var("\$_SESSION['message']",$_SESSION['message'],'+d');
+	// Decrement or unset $_SESSION['message']['hold']. $_SESSION['message']['hold'] is used to hold the messages over for another page.
+  if ( isset($_SESSION['message']['hold']) ) {
+    $_SESSION['message']['hold']--;
+		if ( $_SESSION['message']['hold'] < 0 ) unset($_SESSION['message']['hold']);
+  }
+  if ( !isset($_SESSION['message']['hold']) ) { $_SESSION['message'] = array(); }
+}
+
+// d($gIndex, $dValue)
+// Used to test if isset($variable) is true and assign NULL to $variable if it was not.
+// $gIndex = A comma separated list of the index into the $GLOBALS[] array.
+// $dValue = The default value to set $f[$fIndex] to. If unset then NULL in returned.
+// If the variable is an array such as $example['index'] simply call using d('example,index').
+// This function will handle arrays up to 5 deep.
+// Returns true if $variable is set and not NULL.
+// Sets $variable to NULL and returns false if $variable was not set.
+function d($gIndex, $dValue=NULL) {
+  $gIndex = explode(',',$gIndex);
+	##echo 'count($gIndex)='.count($gIndex).'<br>$gIndex=<pre>'.trim(print_r($gIndex,true)).'</pre>'; // DEBUG d().
+	switch ( count($gIndex) ) {
+		case 1;
+		  if ( isset($GLOBALS[$gIndex[0]]) ) { $d = true; } else { $GLOBALS[$gIndex[0]] = $dValue; $d = false; }
+		break;
+		case 2;
+		  if ( isset($GLOBALS[$gIndex[0]][$gIndex[1]]) ) { $d = true; } else { $GLOBALS[$gIndex[0]][$gIndex[1]] = $dValue; $d = false; }
+		break;
+		case 3;
+		  if ( isset($GLOBALS[$gIndex[0]][$gIndex[1]][$gIndex[2]]) ) { $d = true; } else { $GLOBALS[$gIndex[0]][$gIndex[1]][$gIndex[2]] = $dValue; $d = false; }
+		break;
+		case 4;
+		  if ( isset($GLOBALS[$gIndex[0]][$gIndex[1]][$gIndex[2]][$gIndex[3]]) ) { $d = true; } else { $GLOBALS[$gIndex[0]][$gIndex[1]][$gIndex[2]][$gIndex[3]] = $dValue; $d = false; }
+		break;
+		case 5;
+		  if ( isset($GLOBALS[$gIndex[0]][$gIndex[1]][$gIndex[2]][$gIndex[3]][$gIndex[4]]) ) { $d = true; } else { $GLOBALS[$gIndex[0]][$gIndex[1]][$gIndex[2]][$gIndex[3]][$gIndex[4]] = $dValue; $d = false; }
+		break;
+		default;
+			$d = false;
+		break;
+	}
+	##if ( $d ) { echo '<span class="d_s_vt">true'; } else { echo '<span class="d_s_vf">false'; } echo "</span><br>\n"; // DEBUG d().
+	return $d;
+}
+
+// displayAction($messageText, $displayNow)
+// Display an action message.
+function displayAction($messageText=false, $displayNow=false) {
+  t_FuncBegin();
+  displayMessage($messageText, 'action', $displayNow);
+  t_FuncEnd();
+}
+
+// displayAttention($messageText, $displayNow)
+// Display an attention message.
+function displayAttention($messageText=false, $displayNow=false) {
+  t_FuncBegin();
+  displayMessage($messageText, 'attention', $displayNow);
+  t_FuncEnd();
+}
+
+// displayError($messageText)
+// Display an error message.
+function displayError($messageText=false, $displayNow=false) {
+  t_FuncBegin();
+  displayMessage($messageText, 'error', $displayNow);
+  t_FuncEnd();
+}
+
+// displayInfo($messageText, $displayNow)
+// Display an info message.
+function displayInfo($messageText=false, $displayNow=false) {
+  t_FuncBegin();
+  displayMessage($messageText, 'info', $displayNow);
+  t_FuncEnd();
+}
+
+// displayNormal($messageText, $displayNow)
+// Display a normal message.
+function displayNormal($messageText=false, $displayNow=false) {
+  t_FuncBegin();
+  displayMessage($messageText, 'normal', $displayNow);
+  t_FuncEnd();
+}
+
+// displayWarning($messageText, $displayNow)
+// Display a warning message.
+function displayWarning($messageText=false, $displayNow=false) {
+  t_FuncBegin();
+  displayMessage($messageText, 'warn', $displayNow);
+  t_FuncEnd();
+}
+
+// displayMessage($messageText, $messageType, $displayNow)
+// Save or display messages.
+// Before pageHeader has loaded:
+//   Stores messages until pageHeader loaded.
+// After pageheader has loaded:
+//   Displays all messages if no messageText is given.
+//   Displays the messageText if one is given.
+// $messageText = The message text to save or display.
+// $messageType = The type of message (error, info, attention, warn, normal). Default = info.
+function displayMessage($messageText=false, $messageType='info', $displayNow=false) {
+  t_FuncBegin();
+	if ( !isset($_SESSION['message']) ) $_SESSION['message'] = array();
+	if ( $displayNow !== true && $displayNow !== false ) { $_SESSION['message']['hold'] = $displayNow; $displayNow = false; } // Hold the message for another page.
+  #d_Var("\$_SESSION['message']",$_SESSION['message'],'+d');
+  // Is this a valid messageType?
+  switch ( strtolower($messageType) ) {
+		case 'error':
+      $GLOBALS['errorCount']++; // Increase errorCount.
+		break;
+		case 'warn':
+      $GLOBALS['warningCount']++; // Increase warningCount.
+		break;
+		case 'attention':
+		case 'info':
+		case 'normal':
+		break;
+    default:
+      #programmingError('Invalid messageType ('.$messageType.').');
+		break;
+  }
+  if ( ( !isset($GLOBALS['_PAGE']['pageHeaderLoaded']) ) && !$displayNow ) { // Is pageHeader not loaded and displayNow = false?
+    // No, pageHeader has not been loaded or displayNow = false. Save the message for pageHeader() call.
+    if ( !isset($_SESSION['message'][$messageType]) ) {
+      $_SESSION['message'][$messageType] = $messageText; // Save the message.
+    } else {
+      $_SESSION['message'][$messageType] .= "<br>".$messageText; // Add the message.
+    }
+  } else { // Is pageHeader not loaded and displayNow = false?
+    // Yes, pageHeader has been loaded or displayNow = true. Save the message for pageHeader() call.
+    if ( $messageText ) { // Is there a message to display?
+      // Yes, There is a message to display. Display this message.
+?>
+		<div class="center p"><div class="inline message <?=$messageType?>"><?=$messageText?></div></div>
+<?
+    } else { // Is there a message to display?
+      // No, There is not a message to display. Display all messages.
+      if (isset($_SESSION['message']['error']) && $_SESSION['message']['error'] != '') {
+?>
+		<div class="center p"><div class="inline message error"><?=$_SESSION['message']['error']?></div></div>
+<?
+      	#audioPlay('error');
+			}
+      if (isset($_SESSION['message']['warn']) && $_SESSION['message']['warn'] != '') {
+?>
+		<div class="center p"><div class="inline message warn"><?=$_SESSION['message']['warn']?></div></div>
+<?
+      	#audioPlay('warning');
+      }
+      if (isset($_SESSION['message']['attention']) && $_SESSION['message']['attention'] != '') {
+?>
+		<div class="center p"><div class="inline message attention"><?=$_SESSION['message']['attention']?></div></div>
+<?
+      	#audioPlay('attention');
+      }
+      if (isset($_SESSION['message']['info']) && $_SESSION['message']['info'] != '') {
+?>
+		<div class="center p"><div class="inline message info"><?=$_SESSION['message']['info']?></div></div>
+<?
+      }
+      if (isset($_SESSION['message']['normal']) && $_SESSION['message']['normal'] != '') {
+?>
+		<div class="center p"><div class="inline message"><?=$_SESSION['message']['normal']?></div></div>
+<?
+      }
+      clearMessages(); // Clear messages.
+    } // Is there a message to display?
+  } // Is pageHeader not loaded and displayNow = false?
+	#d_Var("count(\$GLOBALS['_DEBUG']['track']['code'])",count($GLOBALS['_DEBUG']['track']['code']),'d');
+  t_FuncEnd();
+}
+
+// f($fIndex, $sIndex, $dValue, $pError)
+// Used to test if $f[$fIndex] is set.
+// If unset then $f[$fIndex] is set to either $_SESSION[$sIndex] or $dValue.
+// Returns $f[$fIndex] value.
+// $fIndex = The index to the $f[] array.
+// $sIndex = A comma separated list of the index to the $_SESSION[] array. ie. 'user,userId' = $_SESSION['user']['userId']. Allows for 5 index levels.
+//           If $f[$fIndex] is not set then the $sIndex is used for the default value. If $sIndex == '' or $_SESSION[$sIndex] is not set then $dValue is used.
+// $dValue = The default value to set $f[$fIndex] to. If unset then NULL in returned.
+// $pError = Throw a programming error if unable to get a value for $fIndex.
+function f($fIndex, $sIndex='', $dValue=NULL, $pError=false) {
+  if ( !isset($GLOBALS['f'][$fIndex]) ) {
+		if ( $sIndex != '' ) {
+			$sIndex = explode(',',$sIndex);
+			$fValue = 'A default value as a placeholder for $_SESSION[] array mismatch';
+			switch ( count($sIndex) ) {
+				case 1:
+					if ( isset($_SESSION[$sIndex[0]]) ) $fValue = $_SESSION[$sIndex[0]];
+					break;
+				case 2:
+					if ( isset($_SESSION[$sIndex[0]][$sIndex[1]]) ) $fValue = $_SESSION[$sIndex[0]][$sIndex[1]];
+					break;
+				case 3:
+					if ( isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]]) ) $fValue = $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]];
+					break;
+				case 4:
+					if ( isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]]) ) $fValue = $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]];
+					break;
+				case 5:
+					if ( isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]][$sIndex[4]]) ) $fValue = $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]][$sIndex[4]];
+					break;
+			}
+			if ( $fValue != 'A default value as a placeholder for $_SESSION[] array mismatch' ) {
+				$GLOBALS['f'][$fIndex] = $fValue;
+			} else {
+				if ( $pError ) programmingError("\$f['".$fIndex."'] is unset.");
+				$GLOBALS['f'][$fIndex] = $dValue;
+			}
+		} else {
+			if ( $pError ) programmingError("\$f['".$fIndex."'] is unset.");
+			$GLOBALS['f'][$fIndex] = $dValue;
+		}
+	}
+	#d_Var($fIndex,$GLOBALS['f'][$fIndex],'d');
+	return $GLOBALS['f'][$fIndex];
+}
+
+// formArray($fIndex1, $fIndex2, $fIndex3, $fIndex4, $fIndex5)
+// Used to convert $f[] variables in the form $f[name_index] to the form $f[name][index].
+// Will handle indexes up to five levels deep ($f[index1_index2_index3_index4_index5]).
+// e.g. Given a set of form variables: $f['foo_1'], $f['foo_2'], $f['foo_3'], $f['bar_1_1'], $f['bar_1_2'], $f['bar_2_1']:
+//      formArray('foo',1) will store $f['foo_1'] in $f[foo][1] and unset $f['foo_1'].
+//      formArray('foo',2) will store $f['foo_2'] in $f[foo][2] and unset $f['foo_2'].
+//      formArray('foo',3) will store $f['foo_3'] in $f[foo][3] and unset $f['foo_3'].
+//      formArray('bar',1,1) will store $f['bar_1_1'] in $f[bar][1][1] and unset $f['bar_1_1'].
+//      formArray('bar',1,2) will store $f['bar_1_2'] in $f[bar][1][2] and unset $f['bar_1_2'].
+//      formArray('bar',2,1) will store $f['bar_2_1'] in $f[bar][2][1] and unset $f['bar_2_1'].
+function formArray($fIndex1=false, $fIndex2=false, $fIndex3=false, $fIndex4=false, $fIndex5=false) {
+  #t_FuncBegin();
+  if ( $fIndex1 !== false ) {
+    $fCurrent = $fIndex1;
+    if ( $fIndex2 !== false ) {
+      $fCurrent .= '_'.$fIndex2;
+      if ( $fIndex3 !== false ) {
+        $fCurrent .= '_'.$fIndex3;
+        if ( $fIndex4 !== false ) {
+          $fCurrent .= '_'.$fIndex4;
+          if ( $fIndex5 !== false ) {
+            $fCurrent .= '_'.$fIndex5;
+          } // fArrayIndex5
+        } // fArrayIndex4
+      } // fArrayIndex3
+    }  // fArrayIndex2
+    #t_Line("\$fCurrent=".$fCurrent);
+    if ( isset($GLOBALS['f'][$fCurrent]) ) {
+      #t_Line("\$GLOBALS['f'][$fCurrent]=".$GLOBALS['f'][$fCurrent]);
+      $formArray = $GLOBALS['f'][$fCurrent];
+      unset($GLOBALS['f'][$fCurrent]);
+    } else {
+      #t_Line("\$GLOBALS[$fCurrent] is unset");
+      $formArray = NULL;
+    }
+    if ( $fIndex2 === false ) {
+      $GLOBALS['f'][$fIndex1] = $formArray;
+    } elseif ( $fIndex3 === false ) {
+      $GLOBALS['f'][$fIndex1][$fIndex2] = $formArray;
+    } elseif ( $fIndex4 === false ) {
+      $GLOBALS['f'][$fIndex1][$fIndex2][$fIndex3] = $formArray;
+    } elseif ( $fIndex5 === false ) {
+      $GLOBALS['f'][$fIndex1][$fIndex2][$fIndex3][$fIndex4] = $formArray;
+    } else {
+      $GLOBALS['f'][$fIndex1][$fIndex2][$fIndex3][$fIndex4][$fIndex5] = $formArray;
+    }
+		if ( $formArray !== NULL ) {
+			$tline = '$f';
+			$tline .= '['; if ( !is_numeric($fIndex1) ) { $tline .= "'"; } $tline .= $fIndex1; if ( !is_numeric($fIndex1) ) { $tline .= "'"; } $tline .= ']';
+			if ( $fIndex2 !== false ) { $tline .= '['; if ( !is_numeric($fIndex2) ) { $tline .= "'"; } $tline .= $fIndex2; if ( !is_numeric($fIndex2) ) { $tline .= "'"; } $tline .= ']';
+				if ( $fIndex3 !== false ) { $tline .= '['; if ( !is_numeric($fIndex3) ) { $tline .= "'"; } $tline .= $fIndex3; if ( !is_numeric($fIndex3) ) { $tline .= "'"; } $tline .= ']';
+					if ( $fIndex4 !== false ) { $tline .= '['; if ( !is_numeric($fIndex4) ) { $tline .= "'"; } $tline .= $fIndex4; if ( !is_numeric($fIndex4) ) { $tline .= "'"; } $tline .= ']';
+						if ( $fIndex5 !== false ) { $tline .= '['; if ( !is_numeric($fIndex5) ) { $tline .= "'"; } $tline .= $fIndex5; if ( !is_numeric($fIndex5) ) { $tline .= "'"; } $tline .= ']'; }
+					}
+				}
+			}
+			$tline .= ' == '; if ( !is_numeric($formArray) ) { $tline .= "'"; } $tline .= $formArray; if ( !is_numeric($formArray) ) { $tline .= "'"; } $tline .= ' (from '.$fCurrent.')';
+			#t_Line($tline);
+		} else {
+			$tline = $fCurrent.' not found.';
+			#t_Line($tline);
+		}
+  } // fArrayIndex1
+  #t_FuncEnd();
+  t_Func($tline);
+}
+
+// formValue($fIndex, $formVarName, $otherVarName)
+// Puts the $_GET or $_POST value in $f[] associative array.
+// If the $_GET or $_POST name begins with 'f_' it is stripped from $fIndex. 
+// If there is no $_GET or $_POST with $fIndex Key index $f[$fIndex] is set to NULL.
+// Returns true if there is a $_GET or $_POST value with $fIndex Key index else returns false.
+//       $fIndex = The $f[] array Key index.
+//                 If false (not sent) get all $_GET and $_POST Key index values.
+//                 e.g. a call of //formValue('foo') will set $f['foo'] to $_GET['foo'] or $_POST['foo'].
+//  $formVarName = The $_GET or $_POST Key index. If $fIndex = '' it is also the variable name.
+//                 e.g. a call of //formValue('bar','foo') will set $f['bar'] to $_GET['foo'] or $_POST['foo'].
+//                      a call of //formValue('','foo') will set $foo to $_GET['foo'] or $_POST['foo'].
+// $otherVarName = The variable name if $formVarName is not desired.
+//                 e.g. a call of //formValue('','foo','bar') will set $bar to $_GET['foo'] or $_POST['foo'].
+function formValue($fIndex=NULL, $formVarName=false, $otherVarName=false, $backtrace=false) {
+  if ( !$backtrace ) $backtrace = debug_backtrace();
+  if ( !isset($GLOBALS['f']) ) $GLOBALS['f'] = array(); // Create the $f array if it does not exist.
+  if ( $fIndex !== NULL ) { // Get this one index value.
+    if ( !$formVarName ) {
+      $formVarNameToGet = $fIndex;
+    } else {
+      $formVarNameToGet = $formVarName;
+    }
+    // Reverse $_GET and $_POST in production environments.
+    if ( isset($_GET[$formVarNameToGet]) ) {
+      $formValue = $_GET[$formVarNameToGet];
+      $returnValue = true;
+    } elseif ( isset($_POST[$formVarNameToGet]) ) {
+      $formValue = $_POST[$formVarNameToGet];
+      $returnValue = true;
+    } else {
+      $formValue = NULL;
+      $returnValue = false;
+    }
+    // Cleanup magic_quotes_gpc.
+    if ( get_magic_quotes_gpc() ) {
+      if ( !is_array($formValue) ) {
+        $formValue = stripslashes($formValue);
+      } else {
+        for ( $i=0; $i<count($formValue); $i++ ) {
+          $formValue[$i] = stripslashes($formValue[$i]);
+        }
+      }
+    }
+    // Check if store should be in $f[$fIndex], $formVarName, or $otherVarName
+    if ( $fIndex !== '' && $fIndex !== false ) {
+      if ( strpos($fIndex,'[') === false ) { // Check for array.
+        #if ( !isset($_SESSION['pageFrom']['loaded']) && !isset($GLOBALS['f'][$fIndex]) ) $GLOBALS['f'][$fIndex] = $formValue; // Only set if not already set.
+        $GLOBALS['f'][$fIndex] = $formValue; // Not an array so set $f[$fIndex].
+      } else {
+        formValue__Array('f['.$fIndex.']', $formValue, $backtrace); // Call function to deal with array.
+      }
+    } else {
+      if ( !$otherVarName ) { $storeVarName = $formVarName; } else { $storeVarName = $otherVarName; }
+      #d_Line("\$formVarName == $formVarName, \$otherVarName == $otherVarName",'',$backtrace);
+      #d_Var('$formValue',$formValue);
+      if ( strpos($storeVarName,'[') === false ) { // Check for array.
+        $GLOBALS[$storeVarName] = $formValue; // Not an array so set $GLOBALS[$storeVarName].
+         #d_Var("\$GLOBALS[".$otherVarName."]",$GLOBALS[$otherVarName]);
+      } else {
+        formValue__Array($storeVarName, $formValue, $backtrace);; // Call function to deal with array.
+      }
+      // Remove $formVarName from $GLOBALS['f'].
+      #unset($GLOBALS['f'][$formVarName]);
+    }
+  } else { // Get all $_GET and $_POST Key index values.
+    if ( !$formVarName ) $formVarName = $fIndex;
+    // Reverse $_GET and $_POST in production environments.
+    foreach ( $_POST as $postKey => $postValue ) {
+      // Cleanup magic_quotes_gpc.
+      if ( get_magic_quotes_gpc() ) {
+        if ( !is_array($postValue) ) {
+          $postValue = stripslashes($postValue);
+        } else {
+          for ( $i=0; $i<count($postValue); $i++ ) {
+            $postValue[$i] = stripslashes($postValue[$i]);
+          }
+        }
+      }
+      if ( !isset($_SESSION['pageFrom']['loaded']) && !isset($GLOBALS['f'][$postKey]) ) $GLOBALS['f'][$postKey] = $postValue;
+    }
+    foreach ( $_GET as $getKey => $getValue ) {
+      // Cleanup magic_quotes_gpc.
+      if ( get_magic_quotes_gpc() ) {
+        if ( !is_array($getValue) ) {
+          $postValue = stripslashes($getValue);
+        } else {
+          for ( $i=0; $i<count($getValue); $i++ ) {
+            $getValue[$i] = stripslashes($getValue[$i]);
+          }
+        }
+      }
+      if ( !isset($_SESSION['pageFrom']['loaded']) && !isset($GLOBALS['f'][$getKey]) ) $GLOBALS['f'][$getKey] = $getValue;
+    }
+    $returnValue = true;
+  }
+  if ( $fIndex !== NULL ) {
+    t_Func($formValue);
+  } else {
+    t_Func($GLOBALS['f']);
+  }
+  return $returnValue;
+}
+
+// formValue__Array($arrayIndexText, $variableValue, $backtrace)
+// Called by formValue to set variable values when the variable is an array. See formValue();
+function formValue__Array($arrayIndexText, $variableValue=NULL, $backtrace=false) {
+  if ( !$backtrace ) $backtrace = debug_backtrace();
+  $arrayIndexTextNoBracket = trim($arrayIndexText);
+  if ( substr($arrayIndexTextNoBracket,0,1) == '[' ) $arrayIndexTextNoBracket = substr($arrayIndexTextNoBracket,1); // If $arrayIndexTextNoBracket begins with a [ remove it.
+  $arrayIndexTextNoBracket = str_replace("[[","[",str_replace(array("'","]"),array('',''),$arrayIndexTextNoBracket));
+  $arrayIndex = explode('[',$arrayIndexTextNoBracket); // Remove '], double [[, and explode into array by [.
+  if ( $arrayIndex[0] == '' ) array_shift($arrayIndex); // If the first array index is an empty string remove it.
+  #d_Var('$arrayIndexText',$arrayIndexText);
+  #d_Var('$arrayIndexTextNoBracket',$arrayIndexTextNoBracket);
+  #d_Var('count($arrayIndex)',count($arrayIndex));
+  #d_Var('$arrayIndex',$arrayIndex,'+');
+  /** /
+  if ( $arrayIndex[0] == 'submit' ) {
+    d_Var('count($arrayIndex)',count($arrayIndex));
+    d_Var('$arrayIndex',$arrayIndex);
+  }
+  /**/
+  switch ( count($arrayIndex) ) {
+		case 1:
+      if ( !isset($_SESSION['pageFrom']['loaded']) && !isset($GLOBALS[$arrayIndex[0]]) ) $GLOBALS[$arrayIndex[0]] = $variableValue;
+      #d_Var("\$GLOBALS['f'][".$arrayIndex[0]."]",$GLOBALS[$arrayIndex[0]]);
+		break;
+		case 2:
+      if ( !isset($_SESSION['pageFrom']['loaded']) && !isset($GLOBALS[$arrayIndex[0]][$arrayIndex[1]]) ) $GLOBALS[$arrayIndex[0]][$arrayIndex[1]] = $variableValue;
+      #d_Var("\$GLOBALS['f'][".$arrayIndex[0]."]",$GLOBALS[$arrayIndex[0]]);
+		break;
+		case 3:
+      if ( !isset($_SESSION['pageFrom']['loaded']) && !isset($GLOBALS[$arrayIndex[0]][$arrayIndex[1]][$arrayIndex[2]]) ) $GLOBALS[$arrayIndex[0]][$arrayIndex[1]][$arrayIndex[2]] = $variableValue;
+      #d_Var("\$GLOBALS['f'][".$arrayIndex[0]."]",$GLOBALS[$arrayIndex[0]]);
+		break;
+		case 4:
+      if ( !isset($_SESSION['pageFrom']['loaded']) && !isset($GLOBALS[$arrayIndex[0]][$arrayIndex[1]][$arrayIndex[2]][$arrayIndex[3]]) ) $GLOBALS[$arrayIndex[0]][$arrayIndex[1]][$arrayIndex[2]][$arrayIndex[3]] = $variableValue;
+      #d_Var("\$GLOBALS['f'][".$arrayIndex[0]."]",$GLOBALS[$arrayIndex[0]]);
+		break;
+		case 5:
+      if ( !isset($_SESSION['pageFrom']['loaded']) && !isset($GLOBALS[$arrayIndex[0]][$arrayIndex[1]][$arrayIndex[2]][$arrayIndex[3]][$arrayIndex[4]]) ) $GLOBALS[$arrayIndex[0]][$arrayIndex[1]][$arrayIndex[2]][$arrayIndex[3]][$arrayIndex[4]] = $variableValue;
+      #d_Var("\$GLOBALS['f'][".$arrayIndex[0]."]",$GLOBALS[$arrayIndex[0]]);
+		break;
+    default:
+      programmingError('formValue not programmed for $GLOBALS nested '.count($arrayIndex).' deep. call variable name was "'.$arrayIndexText.'".');
+  }
+}
+
+// headerLocation($location, $URLqueryString, $DEBUG_headerLocation)
+// Performs the header("Location: ) call.
+//             $location = The new page URL.
+//       $URLqueryString = 
+// $DEBUG_headerLocation = Debug this call. Do not perform the header() call instead show a page with link to page URL.
+function headerLocation($location='', $URLqueryString='', $DEBUG_headerLocation=false) { 
+	$DEBUG_headerLocationSent = $DEBUG_headerLocation; // Keep $DEBUG_headerLocation sent.
+	#$DEBUG_headerLocation = true;
+	t_FuncBegin($DEBUG_headerLocation);
+	if ( !isset($_SESSION['message']['hold']) || !$_SESSION['message']['hold'] ) $_SESSION['message']['hold'] = 1; // Hold messages until re-directed.
+  if ( !$location ) $location = '/';
+	if ( stripos($location,'http:') === false ) { if ( substr($location,0,1) != '/' ) { $location = '/'.$location; } $location = $_SESSION['ROOT']['http'].$location; } // Prepend $_SESSION['ROOT']['http'] and / if needed.
+  $backtrace = debug_backtrace();
+  if ( isset($_SERVER['HTTP_REFERER']) ) {
+    $_SESSION['previouslocation'] = $_SERVER['HTTP_REFERER'];
+  } else {
+    $_SESSION['previouslocation'] = 'n/a';
+  }
+  #d_Var('$DEBUG_headerLocation',$DEBUG_headerLocationSent,'d');
+	#d_End();
+  d_Var("\$GLOBALS['debuggingAvailable']",$GLOBALS['debuggingAvailable']);
+  d_Var("\$GLOBALS['_DEBUG']['page']['head']",$GLOBALS['_DEBUG']['page']['head']);
+  if ( $URLqueryString ) $location .= URLqueryClean($URLqueryString); // Cleanup $_SERVER['QUERY_STRING']. Remove $_GET['clear'], $_GET['code'], $_GET['debug'], $_GET['debugging'], $_GET['Login'], $_GET['Logout'], $_GET['query'], $_GET['reload'], and $_GET['session'].
+	// Is $DEBUG_headerLocation false, debugging not available, and $_SESSION['DEBUG']['page']['head'] false?
+  if ( !$DEBUG_headerLocation && ( !$GLOBALS['debuggingAvailable'] || ( $GLOBALS['debuggingAvailable'] && !$GLOBALS['_DEBUG']['page']['head'] ) ) ) {
+    header("Location: ".$location); // Perform header call.
+    echo 'header("Location: ".'.$location.');'; // Echo header line.
+  }
+  pageHeader('header("Location: '.$location.')');
+
+?>
+     <br><a href="<?=$location?>">header("Location: <?=$location?>);</a>
+<?
+  for ($index=0; $index<count($backtrace); $index++) {
+?>
+    <br>
+    <span class="d_s_fl"><?=basename($backtrace[$index]['file'])?>:<?=$backtrace[$index]['line']?></span> <span class="d_s_fp">(<?=$backtrace[$index]['file']?>)</span>
+<?
+  }
+	if ( $DEBUG_headerLocation ) d_On('foot');
+  pageFooter();
+  t_FuncEnd();
+}
+
+// htmlSafe($string)
+// Returns $string with "&<>\ made safe for html.
+// $string = The string parse.
+function htmlSafe($string) {
+  $safe = array("\\\"" => "&quot;", "\"" => "&quot;", '"' => "&quot;", "\\\'" => "&#39;", "\'" => "&#39;", "'" => "&#39;", "&" => "&amp;", "<" => "&lt;", ">" => "&gt;", "\\\\" => '&#92;',"\\" => '&#92;');
+  $htmlSafe = strtr($string, $safe);
+  #t_Func($htmlSafe();
+  return $htmlSafe;
+}
+
+// is_positivenumber($value)
+// Return true if the $value is a positive number > 0 else false.
+// $value = The value to parse.
+function is_positivenumber($value) {
+if ( preg_match("/^[0-9]+$/", $value) && $value > 0){
+  $is_positivenumber= true;
+  } else {
+  $is_positivenumber= false;
+ }
+  #t_Func($is_positivenumber);
+  return $is_positivenumber;
+}
+
+require('common/is_valid.phpinc');
+
+// menuItem($menuText, $menuPath, $menuTip, $menuClass, $setTask)
+// Display a menu href or button.
+//   $menuText = Menu text (value of the button).
+//   $menuPath = Menu URL .
+//    $menuTip = Menu tooltip.
+//  $menuClass = Menu class.
+//    $setTask = Do not set the task. Default is false.
+function menuItem($menuText, $menuPath, $menuTip, $menuClass='menu', $setTask=false) {
+	if ( $_SERVER['SCRIPT_NAME'] == $_SESSION['ROOT']['http'].$menuPath.'index.php' ) {// && $_SERVER['QUERY_STRING'] == '' ) {
+		$menuClass .= ' current';
+	} elseif ( strlen($menuPath) > 1 && strpos($_SERVER['SCRIPT_NAME'],$menuPath) !== false ) {
+		$menuClass .= ' parent';
+	}
+	if ( $setTask ) {
+		$theTask = $menuText;
+		$hrefTask = '?task='.$menuText;
+	} else {
+		$theTask = '';
+		$hrefTask = '';
+	}
+	#d_Var("strpos($menuClass,'button')",strpos($menuClass,'button'),'d');
+	#d_Var("strpos($menuClass,'disabled')",strpos($menuClass,'disabled'),'d');
+	if ( strpos($menuClass,'button') === false && strpos($menuClass,'disabled') === false ) {
+		// Display menu item as href.
+?>
+
+<a href="<?=$_SESSION['ROOT']['http']?><?=$menuPath?><?=$hrefTask?>" class="<?=$menuClass?>"<?=ttMake('',$menuTip)?>><?=$menuText?></a>
+<?
+	} else {
+		// Display menu item as button.
+		if ( strpos($menuClass,'disabled') === false ) { $disabled = ''; } else { $disabled = ' disabled'; }
+?>
+
+<input type="button" name="menuButton" value="<?=$menuText?>"<?=ttMake('',$menuTip)?> onClick="return formSubmit(this,'<?=$theTask?>','<?=$_SESSION['ROOT']['http']?><?=$menuPath?>');" class="<?=$menuClass?>"<?=$disabled?>><?
+	}
+}
+
+// mk_dir($path, $rights)
+// Will make a directory if it does not exist. Return true if the directory was make else false.
+//   $path = The path to the directory to make.
+// $rights = The rights to assign to the directory. Default is 0777.
+function mk_dir($path, $rights=0777) {
+  $mk_dir_flag = true;
+  $folder_path = array(strstr($path, '.') ? dirname($path) : $path);
+  while(!@is_dir(dirname(end($folder_path))) && dirname(end($folder_path)) != '/' && dirname(end($folder_path)) != '.' && dirname(end($folder_path)) != '') {
+    array_push($folder_path, dirname(end($folder_path)));
+  }
+  while($parent_folder_path = array_pop($folder_path)) {
+    if (!@mkdir($parent_folder_path, $rights)) $mk_dir_flag = false;
+  }
+  t_Func($mk_dir_flag);
+  return $mk_dir_flag;
+}
+
+// ordinalNumber($number)
+// Returns the $number with "th, st, nd, rd, th" appended. If number is not an integer the number is returned without ordinal.
+// $number = The number to parse.
+function ordinalNumber($number){
+  if ( is_numeric($number) && strpos($number,'.') === false ) {
+    $unit = abs($number) % 10;
+    $ext = ((abs($number) %100 < 21 && abs($number) %100 > 4) ? 'th'
+            : (($unit < 4) ? ($unit < 3) ? ($unit < 2) ? ($unit < 1)
+            ? 'th' : 'st' : 'nd' : 'rd' : 'th'));
+    $ordinalNumber = $number.$ext;
+  } else {
+    $ordinalNumber = $number;
+  }
+  #t_Func($ordinalNumber);
+  return $ordinalNumber;
+}
+
+// pageFooter($includeFooter, $DEBUG_footer)
+// This is to make including the pageFooter.phpinc a lot eaiser.
+//   $DEBUG_footer = If true include pageFooter_debug.phpinc. Default is false.
+// $includeFooter = If true include pageFooter.phpinc. Default is true.
+function pageFooter($includeFooter=true, $DEBUG_footer=false) {
+  t_FuncBegin();
+  $GLOBALS['showAnyFooter'] = $includeFooter;
+  if ( $DEBUG_footer ) d_On('foot');
+  if ( $includeFooter ) {
+    require('common/pageFooter.phpinc');
+  } else {
+    require('common/pageSend.phpinc'); // Cleanup memory and send page.    
+  }
+  t_FuncEnd();
+}
+
+// pageHeader($title, $cssFiles, $jsFiles, $metaTags, $onload, $onresize, $onunload, $bodyId, $DEBUG_page)
+// This is to make including the pageHeader.phpinc a lot eaiser.
+//      $title = The current title for the page.
+//               false or empty string, displayHeader is set to false.
+//               NULL, $_PAGE['showAnyHeader] is set to false, DEBUG_menu is not shown, and 10000 is added to$GLOBALS['_DEBUG']['div']['count'] to stop div interactions from calling file overlapping other div numbers.
+//        $css = Any style sheets that are needed for this page (comma separated list). Default is no style sheets linked.
+//         $js = Any javascript files that are needed for this page (comma separated list). Default is no javascript files included.
+//   $metaTags = Any meta tags that are needed for this page (pipe (|) separated list). Default is meta tags included.
+//     $onload = Any body onload javascript functions that are needed for this page (comma separated list). Default is no onload attribute.
+//   $onresize = Any body onresize javascript functions that are needed for this page (comma separated list). Default is no onresize attribute.
+//   $onunload = Any body onunload javascript functions that are needed for this page (comma separated list). Default is no onunload attribute.
+//     $bodyId = The body id value. Default is no id attribute.
+// $DEBUG_page = If true turn on code debugging for this page. Default is false.
+function pageHeader($title, $cssFiles=false, $jsFiles=false, $metaTags=false, $onload=false, $onresize=false, $onunload=false, $bodyId=false, $DEBUG_page=false) {
+  t_FuncBegin();
+  $backtrace = debug_backtrace(); // Get caller information if not sent to pageHeader().
+  if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] ) { $GLOBALS['DEBUG_Show_menu'] = true; } else { $GLOBALS['DEBUG_Show_menu'] = false; }
+	if ( !isset($GLOBALS['_PAGE']['pageHeaderLoaded']) ) {
+		if ( $title ) {
+			$GLOBALS['_PAGE']['pageHeaderLoadType'] = 'title';
+			$GLOBALS['_PAGE']['showFullHeader'] = true;
+			$GLOBALS['_PAGE']['showAnyHeader'] = true;
+		} elseif ( $title === false ) {
+			$GLOBALS['_PAGE']['pageHeaderLoadType'] = 'false';
+			$GLOBALS['_PAGE']['showFullHeader'] = false;
+			$GLOBALS['_PAGE']['showAnyHeader'] = true;
+			$title = '';
+		} elseif ( is_null($title) ) {
+			$GLOBALS['_PAGE']['pageHeaderLoadType'] = 'NULL';
+			$GLOBALS['_PAGE']['showFullHeader'] = false;
+			$GLOBALS['_PAGE']['showAnyHeader'] = false;
+			$title = '';
+			if ( isset($GLOBALS['debuggingAvailable']) && $GLOBALS['debuggingAvailable'] ) $GLOBALS['DEBUG_Show_menu'] = false; // Skip showing DEBUG_menu.
+			if ( !isset($GLOBALS['_DEBUG']['div']['count']) ) $GLOBALS['_DEBUG']['div']['count'] = 0;
+			$GLOBALS['_DEBUG']['div']['count'] += 10000; // Add 10000 to stop div interactions from calling file overlapping other div numbers.
+		} else {
+			$GLOBALS['_PAGE']['pageHeaderLoadType'] = 'empty';
+			$GLOBALS['_PAGE']['showFullHeader'] = false;
+			$GLOBALS['_PAGE']['showAnyHeader'] = true;
+		}
+		/** /
+		d_Var('$title',$title,'d');
+		d_Var("\$GLOBALS['_PAGE']['showAnyHeader']",$GLOBALS['_PAGE']['showAnyHeader'],'d');
+		d_Var("\$GLOBALS['_DEBUG']['div']['count']",$GLOBALS['_DEBUG']['div']['count'],'d');
+		d_Var("\$GLOBALS['DEBUG_Show_menu']",$GLOBALS['DEBUG_Show_menu'],'d');
+		/**/
+		#if ( $title ) { $GLOBALS['pageCall'] = true; } else { $GLOBALS['pageCall'] = false; }
+		$GLOBALS['_PAGE']['pageTitle'] = $title;
+		if ( !isset($GLOBALS['_PAGE']['css']) ) $GLOBALS['_PAGE']['css'] = '';
+		if ( $cssFiles ) $GLOBALS['_PAGE']['css'] = listAppend($GLOBALS['_PAGE']['css'],$cssFiles);
+		if ( !isset($GLOBALS['_PAGE']['js']) ) $GLOBALS['_PAGE']['js'] = '';
+		if ( $jsFiles ) $GLOBALS['_PAGE']['js'] = listAppend($GLOBALS['_PAGE']['js'],$jsFiles);
+		if ( !isset($GLOBALS['_PAGE']['meta']) ) $GLOBALS['_PAGE']['meta'] = '';
+		if ( $metaTags ) $GLOBALS['_PAGE']['meta'] = listAppend($GLOBALS['_PAGE']['meta'],$metaTags.'|');
+		if ( !isset($GLOBALS['_PAGE']['onload']) ) $GLOBALS['_PAGE']['onload'] = '';
+		if ( $onload ) $GLOBALS['_PAGE']['onload'] = listAppend($GLOBALS['_PAGE']['onload'],$onload);
+		if ( !isset($GLOBALS['_PAGE']['onresize']) ) $GLOBALS['_PAGE']['onresize'] = '';
+		if ( $onresize ) $GLOBALS['_PAGE']['onresize'] = listAppend($GLOBALS['_PAGE']['onresize'],$onresize);
+		if ( !isset($GLOBALS['_PAGE']['onunload']) ) $GLOBALS['_PAGE']['onunload'] = '';
+		if ( $onunload ) $GLOBALS['_PAGE']['onunload'] = listAppend($GLOBALS['_PAGE']['onunload'],$onunload);
+		if ( $bodyId ) {
+			$GLOBALS['_PAGE']['bodyId'] = ' id="'.$bodyId.'"';
+		} else {
+			$GLOBALS['_PAGE']['bodyId'] = '';
+		}
+		require('common/pageHeader.phpinc');
+	}
+  if ( $DEBUG_page ) d_On();
+  t_FuncEnd();
+}
+
+// php_self($addQueryString)
+// Return $_SERVER['PHP_SELF'] with index filename removed.
+// $addQueryString = false to not append QUERY_STRING.
+function php_self($addQueryString=true) {
+  $php_self = str_replace(array('/index.php','/index.htm','/index.html'),'/',$_SERVER['PHP_SELF']); // Remove index file name from URL.
+	if ( $addQueryString ) {
+		if ( $addQueryString === true ) $addQueryString = '';
+		if ( $_SERVER['QUERY_STRING'] == '' ) { $URLqueryString = ''; } else { $URLqueryString = $_SERVER['QUERY_STRING']; }
+		if ( $addQueryString ) {
+			if ( $_SERVER['QUERY_STRING'] != '' ) $URLqueryString .= '&';
+			$URLqueryString .= $addQueryString;
+		}
+		$php_self .= URLqueryClean($URLqueryString); // Cleanup $_SERVER['QUERY_STRING']. Remove $_GET['clear'], $_GET['code'], $_GET['debug'], $_GET['debugging'], $_GET['Login'], $_GET['Logout'], $_GET['query'], $_GET['reload'], and $_GET['session'].
+	}
+  return $php_self;
+}
+
+// programmingError($programmingError)
+// Display the programming error and exit.
+// $programmingError = the programming error message.
+function programmingError($programmingError='') {
+  t_FuncBegin();
+  $backtrace = debug_backtrace();
+  if ( $programmingError ) $programmingError .= "<br>\n";
+  $programmingError = '    <table><tr><td class="message programmingError"><span class="bold">There is a programming error.</span>'."<br>\n".'    '.$programmingError;
+  $programmingError .= '    Please notify the website administrator <a href="mailto:'.$_SESSION['APP']['ADMIN']['email'].'">'.$_SESSION['APP']['ADMIN']['name'].'</a> at '.$_SESSION['APP']['ADMIN']['email'].'.<br>
+    Please include the content of this page in the body of the email.<br>
+    <table><tr><td>Backtrace:</td><td>'."\n";
+  foreach ($backtrace as $index => $backtrace_array ) {
+    $programmingError .= '    '.basename($backtrace_array['file']).':'.$backtrace_array['line'].' <span class="small">('.$backtrace_array['file'].')</span>'.".<br>\n";
+  }
+  $programmingError .= '    </td></tr></table>
+    </td></tr></table> '."\n";
+  if ( !isset($GLOBALS['_PAGE']['pageHeaderLoaded']) || !$GLOBALS['_PAGE']['pageHeaderLoaded'] ) pageHeader('Programming Error!');
+  echo $programmingError;
+	if ( $GLOBALS['debuggingAvailable'] ) d_On('foot');
+	if ( isset($_SESSION['APP']['EMAIL']) ) {
+		displayMessage('Email of programming error sent to '.$_SESSION['APP']['ADMIN']['email']);
+		// Email the programming error to the website sdministrator.
+		$_SESSION['pageFooterNoExit'] = true; // Stops pageFooter() call from using exit; command.
+		pageFooter();
+		$body = str_replace(array('href="/','src="/'),array('href="http://'.$_SERVER['HTTP_HOST'].'/','src="http://'.$_SERVER['HTTP_HOST'].'/'),ob_get_contents());
+		ob_end_flush();
+		require_once('email/class.phpmailer.php');
+		$mail->From = $_SESSION['APP']['ADMIN']['email'];
+		$mail->FromName = $_SERVER['SERVER_NAME'];
+		$mail->AddAddress($_SESSION['APP']['ADMIN']['email']);
+		$mail->Subject = 'Programming Error at '.currentDateTime();
+		$mail->Body = '<b>A programming error at '.$_SERVER['HTTP_HOST']." on page ".$_SERVER['SCRIPT_NAME'].".</b><br><br>\n".$programmingError.$body;
+		require('email/sendEmail.phpinc');
+		$_SESSION['pageFooterNoExit'] = false; // Allows pageSend.phpinc to use the exit; command.
+		pageFooter(false);
+	}
+	pageFooter();
+  t_FuncEnd();
+}
+
+// s($sIndex, $dValue)
+// Used to test if isset($_SESSION[$sIndex]) is true and assign NULL to $_SESSION[$sIndex] if it was not.
+// $sIndex = A comma separated list of the index into the $_SESSION[] array.
+// $dValue = The default value to set $_SESSION[$sIndex] to. If unset then NULL in returned.
+// This function will handle $_SESSION indexes up to 5 deep.
+// Returns true if $_SESSION[$sIndex] is set and not NULL.
+// Sets $_SESSION[$sIndex] to NULL and returns false if $_SESSION[$sIndex] was not set.
+function s($sIndex, $dValue=NULL) {
+  $sIndex = explode(',',$sIndex);
+	##echo 'count($sIndex)='.count($sIndex).'<br>$sIndex=<pre>'.trim(print_r($sIndex,true)).'</pre>'; // DEBUG d().
+	switch ( count($sIndex) ) {
+		case 1;
+		  if ( isset($_SESSION[$sIndex[0]]) ) { $d = true; } else { $_SESSION[$sIndex[0]] = $dValue; $d = false; }
+		break;
+		case 2;
+		  if ( !isset($_SESSION[$sIndex[0]]) ) $_SESSION[$sIndex[0]] = array();
+		  if ( isset($_SESSION[$sIndex[0]][$sIndex[1]]) ) { $d = true; } else { $_SESSION[$sIndex[0]][$sIndex[1]] = $dValue; $d = false; }
+		break;
+		case 3;
+		  if ( !isset($_SESSION[$sIndex[0]]) ) $_SESSION[$sIndex[0]] = array();
+		  if ( !isset($_SESSION[$sIndex[0]][$sIndex[1]]) ) $_SESSION[$sIndex[0]][$sIndex[1]] = array();
+		  if ( isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]]) ) { $d = true; } else { $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]] = $dValue; $d = false; }
+		break;
+		case 4;
+		  if ( !isset($_SESSION[$sIndex[0]]) ) $_SESSION[$sIndex[0]] = array();
+		  if ( !isset($_SESSION[$sIndex[0]][$sIndex[1]]) ) $_SESSION[$sIndex[0]][$sIndex[1]] = array();
+		  if ( !isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]]) ) $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]] = array();
+		  if ( isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]]) ) { $d = true; } else { $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]] = $dValue; $d = false; }
+		break;
+		case 5;
+		  if ( !isset($_SESSION[$sIndex[0]]) ) $_SESSION[$sIndex[0]] = array();
+		  if ( !isset($_SESSION[$sIndex[0]][$sIndex[1]]) ) $_SESSION[$sIndex[0]][$sIndex[1]] = array();
+		  if ( !isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]]) ) $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]] = array();
+		  if ( !isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]]) ) $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]] = array();
+		  if ( isset($_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]][$sIndex[4]]) ) { $d = true; } else { $_SESSION[$sIndex[0]][$sIndex[1]][$sIndex[2]][$sIndex[3]][$sIndex[4]] = $dValue; $d = false; }
+		break;
+		default;
+			$d = false;
+		break;
+	}
+	##if ( $d ) { echo '<span class="d_s_vt">true'; } else { echo '<span class="d_s_vf">false'; } echo "</span><br>\n"; // DEBUG d().
+	return $d;
+}
+
+// sectionFooter()
+// End a section.
+function sectionFooter() {
+  t_FuncBegin();
+	require('common/sectionFooter.phpinc');
+  t_FuncEnd();
+}
+
+// sectionHeader($sectionTitle, $sectionWidth)
+// Begin a section.
+// $sectionTitle = the section title.
+// $sectionWidth = the section width.
+function sectionHeader($sectionTitle=false, $sectionWidth=false) {
+  t_FuncBegin();
+	require('common/sectionHeader.phpinc');
+  t_FuncEnd();
+}
+
+// sectionHeaderPlay($playTitle)
+// Begin a section with a play title.
+// $playTitle = title postfix for the playerAction.
+function sectionHeaderPlay($playTitle=false) {
+#echo basename(__FILE__).':'.__LINE__.': '; print_r($GLOBALS['_DEBUG']['code']['stack']); if ( $GLOBALS['_DEBUG']['page']['code'] ) { echo ' pageCode == <span class="d_s_vt">true</span>'; } else { echo ' pageCode == <span class="d_s_vf">false</span>'; } echo "<br>\n";
+  t_FuncBegin();
+#echo basename(__FILE__).':'.__LINE__.': '; print_r($GLOBALS['_DEBUG']['code']['stack']); if ( $GLOBALS['_DEBUG']['page']['code'] ) { echo ' pageCode == <span class="d_s_vt">true</span>'; } else { echo ' pageCode == <span class="d_s_vf">false</span>'; } echo "<br>\n";
+	$sectionWidth=false;
+	$sectionTitle = bold($GLOBALS['gameInfo']['playerAction']);
+	if ( $playTitle ) $sectionTitle .= ' '.$playTitle;
+	$sectionTitle .= ' - '.bold($GLOBALS['gameInfo']['gameName']);
+	if ( $GLOBALS['gameInfo']['playerTurn'] ) $sectionTitle .= ' Turn '.$GLOBALS['gameInfo']['playerTurn'];
+	if ( $GLOBALS['gameInfo']['playerAction'] != 'Production' && $GLOBALS['gameInfo']['playerRound'] > 0 ) $sectionTitle .= '.'.$GLOBALS['gameInfo']['playerRound'];
+	$sectionTitle .= ' - '.$GLOBALS['playerColors'][$_SESSION['user']['userId']]['Name'];
+	require('common/sectionHeader.phpinc');
+#echo basename(__FILE__).':'.__LINE__.': '; print_r($GLOBALS['_DEBUG']['code']['stack']); if ( $GLOBALS['_DEBUG']['page']['code'] ) { echo ' pageCode == <span class="d_s_vt">true</span>'; } else { echo ' pageCode == <span class="d_s_vf">false</span>'; } echo "<br>\n";
+  t_FuncEnd();
+#echo basename(__FILE__).':'.__LINE__.': '; print_r($GLOBALS['_DEBUG']['code']['stack']); if ( $GLOBALS['_DEBUG']['page']['code'] ) { echo ' pageCode == <span class="d_s_vt">true</span>'; } else { echo ' pageCode == <span class="d_s_vf">false</span>'; } echo "<br>\n";
+}
+
+// twoDigit($number, $minLenght)
+// Returns $number as a two+ digit number. The number is zero padded to the left.
+//    $number = The number to parse.
+// $minLenght = The minimum number length. Default is 2 (hence the function name 'twoDigit').
+function twoDigit($number, $minLenght=2) {
+  $twoDigit = $number;
+  while ( strlen($twoDigit) < $minLenght ) {
+    $twoDigit = '0'.$twoDigit;
+  }
+  #t_Func($twoDigit);
+  return $twoDigit;
+}
+
+// URLqueryClean($addQueryString)
+// Cleanup $_SERVER['QUERY_STRING']. Remove $_GET['clear'], $_GET['code'], $_GET['debug'], $_GET['debugging'], $_GET['Login'], $_GET['Logout'], $_GET['query'], $_GET['reload'], and $_GET['session'].
+function URLqueryClean($URLqueryString='') {
+	t_FuncBegin();
+	if ( $URLqueryString === true || $URLqueryString === false ) $URLqueryString = '';
+	$URLqueryClean = '';
+	if ( $URLqueryString != '' ) {
+		$QueryStringParts =  explode('&',$URLqueryString);
+		d_Var('$QueryStringParts',$QueryStringParts,'+');
+		foreach ( $QueryStringParts as $index => $QueryStringPart ) {
+			d_Var('$QueryStringParts['.$index.']',$QueryStringPart,'');
+			if ( $QueryStringPart == 'clear' || substr($QueryStringPart,0,5) == 'code=' || substr($QueryStringPart,0,6) == 'debug=' || substr($QueryStringPart,0,10) == 'debugging=' || $QueryStringPart == 'Login' || $QueryStringPart == 'Logout' || substr($QueryStringPart,0,6) == 'query=' || $QueryStringPart == 'reload' || $QueryStringPart == 'session' || $QueryStringPart == '' ) unset($QueryStringParts[$index]);
+		}
+		d_Var('$QueryStringParts',$QueryStringParts,'+');
+		if ( count($QueryStringParts) ) {
+			$prefix = '?';
+			foreach ( $QueryStringParts as $QueryStringPart ) {
+				$URLqueryClean .= $prefix.$QueryStringPart;
+				$prefix = '&';
+			}
+		}
+	}
+	d_Var('$URLqueryClean',$URLqueryClean);
+  t_Func($URLqueryClean);
+	t_FuncEnd();
+	return $URLqueryClean;
+}
+// userEmail($uId)
+// Return the user's email address from the userId.
+// $uId = The userId.
+function userEmail($uId) {
+	$query=sprintf("SELECT userEmail FROM user WHERE userId='%s'", get_magic_quotes_gpc() ? $uId : addslashes($uId));
+  $userResult = query_do();
+  if ($GLOBALS['_QUERY']['count']) {
+    $userEmail = query_row($userResult);
+    $userEmail = $userEmail['userEmail'];
+  }  else {
+    $userEmail = "";
+  }
+  t_Func($userEmail);
+  return $userEmail;
+}
+
+// userName($uId)
+// Return the user's name from the userId.
+//      $uId = The userId.
+function userName($uId=0) {
+	$DEBUG_userName = false;
+	if ( !$uId ) $uId = 0; // For false or NULL;
+  $query = "
+    SELECT userFirstname,
+           userMiddlename,
+           userLastname,
+           userNickname
+      FROM `user`
+     WHERE userId = ".$uId."
+   ";
+  $userInfo = query_info($query);
+  if ($GLOBALS['_QUERY']['count']) {
+		if ( !$userInfo['userNickname'] ) {
+			$userFullName = htmlSafe(trim($userInfo['userFirstname']." ".$userInfo['userLastname'])); if ( $DEBUG_userName ) $userFullName.= ' #'.$uId;
+		} else {
+			$userFullName = htmlSafe(trim($userInfo['userNickname']." ".$userInfo['userLastname'])); if ( $DEBUG_userName ) $userFullName.= ' #'.$uId;
+		}
+	}  else {
+		$userFullName = "N/A (".$uId.")";
+	}
+  return $userFullName;
+}
+
+// userNamePossessive($uId, $nickname)
+// Return the user's name from the userId in possessive form.
+//      $uId = The userId.
+// $nickname = Use any nickname if true else use firstname. Default is to use nickname.
+function userNamePossessive($uId=0, $nickname=true) {
+	$userNamePossessive = htmlSafe(userName($uId, $nickname)."'");
+	if ( substr($userNamePossessive,-2) != "s'" ) $userNamePossessive = $userNamePossessive.'s';
+	return $userNamePossessive;
+}
+
+
+// uuid()
+// Generate a uuid for form control (used to prevent reload).
+function uuid() {
+  $uuid = md5(getmypid().uniqid(rand()).$_SERVER['SERVER_NAME']);
+  #t_Func($uuid);
+  return $uuid;
+}
+
+/** /
+{ // End this file TRACKing.  Use this code when the function t_End() is unavailable.
+  // End file <ol>.
+  $_SESSION['TRACK']['ol'] -= 1; $_SESSION['TRACK']['data'] .= t_Indent()."</ol>\n";
+    // TRACK file end.
+  $_SESSION['TRACK']['data'] .= t_Indent()."End ".basename(__FILE__).":".__LINE__."\n"; $_SESSION['TRACK']['indent'] -= 1;
+  // End file <li>.
+  $_SESSION['TRACK']['indent'] -= 1; $_SESSION['TRACK']['data'] .= t_Indent()."</li>\n";
+}
+/**/
+
+t_End(false, __FILE__, __LINE__); // End TRACKing functions.phpinc file.
+?>

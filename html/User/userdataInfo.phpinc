@@ -1,0 +1,35 @@
+<?
+// User/userdataInfo.phpinc
+// Get the user's default settings from the database. If there are no userdata settings, then set them.
+// $f['userId'] - Set to the userId to get the default settings for.
+t_Begin(); // Begin TRACKing included file.
+// Verify userId.
+f('userId','user,userId',0,true); // Verify userId.
+d_V('userId');
+// Query database.
+$query = "
+SELECT *
+  FROM userdata
+ WHERE userId = ".$f['userId']."
+";
+d_Var('userdataInfo',$query,'q');
+$userdataInfo = query_info($query);
+d_Var('$userdataInfo',$userdataInfo);
+if ( $userdataInfo ) {
+	foreach ( $userdataInfo as $field => $value ) {
+		$_SESSION['user'][$field] = $value;
+	}
+} else {
+  if ( $f['userId'] > 1 ) {
+    $query = "
+      INSERT INTO `userdata` (
+          userId
+      ) VALUES (
+           ".$_SESSION['user']['userId']."
+      )
+    ";
+    $userdataInsert = query_do($query);
+  }
+}
+t_End(); // End TRACKing included file.
+?>

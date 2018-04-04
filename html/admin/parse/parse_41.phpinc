@@ -1,0 +1,21 @@
+<?
+// parse_41.phpinc
+// Check for Instructor only line and add.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+d_line('Check for Instructor only line and add.');
+d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+
+if ( $classLnA[0] == '*' ) {
+	// Instructor only line.
+	$classInfo['meeting'][$meetingIndex]['INSTRUCTOR'] .= '|'.trim(substr($classLn,74));
+} else {
+	set_state(31); // Check for meeting or note line.
+	$line--; // Re-parse this line.
+}
+
+d_Var('$classInfo',$classInfo,'');
+
+#set_state(99);
+t_End(); // End TRACKing include_filename.phpinc.
+?>

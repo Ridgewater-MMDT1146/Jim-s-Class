@@ -1,0 +1,12 @@
+<?
+// User/logout.phpinc
+
+t_Begin(); // Begin TRACKing included file.
+// ** Logout the current user. **
+unset($_SESSION['user']);
+$_SESSION['user'] = array();
+$_SESSION['user']['userId'] = NULL;
+headerLocation('/');
+#header("Location: /");
+t_End(); // End TRACKing included file.
+?>

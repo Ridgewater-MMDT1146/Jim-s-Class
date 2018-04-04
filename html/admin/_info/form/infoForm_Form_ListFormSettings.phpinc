@@ -1,0 +1,91 @@
+<?
+// admin/_info/form/infoForm_Form_ListFormSettings.phpinc
+// Display the form settings form.
+t_Begin(); // Begin TRACKing included file.
+formValue('displayListUsing');
+formValue('buttonListType');
+formValue('formListControl');
+if ( !isset($f['list_form_settings_value']) ) $f['list_form_settings_value'] = 1;
+?>
+<a name="list_form_settings_name"></a>
+<input type="hidden" name="list_form_settings_value" id="list_form_settings_value_id" value="<?=$f['list_form_settings_value']?>">
+<table><tr><td><fieldset><legend><a href="#list_form_settings_name" name="list_form_settings" onClick="return info_Set(this);"><div id="list_form_settings_status" class="inline"><? if ( !$f['list_form_settings_value']) { ?>+<? } else { ?>-<? } ?></div> list form settings</a><input type="submit" name="subtask_form_settings" value="Update form" onClick="info_gotoName(this,'list_form_settings_name');"></legend>
+<div id="list_form_settings_show" class="<? if ( !$f['list_form_settings_value']) { ?>d_s_h <? } ?>d_s_l">
+<?
+
+if ( $f['form'] != 'form_definition' ) {
+  // Set NULL checkboxes buttons.
+  $f['defaultListButtonAdd'] = 1;
+  $f['defaultListButtonEdit'] = 1;
+  // Preset radio buttons.
+  $f['displayListUsing'] = 'table';
+  $f['buttonListType'] = 'submit';
+  $f['formListControl'] = 'task';
+}
+?>
+<table>
+  <tr>
+    <td><abbr onMouseOver="ttShow('Displays the form using a table.')" onMouseOut="ttHide();" onClick="ttHide();"><input type="radio" name="displayListUsing" value="table"<? if ( $f['displayListUsing'] == 'table' ) { ?> checked<? } ?>>Display using table</abbr></td>
+    <td><abbr class="disabled" onMouseOver="ttShow('Displays the form using css.')" onMouseOut="ttHide();" onClick="ttHide();"><input type="radio" name="displayListUsing" value="css"<? if ( $f['displayListUsing'] == 'css' ) { ?> checked<? } ?>>Display using css</abbr></td>
+  </tr>
+  <tr>
+    <td><input type="radio" name="buttonListType" value="submit"<? if ( $f['buttonListType'] == 'submit' ) { ?> checked<? } ?>>Buttons use submit</td>
+    <td><input type="radio" name="buttonListType" value="button"<? if ( $f['buttonListType'] == 'button' ) { ?> checked<? } ?>>Buttons are buttons</td>
+  </tr>
+  <tr>
+    <td colspan="2">Add default list buttons
+      <input type="checkbox" name="defaultListButtonAdd" value="task"<? if ( isset($f['defaultListButtonAdd']) ) { ?> checked<? } ?>><input type="button" value="Add" class="smaller"<? if ( !isset($f['defaultListButtonAdd']) ) { ?> disabled<? } ?>>
+      <input type="checkbox" name="defaultListButtonEdit" value="task"<? if ( isset($f['defaultListButtonEdit']) ) { ?> checked<? } ?>><input type="button" value="Edit" class="smaller"<? if ( !isset($f['defaultListButtonEdit']) ) { ?> disabled<? } ?>>
+      <input type="checkbox" name="defaultListButtonUpdate" value="task"<? if ( isset($f['defaultListButtonUpdate']) ) { ?> checked<? } ?>><input type="button" value="Update" class="smaller"<? if ( !isset($f['defaultListButtonUpdate']) ) { ?> disabled<? } ?>>
+      <input type="checkbox" name="defaultListButtonView" value="task"<? if ( isset($f['defaultListButtonView']) ) { ?> checked<? } ?>><input type="button" value="View" class="smaller"<? if ( !isset($f['defaultListButtonView']) ) { ?> disabled<? } ?>>
+    </td>
+  </tr>
+  <tr>
+    <td><input type="radio" name="formListControl" value="task"<? if ( $f['formListControl'] == 'task' ) { ?> checked<? } ?>>Control form uses task</td>
+    <td><input type="radio" name="formListControl" value="task_subtask"<? if ( $f['formListControl'] == 'task_subtask' ) { ?> checked<? } ?>>Control form uses task &amp; subtask</td>
+  </tr>
+  <tr>
+    <td><input type="radio" name="formListControl" value="form_task"<? if ( $f['formListControl'] == 'form_task' ) { ?> checked<? } ?>>Control form uses form &amp; task</td>
+    <td></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <th class="" colspan="4">List submit buttons</th>
+  </tr>
+  <tr>
+    <td class="bold_info right_info small_info">name</td>
+    <td class="bold_info small_info">value</td>
+    <td class="bold_info right_info small_info">name</td>
+    <td class="bold_info small_info">value</td>
+  </tr>
+  <tr>
+<?
+for ($i=1; $i<=$maximumSubmitButtonPairs; $i++) {
+  $j = $i +  $maximumSubmitButtonPairs;
+  if ($i != $maximumSubmitButtonPairs) {
+    $style = '';
+  } else {
+    $style = ' grayline_info';
+  }
+  formValue('name_i');
+  formValue('value_i');
+  formValue('name_j');
+  formValue('value_j');
+?>
+  <tr>
+    <td class="right_info small_info<?=$style?>"><b><?=$i?>: </b><input type="text" name="listsubmit_<?=$i?>_name" class="small_info width100px_info" value="<?=htmlSafe($f['name_i'])?>"></td>
+    <td class="small_info<?=$style?>"><input type="text" name="listsubmit_<?=$i?>_value" class="small_info width100px_info" value="<?=htmlSafe($f['value_i'])?>"></td>
+    <td class="right_info small_info<?=$style?>"><b><?=$j?>: </b><input type="text" name="listsubmit_<?=$j?>_name" class="small_info width100px_info" value="<?=htmlSafe($f['name_j'])?>"></td>
+    <td class="small_info<?=$style?>"><input type="text" name="listsubmit_<?=$j?>_value" class="small_info width100px_info" value="<?=htmlSafe($f['value_j'])?>"></td>
+  </tr>
+<?
+}
+?>
+</table>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+
+?>

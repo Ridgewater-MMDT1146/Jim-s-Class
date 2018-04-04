@@ -1,0 +1,21 @@
+<?
+// site/get_user_departments.phpinc
+// Get user departments.
+
+t_Begin(); // Begin TRACKing get_user_departments.phpinc.
+$departmentIdList = array_to_list($_SESSION['user']['department']); if ( !$departmentIdList ) $departmentIdList = '0';
+$query = "
+    SELECT departmentId
+         , departmentCode
+         , departmentName
+      FROM `department`
+		 WHERE departmentId IN ( ".$departmentIdList." )
+  ORDER BY departmentName
+";
+d_Var('departmentResult',$query,'q');
+$departmentResult = query_do($query);
+$departmentCount = $GLOBALS['_QUERY']['count'];
+d_Var('$departmentResult',$departmentResult);
+
+t_End(); // End TRACKing get_user_departments.phpinc.
+?>

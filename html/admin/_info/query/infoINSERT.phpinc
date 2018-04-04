@@ -1,0 +1,24 @@
+<?
+// admin/_info/form/infoINSERT.phpinc
+// Display the INSERT query.
+
+t_Begin(); // Begin TRACKing included file.
+$DEBUG_infoINSERT = false;
+$DEBUG_info = $DEBUG_infoINSERT;
+include('admin/_info/query/infoTableFields.phpinc'); // Get table field info.
+d_Var('$fieldArray',$fieldArray);
+$indent = '';
+$query = '';
+$queryType = 'INSERT';
+?>
+<a name="conditional_settings"></a>
+<?
+include('admin/_info/query/infoConditional.phpinc');
+include('admin/_info/query/infoINSERTquery.phpinc'); // Generate the $query.
+?>
+<table><tr><td><fieldset><legend><?=$f['database']?> <?=$f['table']?> INSERT</legend>
+<form><textarea class="code_info" wrap="off"><?=$query?></textarea></form>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

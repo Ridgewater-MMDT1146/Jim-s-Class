@@ -1,0 +1,24 @@
+<?
+// common/postdata/pageDelete.phpinc
+// Contains the pageDelete function.
+#t_Begin(); // Begin TRACKing included file.
+// pageDelete($postId)
+// Deletes the post and postdata for $postId.
+function pageDelete($postId=false) {
+  if ( $postId ) {
+    $query = "
+      DELETE
+        FROM `postdata`
+       WHERE postId = ".$postId."
+    ";
+    $postdataDelete = query_do($query);
+    $query = "
+      DELETE
+        FROM `post`
+       WHERE postId = ".$postId."
+    ";
+    $postDelete = query_do($query);
+  }
+}
+#t_End(); // End TRACKing included file.
+?>

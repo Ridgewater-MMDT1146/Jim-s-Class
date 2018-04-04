@@ -1,0 +1,36 @@
+<?
+// admin/_info/form/infoForm_Preview_AddEditForm.phpinc
+// Display the form preview.
+t_Begin(); // Begin TRACKing included file.
+if ( !isset($f['add_edit_form_preview_value']) ) $f['add_edit_form_preview_value'] = 1;
+?>
+<a name="AddEditFormPreview"></a>
+<input type="hidden" name="add_edit_form_preview_value" id="add_edit_form_preview_value_id" value="<?=$f['add_edit_form_preview_value']?>">
+<table><tr><td><fieldset><legend><a href="#AddEditFormPreview" name="add_edit_form_preview" onClick="return info_Set(this);"><div id="add_edit_form_preview_status" class="inline"><? if ( !$f['add_edit_form_preview_value']) { ?>+<? } else { ?>-<? } ?></div> <?=basename($f['filenameBase'])?>Form preview (using <?=$f['displayFormUsing']?>)</a></legend>
+<div id="add_edit_form_preview_show" class="<? if ( !$f['add_edit_form_preview_value']) { ?>d_s_h <? } ?>d_s_l">
+<table class="grayline_info" cellpadding="0" cellspacing="0">
+  <tr>
+    <th class="right_info">field</th>
+    <th class="right_info">label</th>
+    <th class="center">form element</th>
+    <th>type</th>
+    <th>value</th>
+  </tr>
+<?
+switch( $f['displayFormUsing'] ) {
+  case 'css':
+    include('admin/_info/form/infoForm_Preview_AddEditForm_CSS.phpinc');
+  break;
+  case 'table':
+    include('admin/_info/form/infoForm_Preview_AddEditForm_Table.phpinc');
+  break;
+  default:
+    programmingError('The displayFormUsing ('.$f['displayFormUsing'].') is of incorrect type.');
+}
+?>
+</table>
+</div>
+</fieldset></td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+?>

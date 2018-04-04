@@ -1,0 +1,86 @@
+<?
+// User/userLoginHistory.phpinc
+// Store user page history.
+t_Begin(); // Begin TRACKing included file.
+
+if ( isset($_SESSION['user']['userId']) ) {
+  // Get the last page from the userhistory table.
+  $query = "
+      SELECT userhistoryPage,
+             userhistoryData
+        FROM `userhistory`
+       WHERE userId = ".$_SESSION['user']['trueId']."
+    ORDER BY userhistoryDate DESC
+  ";
+  $userhistoryResult = query_do($query);
+  $userhistoryCount = $GLOBALS['_QUERY']['count'];
+  if ( $userhistoryCount ) {
+    query_seek($userhistoryResult, 0);
+    $userhistoryInfo = query_row($userhistoryResult);
+  } else {
+    $userhistoryInfo = false;
+  }
+  // Compile get/post data.
+  $userhistoryData = '';
+  foreach($_GET as $getpostName => $getPostValue) {
+    $userhistoryData .= $getpostName.'='.$getPostValue."
+";
+  }
+  foreach($_POST as $getpostName => $getPostValue) {
+    $userhistoryData .= $getpostName.'='.$getPostValue."
+";
+  }
+  if ( !$userhistoryInfo || $userhistoryInfo['userhistoryPage'] != $_SERVER['PHP_SELF'] || $userhistoryInfo['userhistoryData'] != $userhistoryData ) {
+    // This is a new page or has new data. Enter the page into the userhistory table.
+    // Get the previous page location.
+    if ( isset($_SESSION['previouslocation']) ) {
+      $userhistoryReferer = $_SESSION['previouslocation'];
+    } else {
+      if ( isset($_SERVER['HTTP_REFERER']) ) {
+        $userhistoryReferer = explode('?',$_SERVER['HTTP_REFERER']); // Strip any query from URL.
+        $userhistoryReferer = $userhistoryReferer[0];
+      } else {
+        $userhistoryReferer = '';
+      }
+    }
+    // Calc the decimal IP address.
+    $octet = explode(".",$_SERVER['REMOTE_ADDR']);
+    $decimalIP = $octet[0]*256*256*256 + $octet[1]*256*256 + $octet[2]*256 + $octet[3];
+    /**/
+    // Temporarly DELETE all previous userhistory.
+    $query = "
+        DELETE
+          FROM `userhistory`
+         WHERE userId = ".$_SESSION['user']['trueId']."
+    ";
+    $userhistoryDelete = query_do($query);
+    /**/
+    // INSERT the page data.
+    if ( $_SESSION['user']['userId'] == $_SESSION['user']['trueId'] ) {
+      $query = "
+      INSERT INTO `userhistory` (
+        userId,
+        userhistoryPage,
+        userhistoryData,
+        userhistoryReferer,
+        userhistoryIPAddress,
+        userhistoryIPDecimal,
+        userhistoryDate,
+        userhistorySessionId
+      ) VALUES (
+        ".$_SESSION['user']['userId'].",
+       '".query_safe($_SERVER['PHP_SELF'])."',
+       '".query_safe($userhistoryData)."',
+       '".query_safe($userhistoryReferer)."',
+       '".query_safe($_SERVER['REMOTE_ADDR'])."',
+        ".$decimalIP.",
+       '".currentDateTime()."',
+       '".query_safe($_COOKIE['PHPSESSID'])."'
+      )";
+      $userhistoryInsert = query_do($query);
+    }
+  }
+}
+
+t_End(); // End TRACKing included file.
+?>

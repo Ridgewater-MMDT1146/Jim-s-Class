@@ -1,0 +1,40 @@
+<?
+// parse_10.phpinc
+// Get YRTR and campus then move to first department line.
+
+t_Begin(); // Begin TRACKing include_filename.phpinc.
+d_line('Begin file parse.','a');
+
+#$DEBUG_parse_10_ShowSkippedLines = true; // Show skipped lines.
+if ( !isset($DEBUG_parse_10_ShowSkippedLines) ) $DEBUG_parse_10_ShowSkippedLines = false;
+if ( $DEBUG_parse_10_ShowSkippedLines ) { $ShowSkippedLines = 'd'; } else { $ShowSkippedLines = ''; }
+
+// Begin with no class info.
+$classInfo = array();
+
+// Get year and term.
+$YRTR = substr($parseFile,0,5);
+d_Var('$YRTR',$YRTR);
+$classInfo['YRTR'] = $YRTR;
+
+// Get campus.
+$continue = 15; // Skip a max of 15 lines.
+while ( $continue && get_ClassLn() && !in_ClassLn('<FONT SIZE=+2><B>') ) { d_Line("Skipping: $line $classLn.",$ShowSkippedLines.'i'); $continue--; } // Skip to the Campus line.
+#d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+$campus = trim(strip_tags('<'.$classLnA[1]));
+$classInfo['campus'] = $campus;
+?>
+<h4><?=$campus?></h4>
+<?
+$continue = 15; // Skip a max of 15 lines.
+while ( $continue && get_ClassLn() && !in_ClassLn('<PRE>') ) { d_Line("Skipping: $line $classLn.",$ShowSkippedLines.'i'); $continue--; } // Skip to the <PRE> line in order to get past '<FONT SIZE=+1><B>Last Updated' line.
+$continue = 15; // Skip a max of 15 lines.
+while ($continue && get_ClassLn() && !in_ClassLn('<FONT SIZE=+1><B>') ) { d_Line("Skipping: $line $classLn.",$ShowSkippedLines.'i'); $continue--; } // Skip to the first department line.
+d_Line('state: '.$state.' line: '.$line.': '.$classLn); d_Var('$classLnA',$classLnA); // DEBUG class line.
+$line--; // Re-parse this line.
+
+set_state(11); // Find class or department line.
+
+#set_state(99);
+t_End(); // End TRACKing include_filename.phpinc.
+?>

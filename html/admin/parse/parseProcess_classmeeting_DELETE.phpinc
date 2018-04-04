@@ -1,0 +1,17 @@
+<?
+// parseProcess_classmeeting_DELETE.phpinc
+// DELETE all class meetings.
+
+t_Begin(); // Begin TRACKing parseProcess_classmeeting_DELETE.phpinc.
+
+d_Var('$thisClass',$thisClass,'');
+$query = "
+        DELETE FROM `classmeeting`
+         WHERE classId = ".$thisClass['classId']."
+";
+d_Var('classmeetingDELETE',$query,'q');
+$classmeetingDELETE = query_do($query);
+d_Var('$classmeetingDELETE',$classmeetingDELETE,'l');
+
+t_End(); // End TRACKing parseProcess_classmeeting_DELETE.phpinc.
+?>

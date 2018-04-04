@@ -1,0 +1,182 @@
+<?
+// Schedule/ScheduleClassForm_Meeting_Room.phpinc
+// purpose_of_ScheduleClassForm_Room.
+
+t_Begin(); // Begin TRACKing ScheduleClassForm_Meeting_Room.
+
+// Get campuses data.
+$query = "
+    SELECT campusId
+         , campusCode
+         , campusName
+      FROM `campus`
+  ORDER BY campusName
+";
+d_Var('campusResult',$query,'q');
+$campusResult = query_do($query);
+$campusCount = $GLOBALS['_QUERY']['count'];
+#d_Var('$campusResult',$campusResult,'d');
+if ( !$campusCount ) programmingError('No campuses found.');
+// Store campusIds.
+query_seek($campusResult, 0);
+$campusIds = array();
+while ($thisCampus = query_row($campusResult)) {
+	$campusIds[] = $thisCampus['campusId'];
+}
+if ( $thisMeeting['scheduleclassmeetingOnCampus'] == 1 ) {
+	$scheduleclassmeetingOffCampusChecked = '';
+	$divRoomsClass = '';
+} else {
+	$scheduleclassmeetingOffCampusChecked = ' checked';
+	$divRoomsClass = ' class="hidden"';
+}
+?>
+<label for="chkClassIsOffCampus<?=$_scmId?>" class="weekday"><input type="checkbox" name="scheduleclassmeetingOffCampus<?=$_scmId?>" id="chkClassIsOffCampus<?=$_scmId?>" value="1" onClick="ClassmeetingOffCampus(this);"<?=$scheduleclassmeetingOffCampusChecked?>><span>Off campus</span></label><br>
+<div id="divRooms<?=$_scmId?>"<?=$divRoomsClass?>>
+<?
+for ( $campusIndex=0; $campusIndex<count($campusIds); $campusIndex++ ) { // Loop thru campuses.
+	$campusId = $campusIds[$campusIndex];
+	#d_Var('$campusId',$campusId,'d');
+	if ( $campusIndex > 0 && !isset($thisMeeting['Room'][$campusIndex]) ) {
+		$campusClass = "hidden";
+	} else {
+		$campusClass = '';
+	}
+	if ( isset($thisMeeting['Room'][$campusIndex]['campusId']) ) {
+		$f['campusId'] = $thisMeeting['Room'][$campusIndex]['campusId'];
+	} else {
+		$f['campusId'] = 0;
+	}
+?>
+<div id="divRoom<?=$_scmId?>_<?=$campusIndex?>" class="<?=$campusClass?>">
+<?
+// Campus. Removed SetupNextCampusSelectOptions(< ?=$scmId? >,< ?=$campusIndex? >); from select OnChange.
+?>
+<label for="selCampus<?=$_scmId?>_<?=$campusIndex?>">Campus:
+	<select name="campusId<?=$_scmId?>_<?=$campusIndex?>" id="selCampus<?=$_scmId?>_<?=$campusIndex?>" onChange="SetupBuildingSelectOptions(this);">
+  	<option></option>
+<?
+query_seek($campusResult, 0);
+while ($campusInfo = query_row($campusResult)) {
+?>
+  	<option value="<?=$campusInfo['campusId']?>"<? if ( $f['campusId'] == $campusInfo['campusId'] ) { ?> selected<? } ?>><?=$campusInfo['campusName']?></option>
+<?
+}
+?>
+  </select>
+</label>
+<?
+// Building
+if ( isset($thisMeeting['Room'][$campusIndex]['buildingId']) ) {
+	$f['buildingId'] = $thisMeeting['Room'][$campusIndex]['buildingId'];
+} else {
+	$f['buildingId'] = 0;
+}
+if ( $f['campusId'] ) {
+	// Get buildings data.
+	$query = "
+			SELECT buildingId
+					 , campusId
+					 , buildingCode
+					 , buildingName
+				FROM `building`
+			 WHERE campusId = ".$f['campusId']."
+		ORDER BY buildingCode
+	";
+	d_Var('buildingResult',$query,'q');
+	$buildingResult = query_do($query);
+	$buildingCount = $GLOBALS['_QUERY']['count'];
+	d_Var('$buildingResult',$buildingResult,'');
+	$buildingClass = '';
+} else {
+	$buildingCount = 0;
+	$buildingClass = 'hidden';
+}
+?>
+<label class="<?=$buildingClass?>" id="labBuilding<?=$_scmId?>_<?=$campusIndex?>" for="selBuilding<?=$_scmId?>_<?=$campusIndex?>">Building:
+	<select name="buildingId<?=$_scmId?>_<?=$campusIndex?>" id="selBuilding<?=$_scmId?>_<?=$campusIndex?>" onChange="SetupRoomSelectOptions(this);">
+<?
+if ( $buildingCount ) {
+	// Load building options.
+	query_seek($buildingResult, 0);
+	while ($buildingInfo = query_row($buildingResult)) {
+	?>
+			<option value="<?=$buildingInfo['buildingId']?>"<? if ( $f['buildingId'] == $buildingInfo['buildingId'] ) { ?> selected<? } ?>><?=$buildingInfo['buildingCode']?></option>
+	<?
+	}
+} else {
+	// Output only a blank option.
+?>
+   	<option></option>
+<?
+}
+?>
+  </select>
+</label>
+<?
+// Room
+if ( isset($thisMeeting['Room'][$campusIndex]['roomId']) ) {
+	$f['roomId'] = $thisMeeting['Room'][$campusIndex]['roomId'];
+} else {
+	$f['roomId'] = 0;
+}
+if ( $f['buildingId'] ) {
+	// Get rooms data.
+	$query = "
+			SELECT roomId
+					 , buildingId
+					 , roomNumber
+				FROM `room`
+			 WHERE buildingId = ".$f['buildingId']."
+		ORDER BY IF ( roomNumber REGEXP ('^[0-9]') ,10000 + roomNumber,roomNumber), roomNumber
+	";
+	d_Var('roomResult',$query,'q');
+	$roomResult = query_do($query);
+	$roomCount = $GLOBALS['_QUERY']['count'];
+	d_Var('$roomResult',$roomResult);
+	$roomClass = '';
+} else {
+	$roomCount = 0;
+	$roomClass = 'hidden';
+}
+?>
+<label class="<?=$roomClass?>" id="labRoom<?=$_scmId?>_<?=$campusIndex?>" for="selRoom<?=$_scmId?>_<?=$campusIndex?>">Room:
+	<select name="roomId<?=$_scmId?>_<?=$campusIndex?>" id="selRoom<?=$_scmId?>_<?=$campusIndex?>"<? if ( isset($campusIds[$campusIndex+1]) ) { ?> onChange="ShowRoomButton(<?=$scmId?>,<?=$campusIndex?>);"<? } ?>>
+<?
+if ( $roomCount ) {
+	// Load room options.
+	query_seek($roomResult, 0);
+	while ($roomInfo = query_row($roomResult)) {
+	?>
+			<option value="<?=$roomInfo['roomId']?>"<? if ( $f['roomId'] == $roomInfo['roomId'] ) { ?> selected<? } ?>><?=$roomInfo['roomNumber']?></option>
+	<?
+	}
+} else {
+	// Output only a blank option.
+?>
+   	<option></option>
+<?
+}
+?>
+  </select>
+</label>
+<?
+	if ( $f['roomId'] ) {
+		$btnShowRoomClass = '';
+	} else {
+		$btnShowRoomClass = ' hidden';
+	}
+	if ( isset($campusIds[$campusIndex+1]) ) {
+		$nextCampusIndex = $campusIndex+1; //$campusIds[$campusIndex+1];
+		button('+','Add another room',"ShowNextCampus(".$scmId.','.$nextCampusIndex.");",'','small'.$btnShowRoomClass,'btnShowRoom'.$_scmId.'_'.$campusIndex);
+	}
+?>
+</div><!-- divRoom_scmId_campusId -->
+<?
+} // Loop thru campuses.
+?>
+</div><!-- divRooms -->
+<?
+
+t_End(); // End TRACKing ScheduleClassForm_Meeting_Room.
+?>

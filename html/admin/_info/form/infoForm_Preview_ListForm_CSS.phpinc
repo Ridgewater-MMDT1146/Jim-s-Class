@@ -1,0 +1,9 @@
+<?
+// admin/_info/form/infoForm_Preview_ListForm_CSS.phpinc
+t_Begin(); // Begin TRACKing included file.
+?>
+ <table><tr><td class="warn">list css preview not available.</td></tr></table>
+<?
+t_End(); // End TRACKing included file.
+
+?>

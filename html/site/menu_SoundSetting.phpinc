@@ -1,0 +1,23 @@
+<?
+// site/menu_SoundSetting.phpinc
+// Show the sound on/off status.
+t_Begin(); // Begin TRACKing included file.
+if ( !isset($GLOBALS['f']['menu_SoundSetting']) ) {
+  if ( isset($_SESSION['userId']) && $_SESSION['userId'] ) {
+    if ( $_SESSION['user']['Sound']['Mute'] ) {
+      $imageSrc = $_SESSION['ROOT']['http'].'/images/sound_mute.png';
+      $tooltipText = 'Manage sound (currently: Mute all).';
+    } else {
+      $imageSrc = $_SESSION['ROOT']['http'].'/images/sound_on.png';
+      $tooltipText = 'Manage sound (currently: All on).';
+    }
+    echo ' <span id="id_Sound_Mute_Setting" onClick="SoundManage(this);"><abbr class="nodot" onMouseOver="ttShow(\''.$tooltipText.'\')" onMouseOut="ttHide();"><img src="'.$imageSrc.'" width="24" height="21" alt="Turn sound on/off"></abbr></span>';
+  } else {
+    echo ' <span id="id_Sound_Mute_Setting"><abbr class="nodot" onMouseOver="ttShow(\'Login to control sound\')" onMouseOut="ttHide();"><img src="'.$_SESSION['ROOT']['http'].'/images/sound_on.png'.'" width="24" height="21" alt="Login to control sound"></abbr></span>';
+	}
+	require('site/menu_SoundSetting_Div.phpinc');
+}
+/** /echo '<span id="DEBUG_SoundOnOff"></span><script type="text/javascript">SoundOnOffShowStatus();</script>';/**/
+$GLOBALS['f']['menu_SoundSetting'] = true;
+t_End(false, __FILE__, __LINE__); // End TRACKing included file.
+?>

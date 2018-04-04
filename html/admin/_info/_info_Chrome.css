@@ -1,0 +1,4 @@
+@charset "utf-8";
+/* _info_Chrome.css */
+legend input[type="submit"], input[type="button"].smaller, input[type="submit"].smaller { padding-left:2px; padding-right:2px; }
+select { margin-left:-.5px; }

@@ -1,0 +1,43 @@
+<?
+// application_site_additional_code.phpinc
+// Perform any additionl code that needs to run for this site after authentication.
+// Make sure that the include line in application.phphinc line 147 is not commented if you want to use this file.
+t_Begin(); // Begin TRACKing included file.
+
+// UPDATE scheduler database.
+if ( $_SERVER['SCRIPT_NAME'] == '/index.php' ) { 
+	// BEGIN Update userdata table.
+	$tableToAlter = 'userdata';
+	$fieldToFind = 'calendar_dayview';
+	$addAfterColumn = 'userId';
+	// Check for $fieldToFind field in $tableToAlter table.
+	$query = "SHOW COLUMNS FROM `".$tableToAlter."`";
+	#d_Var('tableTAlter_fieldResult',$query,'dq');
+	$tableTAlter_fieldResult = query_do($query,$_SESSION['DATABASE']['Default']);
+	#d_Var('$tableTAlter_fieldResult',$tableTAlter_fieldResult,'d');
+	$tableToAlter_fieldCount = $GLOBALS['_QUERY']['count'];
+	if ( $tableToAlter_fieldCount ) {
+		$tableFieldFound = false;
+		query_seek($tableTAlter_fieldResult, 0);
+		while ($row = query_row($tableTAlter_fieldResult)) {
+			if ( $row['Field'] == $fieldToFind ) $tableFieldFound = true;
+		}
+		if ( !$tableFieldFound ) {
+			// ALTER the $tableToAlter.
+			$query = "ALTER TABLE `userdata`
+								 ADD COLUMN `calendar_dayview` ENUM('Full week','Work week') DEFAULT 'Work week' AFTER `userId`,
+								 ADD COLUMN `calendar_timebegin` FLOAT(4,2) UNSIGNED DEFAULT 9 AFTER `calendar_dayview`,
+								 ADD COLUMN `calendar_timeend` FLOAT(4,2) UNSIGNED DEFAULT 17 AFTER `calendar_timebegin`,
+								 ADD COLUMN `calendar_timeincrement` INTEGER(2) UNSIGNED DEFAULT 30 AFTER `calendar_timeend`,
+								 ADD COLUMN `calendar_incrementheight` INTEGER(3) UNSIGNED DEFAULT 30 AFTER `calendar_timeincrement`;
+";
+			d_Var('userdataAlter',$query,'q');
+			$userdataAlter = query_do($query);
+			displayInfo($tableToAlter.' table altered.');
+		}
+	}
+	// END Update userdata table.
+}
+
+t_End(); // End TRACKing included file.
+?>

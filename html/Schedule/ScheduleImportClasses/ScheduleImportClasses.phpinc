@@ -1,0 +1,144 @@
+<?
+// Schedule/ScheduleImportClasses/ScheduleImportClasses.phpinc
+// Display form to import classes into schedule.
+// calendar_dayview, calendar_timebegin, calendar_timeend, calendar_timeincrement, calendar_incrementheight
+
+t_Begin(); // Begin TRACKing ScheduleImportClasses.phpinc.
+
+f('sessionId'); if ( !$f['sessionId'] ) !$f['sessionId'] = 0;
+f('departmentId'); if ( !$f['departmentId'] ) !$f['departmentId'] = 0;
+f('scheduleId'); if ( !$f['scheduleId'] ) !$f['scheduleId'] = 0;
+if ( !$f['scheduleId'] && $_SESSION['user']['scheduleId'] ) $f['scheduleId'] = $_SESSION['user']['scheduleId'];
+f('scheduleName');
+
+require('Schedule/getSchedule.phpinc');
+// Get user schedules.
+$departmentIdList = array_to_list($_SESSION['user']['department']); if ( !$departmentIdList ) $departmentIdList = '0';
+#d_Var('$departmentIdList',$departmentIdList,'d');
+$query = "
+    SELECT scheduleId
+         , department.departmentId
+         , session.sessionId
+         , scheduleName
+				 , departmentCode
+				 , departmentName
+				 , YRTR
+				 , sessionName
+      FROM `schedule`
+      JOIN `department` ON schedule.departmentId = department.departmentId
+      JOIN `session` ON schedule.sessionId = session.sessionId
+     WHERE schedule.departmentId IN ( ".$departmentIdList." )
+  ORDER BY departmentCode, YRTR
+";
+d_Var('scheduleResult',$query,'q');
+$scheduleResult = query_do($query);
+$scheduleCount = $GLOBALS['_QUERY']['count'];
+d_Var('$scheduleResult',$scheduleResult);
+
+include('site/get_user_departments.phpinc'); // Get user departments.
+
+// Get classes in import session.
+$query = "
+    SELECT DISTINCT YRTR
+      FROM `class`
+  ORDER BY YRTR
+";
+d_Var('$classYRTRResult',$query,'q');
+$classYRTRResult = query_do($query);
+$classYRTRCount = $GLOBALS['_QUERY']['count'];
+d_Var('$classYRTRResult',$classYRTRResult,'');
+$classYRTRList = '';
+if ( $classYRTRCount ) { // Are there any classes to import?
+	// Yes. Import the classes.
+  query_seek($classYRTRResult, 0);
+  while ($classYRTRInfo = query_row($classYRTRResult)) { // Loop thru classes to import.
+		$classYRTRList = listAppend($classYRTRList,"'".$classYRTRInfo['YRTR']."'");
+	}
+}
+if ( !$classYRTRList ) $classYRTRList = "''";
+d_Var('$classYRTRList',$classYRTRList,'');
+
+// Get sessions.
+$query = "
+    SELECT sessionId
+         , YRTR
+         , sessionName
+         , sessionDescription
+      FROM `session`
+		 WHERE YRTR IN ( ".$classYRTRList." )
+  ORDER BY YRTR DESC
+";
+d_Var('sessionResult',$query,'q');
+$sessionResult = query_do($query);
+$sessionCount = $GLOBALS['_QUERY']['count'];
+d_Var('$sessionResult',$sessionResult,'');
+
+
+sectionHeader();
+
+// BEGIN form.
+?>
+<fieldset><legend>Import classes into <b><?=$scheduleInfo['scheduleName']?></b> (<?=$scheduleInfo['YRTR']?>) schedule</legend>
+<form name="form_name" action="<?=php_self()?>" method="get">
+  <input type="hidden" name="form" value="form_name">
+  <input type="hidden" name="uuid" value="<?=uuid()?>">
+<?
+if ( $scheduleCount ) {
+// Select an existing schedule.
+?>
+<span class="float_left">
+<fieldset><legend>Import from another schedule</legend>
+Schedule: <select name="scheduleId" id="sel_scheduleId" onChange="ScheduleImportClasses_ScheduleButtonCheck(this)">
+		<option value="" selected disabled></option>
+<?
+  query_seek($scheduleResult, 0);
+  while ($scheduleInfo = query_row($scheduleResult)) {
+		if ( $scheduleInfo['scheduleId'] != $_SESSION['user']['scheduleId']) {
+?>
+		<option value="<?=$scheduleInfo['scheduleId']?>"><?=$scheduleInfo['scheduleName']?> (<?=$scheduleInfo['departmentCode']?> <?=$scheduleInfo['YRTR']?>)</option>
+<?
+		}
+  }
+?>
+	</select>
+	<input type="button" name="task" id="btn_Import_schedule_classes" value="Import schedule classes" onclick="formSubmit(this);" onmouseover="ttShow('Import classes from the selected schedule');" onmouseout="ttHide();" disabled>
+</fieldset>
+<br><br><? button('Cancel','Do not change the schedule view settings.',"return ScheduleImportClasses('Cancel');"); ?><br>
+</span>
+<fieldset class="float_left"><legend>Import from parsed classes</legend>
+<h2 class="center warn">THIS IS NOT YET WORKING!</h2>
+<?
+}// Select schedule
+// Request sessionId and departmentId for a new schedule.
+?>
+<table>
+<? if ( isset($formError['sessionId']) ) { ?>
+  <tr><td class="error" colspan="2"><?=$formError['sessionId']?></td></tr>
+<? } ?>
+	<tr><td class="right">Session:</td><td><select name="sessionId" id="sel_sessionId" onChange="ScheduleImportClasses_ParseButtonCheck(this)">
+		<option value="" selected disabled></option>
+<?
+if ( $sessionCount ) {
+  query_seek($sessionResult, 0);
+  while ($sessionInfo = query_row($sessionResult)) {
+?>
+		<option value="<?=$sessionInfo['sessionId']?>"><?=$sessionInfo['sessionName']?> (<?=$sessionInfo['YRTR']?>)</option>
+<?
+  }
+}
+?>
+	</select> <input type="button" name="task" id="btn_Import_parsed_classes" value="Import parsed classes" onclick="formSubmit(this);" onmouseover="ttShow('Import classes from a parsed Ridgewater schedule');" onmouseout="ttHide();" disabled></td></tr>
+<? if ( isset($formError['scheduleName']) ) { ?>
+  <tr><td class="error" colspan="2"><?=$formError['scheduleName']?></td></tr>
+<? } ?>
+	<tr><td class="center" colspan="2"> </td></tr>
+</table>
+</fieldset>
+</form>
+</fieldset>
+<?
+sectionFooter();
+
+#d_On('foot');
+t_End(); // End TRACKing ScheduleImportClasses.phpinc.
+?>
