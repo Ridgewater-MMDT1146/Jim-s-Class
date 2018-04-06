@@ -14,18 +14,15 @@
 
 #idScheduleForm { border-color: #880000; margin: 2%; }
 
-#id_meetings { border-color: #880000; border-radius: 8px; box-shadow: 0 0 0 5px #e6e6e6; padding: 8px,10px; }
-
 #scheduleBox { position: relative; }
 #sidenav { display: block; }
-#spn_asLab { display: none; }
 
 .action { color:#800; }
 .actionback { background-color:#800; color:#fff; }
 
 .calendar_class { background-color:#eee; border-color:#eee; border-style:solid; border-width:3px; cursor:move; overflow: hidden; position:absolute; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; }
 .calendarTime { /**/padding: 0 .75em 0 .25em;/**/ } /* height, max-height, and min-height are set by Schedule/displaySchedule.phpinc */
-.calendarCell { margin: 0; padding: 0; } /* height, max-height, and min-height are set by Schedule/displaySchedule.phpinc */
+.calendarCell { margin: 0; padding: 0; padding-right: 4px; } /* height, max-height, and min-height are set by Schedule/displaySchedule.phpinc */
 .center { text-align:center; }
 
 .drag_cursor { cursor: move; }
@@ -75,7 +72,7 @@
 
 .small { font-size:.75em; }
 
-.time { width:4.1em; }
+.classTime { width:4.25em; }
 
 .ui-menu-item{
     background-color: white;
@@ -208,30 +205,30 @@ div.scheduleTable > div.scheduleRow:nth-child(1) > div.scheduleTime { border-top
 div.scheduleTable > div.scheduleRow:nth-child(1) > div.scheduleCell { border-top:1px solid black; }
 div.scheduleRow { white-space: nowrap; }
 div.scheduleCell { border-bottom:1px solid black; border-right:1px solid black; display: inline-block; }
-div.scheduleHead { font-weight: bold; text-align: center !important; }
+div.scheduleHead { border-bottom:1px solid black; border-right:1px solid black; display: inline-block; font-weight: bold; text-align: center !important; }
 div.scheduleTime, td.calendarTime { width: 66px; }
 div.scheduleTime { border-bottom:1px solid black; border-left:1px solid black; border-right:1px solid black; display: inline-block; font-weight: bold; padding-right: .25em; text-align: right; }
 
-fieldset { display:inline-block; }
 fieldset {
-    font-family: sans-serif;
-    border: 5px solid #cc0000;
     background: #e6e6e6;
+    border: 5px solid #cc0000;
     border-radius: 10px;
+		display:inline-block;
+    font-family: sans-serif;
+    margin: 5px;
     padding: 15px;
-	margin: 5px;
-	vertical-align: top;
+    vertical-align: top;
 }
-
 fieldset legend {
     background:#9a0000;
-    color: #fff;
-    padding: 8px 10px ;
-    font-size: 18px;
     border-radius: 8px;
     box-shadow: 0 0 0 5px #e6e6e6;
+    color: #fff;
+    font-size: 18px;
     margin-left: 20px;
+    padding: 8px 10px ;
 }
+fieldset#fldMeetings { border-color: #880000; border-radius: 8px; box-shadow: 0 0 0 5px #e6e6e6; padding: 8px,10px; padding-bottom: 0; padding-left: 0; }
 footer#pageFooter { margin:25px 2em 2em 140px; padding:0 1em 1em; } /*border:2px solid #D1CCA9; box-shadow:3px 3px 2px #D1CCA9; */
 
 h1#pageTitle {
@@ -257,8 +254,8 @@ header > div > a:hover {
 }
 input[type="checkbox"] {  }
 input[type="checkbox"], input[type="radio"] { margin-right: 0px; vertical-align: bottom; }
-input[type="checkbox"]+span, input[type="radio"]+span { margin-left: .10em; padding-left: .25em; padding-right: .25em; }
-input+span.weekday { display:inline-block; width:15px; text-align:center; color:blue; }
+input[type="checkbox"]+span, input[type="radio"]+span { display:inline-block; margin-left: 0; padding-left: .25em; padding-right: .25em; }
+input+span.weekday { color:blue; margin-right: 3px; text-align: center; width: 1.5em; }
 input[type="checkbox"]:checked+span, input[type="radio"]:checked+span { background-color:#B51F3B; color:#fff; }
 input[type=number] { font-family:"Courier New", Courier, mono; font-size:1em; text-align:right; }
 input[type=number].num2 { width:2.5em; }
@@ -387,10 +384,6 @@ ul.nav > li.sub a {
 ul.nav > li a:hover {
     background-color: #ccc;
     color: #000;
-}
-
-.l_height{
-    line-height:7px;
 }
 
 

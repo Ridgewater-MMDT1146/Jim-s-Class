@@ -1,5 +1,7 @@
 // Schedule/schedule2.js
 
+var ClassMeetingIndex; // Used to count the number of class meetings for the Schedule CLass dialog.
+
 // Meeting_Add()
 // Add a new meeting to the Schedule Class dialog.
 function Meeting_Add(scheduleclassId) {
@@ -7,29 +9,8 @@ function Meeting_Add(scheduleclassId) {
 	if ( DEBUG_Meeting_Add ) { console.warn('Meeting_Add[scheduleclassId='+scheduleclassId+']'); }
 	if ( DEBUG_Meeting_Add ) { console.log('scheduleclassId='+scheduleclassId); }
 	
-	// BEGIN Increase width of the dialogDiv to allow new class meeting to float.
-	// Also count the number of current class meetings.
-	ClassMeetingIndex = 0;
-	// Get the bounds and offsetWidth of the meetings fieldset element.
+	ScheduleClassDialogSetWidth(2);
 	var eMeetingFieldset = document.getElementById('fldMeetings');
-	var MeetingFieldsetBounds = elementBounds(eMeetingFieldset,'schedule2.js 13'); 
-	if ( DEBUG_Meeting_Add ) { console.log('MeetingFieldsetBounds='+JSON.stringify(MeetingFieldsetBounds)); }
-	if ( DEBUG_Meeting_Add ) { console.log('eMeetingFieldset.offsetWidth='+eMeetingFieldset.offsetWidth); }
-	var CurrentClassMeetingsMaxWidth = 0; // Will hold the max width of the current class meetings.
-	var aCurrentClassMeetings = document.getElementsByClassName('divClassMeeting'); // Get the current class meeting containers.
-	for ( var mi=0; mi<aCurrentClassMeetings.length; mi++ ) { // Loop thru the current class meeting containers.
-		if ( DEBUG_Meeting_Add ) { console.log('aCurrentClassMeetings['+mi+'].id='+aCurrentClassMeetings[mi].id); }
-		if ( aCurrentClassMeetings[mi].offsetWidth > CurrentClassMeetingsMaxWidth ) {
-			CurrentClassMeetingsMaxWidth = aCurrentClassMeetings[mi].offsetWidth; // Keep the max width of the current class meetings.
-		}
-		ClassMeetingIndex++; // Add 1 to the class meedit index.
-	} // Loop thru the current class meeting containers.
-	if ( DEBUG_Meeting_Add ) { console.log('CurrentClassMeetingsMaxWidth='+CurrentClassMeetingsMaxWidth); }
-	if ( CurrentClassMeetingsMaxWidth * 2 > MeetingFieldsetBounds.width ) { // Is there room for another class meeting on the right?
-		var NewMeetingFieldsetWidth = MeetingFieldsetBounds.width + CurrentClassMeetingsMaxWidth + 15; // Add 15 for margin-left.
-		eMeetingFieldset.style.width = NewMeetingFieldsetWidth + 'px';
-	} // Is there room for another class meeting on the right?
-	// END Increase width of the dialogDiv to allow new class meeting to float.
 	
 	// Create the new class meeting id.
 	var ClassMeetingAddId = 'add'+	ClassMeetingIndex;
@@ -42,135 +23,51 @@ function Meeting_Add(scheduleclassId) {
 	var div = document.createElement('div');
 	div.id = 'id_classmeeting'+_ClassMeetingAddId;
 	div.className = 'divClassMeeting';
-	
-	// BEGIN Create the innerHTML for the class meeting div.
-	var InnerHTML = '';
-	
-	// Add Dates:
-	InnerHTML += '	<label for="inp_class1meetingStartDate'+_ClassMeetingAddId+'">';
-	InnerHTML += '	Dates:';
-	InnerHTML += '	<input type="date" name="scheduleclassmeetingStartDate'+_ClassMeetingAddId+'" id="inp_class1meetingStartDate'+_ClassMeetingAddId+'" value="" max="">';
-	InnerHTML += '	-';
-	InnerHTML += '	<input type="date" name="scheduleclassmeetingEndDate'+_ClassMeetingAddId+'" id="inp_scheduleclassmeetingEndDate'+_ClassMeetingAddId+'" value="" min="">';
-	InnerHTML += '	<input type="button" value="Full" class="small" onclick="dateStartEnd_Set(\'inp_class1meetingStartDate'+_ClassMeetingAddId+'\',\'inp_scheduleclassmeetingEndDate'+_ClassMeetingAddId+'\',SemesterFullStart,SemesterFullEnd);" onmouseover="ttShow(\'Class runs the full semester\');" onmouseout="ttHide();">';
-	InnerHTML += '	<input type="button" value="1st half" class="small" onclick="dateStartEnd_Set(\'inp_class1meetingStartDate'+_ClassMeetingAddId+'\',\'inp_scheduleclassmeetingEndDate'+_ClassMeetingAddId+'\',Semester1stStart,Semester1stEnd);" onmouseover="ttShow(\'Class runs the first half of the semester\');" onmouseout="ttHide();">';
-	InnerHTML += '	<input type="button" value="2nd half" class="small" onclick="dateStartEnd_Set(\'inp_class1meetingStartDate'+_ClassMeetingAddId+'\',\'inp_scheduleclassmeetingEndDate'+_ClassMeetingAddId+'\',Semester2ndStart,Semester2ndEnd);" onmouseover="ttShow(\'Class runs the second half of the semester\');" onmouseout="ttHide();">';
-	InnerHTML += '	</label>';
-	
-	// Add Arranged.
-	InnerHTML += '<div><label for="id_scheduleclassmeetingArranged'+_ClassMeetingAddId+'">';
-	InnerHTML += '<input type="checkbox" name="scheduleclassmeetingArranged'+_ClassMeetingAddId+'" id="id_scheduleclassmeetingArranged'+_ClassMeetingAddId+'" value="1" onClick="ClassmeetingArranged(this);"><span>Arranged</span>';
-	InnerHTML += '</label>';
-	InnerHTML += '</div>';
-	
-	// Add Days:
-	InnerHTML += '<div id="id_meetingDays'+_ClassMeetingAddId+'">Days:';
-	for (var weekdayId in Weekdays) {if( Weekdays.hasOwnProperty(weekdayId) ) {
-		InnerHTML += '<label for="id_weekday'+_ClassMeetingAddId+'_'+weekdayId+'" onMouseOver="ttShow(\''+Weekdays[weekdayId].weekdayWeekday+'\');" onMouseOut="ttHide();"><input type="checkbox" name="weekdayIds'+_ClassMeetingAddId+'[]" id="id_weekday'+_ClassMeetingAddId+'_'+weekdayId+'" value="'+weekdayId+'" onClick="SetClassEndTime();"><span class="weekday">'+Weekdays[weekdayId].weekdayD+'</span></label> &nbsp;';
-	}}
-	InnerHTML += '</div><!-- id_meetingDays -->';
-	
-	// Add Time:
-	InnerHTML += '<div id="id_meetingTimes'+_ClassMeetingAddId+'">';
-		// Begin time.
-	InnerHTML += '<label for="id_scheduleclassmeetingBeginTime'+_ClassMeetingAddId+'">Time:</label>';
-	InnerHTML += '<input type="text" name="scheduleclassmeetingBeginTime'+_ClassMeetingAddId+'" id="id_scheduleclassmeetingBeginTime'+_ClassMeetingAddId+'" class="classTime" value="" onBlur="SetClassEndTime(this);" onFocus="this.select();" onMouseOver="ttShow(\'Class start time\');" onMouseOut="ttHide();">';
-	InnerHTML += '</label>';
-		// End time.
-	InnerHTML += ' - ';//'<label for="id_scheduleclassmeetingEndTime'+_ClassMeetingAddId+'"> - ';
-	InnerHTML += '<input name="scheduleclassmeetingEndTime'+_ClassMeetingAddId+'" id="id_scheduleclassmeetingEndTime'+_ClassMeetingAddId+'" type="text" class="classTime" value="" onFocus="this.select();" onMouseOver="ttShow(\'Class end time\');" onMouseOut="ttHide();">';
-		// Auto set.
-	InnerHTML += ' <span  onMouseOver="ttShow(\'Auto set the end time based on the class credits and days\');" onMouseOut="ttHide();">';
-	InnerHTML += '<label for="chkAutoEnd'+_ClassMeetingAddId+'">';
-	InnerHTML += '<input type="checkbox" id="chkAutoEnd'+_ClassMeetingAddId+'" value="1" onClick="SetClassEndTime(this);">';
-	InnerHTML += '<span class="">Auto set end time by credits/days</span></label></span>';
-		// As lab.
-	InnerHTML += '<span id="spn_asLab'+_ClassMeetingAddId+'add'+ClassMeetingIndex+'" onMouseOver="ttShow(\'Auto set the end time as lab credits\');" onMouseOut="ttHide();">';
-	InnerHTML += '<label for="chkAsLab'+_ClassMeetingAddId+'">';
-	InnerHTML += '<input type="checkbox" id="chkAsLab'+_ClassMeetingAddId+'" value="1" onClick="SetClassEndTime(this);">';
-	InnerHTML += '<span class="">As lab</span></span>';//</label></span>';
-	InnerHTML += '</div><!-- id_meetingTimes -->';
-	
-	// Add Off campus.
-	InnerHTML += '<label for="chkClassIsOffCampus'+_ClassMeetingAddId+'" class="weekday">';
-	InnerHTML += '<input type="checkbox" name="scheduleclassmeetingOffCampus'+_ClassMeetingAddId+'" id="chkClassIsOffCampus'+_ClassMeetingAddId+'" value="1" onClick="ClassmeetingOffCampus(this);">';
-	InnerHTML += '<span>Off campus</span></label><br>';
-	
-	// BEGIN Add campus / building / room selections. One of these is created for each campus.
-	InnerHTML += '<div id="divRooms'+_ClassMeetingAddId+'">';
-	for ( var campusIndex=0; campusIndex<CollegeCampus.length; campusIndex++ ) { // Loop thru campuses.
-		var campusId = CollegeCampus[campusIndex].campusId;
-		var hideCampus;
-		if ( campusIndex > 0 ) { hideCampus = 'hidden'; } else { hideCampus = ''; }
-		InnerHTML += '<div id="divRoom'+_ClassMeetingAddId+'_'+campusIndex+'" class="'+hideCampus+'">';
-		// Add Campus:
-		InnerHTML += '<label for="selCampus'+_ClassMeetingAddId+'_'+campusIndex+'">Campus:';
-		InnerHTML += '<select name="campusId'+_ClassMeetingAddId+'_'+campusIndex+'" id="selCampus'+_ClassMeetingAddId+'_'+campusIndex+'" onChange="SetupBuildingSelectOptions(this);">';
-		InnerHTML += '<option></option>';
-		for ( var ci=0; ci<CollegeCampus.length; ci++ ) { // Loop thru campuses for options.
-			InnerHTML += '<option value="'+CollegeCampus[ci].campusId+'">'+CollegeCampus[ci].Name+'</option>';
-		} // Loop thru campuses for options.
-		InnerHTML += '</select>';
-		InnerHTML += '</label>';
-		// Add Building:
-		InnerHTML += '<label class="hidden" id="labBuilding'+_ClassMeetingAddId+'_'+campusIndex+'" for="selBuilding'+_ClassMeetingAddId+'_'+campusIndex+'">Building:';
-		InnerHTML += '<select name="buildingId'+_ClassMeetingAddId+'_'+campusIndex+'" id="selBuilding'+_ClassMeetingAddId+'_'+campusIndex+'" onChange="SetupRoomSelectOptions(this);">';
-		InnerHTML += '<option></option>';
-		InnerHTML += '</select>';
-		InnerHTML += '</label>';
-		// Add Room:
-		InnerHTML += '<label class="hidden" id="labRoom'+_ClassMeetingAddId+'_'+campusIndex+'" for="selRoom'+_ClassMeetingAddId+'_'+campusIndex+'">Room:';
-		InnerHTML += '<select name="roomId'+_ClassMeetingAddId+'_'+campusIndex+'" id="selRoom'+_ClassMeetingAddId+'_'+campusIndex+'" onChange="ShowRoomButton(\''+ClassMeetingAddId+'\','+campusIndex+');">';
-		InnerHTML += '<option></option>';
-		InnerHTML += '</select>';
-		InnerHTML += '</label>';
-		var nextCampusIndex = campusIndex + 1;
-		if ( nextCampusIndex < CollegeCampus.length ) { // Is there another campus?
-			// Add + room button.
-			InnerHTML += '<input type="button" value="+" id="btnShowRoom'+_ClassMeetingAddId+'_'+campusIndex+'" class="small" style="display:none" onclick="ShowNextCampus(\''+ClassMeetingAddId+'\','+nextCampusIndex+');" onmouseover="ttShow(\'Add another room\');" onmouseout="ttHide();">';
-		} // Is there another campus?
-	} // Loop thru campuses.
-		// Finish room selection.
-	InnerHTML += '</div><!-- divRooms -->';
-	// END Add campus / building / room selections. One of these is created for each campus.
-
-	// Add Instructor: One of these is created for each instructor.
-	for ( instructorIndex=0; instructorIndex<ScheduleInstructor.length; instructorIndex++ ) { // Loop thru instructors.
-		var hideInstructor;
-		if ( instructorIndex > 0 ) { hideInstructor = 'hidden'; } else { hideInstructor = ''; }
-		InnerHTML += '<div id="divInstructor'+_ClassMeetingAddId+'_'+campusIndex+'_'+instructorIndex+'" class="'+hideInstructor+'">';
-		InnerHTML += '<label for="selInstructor'+_ClassMeetingAddId+'_'+campusIndex+'_'+instructorIndex+'">Instructor:';
-		InnerHTML += '<select name="instructorId'+_ClassMeetingAddId+'_'+campusIndex+'_'+instructorIndex+'" id="selInstructor'+_ClassMeetingAddId+'_'+campusIndex+'_'+instructorIndex+'" onChange="SetupInstructorOptions(this); ShowInstructorButton(this);">';
-		InnerHTML += '<option></option>';
-		if ( instructorIndex === 0 ) { // Is this the first instructor select?
-			// Populate the instructor options.
-			for ( var ii=0; ii<ScheduleInstructor.length; ii++ ) { // Loop thru instructor for options.
-			InnerHTML += '<option value="'+ScheduleInstructor[ii].instructorId+'">'+ScheduleInstructor[ii].Name+'</option>';
-			} // Loop thru instructor for options.
-		} // Is this the first instructor select?
-		InnerHTML += '</select>';
-		InnerHTML += '</label>';
-		var nextInstructorIndex = campusIndex + 1;
-		if ( nextInstructorIndex < ScheduleInstructor.length ) { // Is there another instructor?
-			// Add + room button.
-			InnerHTML += '<input type="button" value="+" id="btnShowInstructor'+_ClassMeetingAddId+'_'+campusIndex+'_'+instructorIndex+'" class="small" style="display:none" onclick="ShowInstructorNext(this);" onmouseover="ttShow(\'Add another instructor\');" onmouseout="ttHide();">';
-		} // Is there another campus?
-	} // Loop thru instructors.
-	InnerHTML += '</div><!-- divInstructor'+_ClassMeetingAddId+'_'+campusIndex+'_'+instructorIndex+' -->';
-	
-	// Set the innerHTML
-	div.innerHTML = InnerHTML+'<br>ClassMeetingIndex='+ClassMeetingIndex;
+	div.innerHTML = '';
 	// Append new meeting in Schedule Class dialog.
 	eMeetingFieldset.appendChild(div);
-	
-	// Add one pixel to the marginBottom to deal with browser drawing issues.
-	var newClassMeetingDiv = document.getElementById(div.id);
-	var style = newClassMeetingDiv.currentStyle || window.getComputedStyle(newClassMeetingDiv);
-	var newMarginBottom = parseInt(style.marginBottom.replace('px','')) + 1 + 'px';
-	document.getElementById(div.id).style.marginBottom = newMarginBottom;
-	style = newClassMeetingDiv.currentStyle || window.getComputedStyle(newClassMeetingDiv);
-	if ( DEBUG_Meeting_Add ) { console.log("New marginBottom: " + style.marginBottom); }
+	// Get the meeting form via AJAX.
+	URI = '/Schedule/ScheduleClass/ScheduleClassForm.php?task=Meeting';
+	//URI += '&scheduleId='+scheduleId;
+	//URI += '&departmentId='+departmentId;
+	URI += '&scheduleclassId='+scheduleclassId;
+	URI += '&scmId='+ClassMeetingAddId;
+	//eId = 'dialogDiv';
+	preloadText = 'Getting class meeting';
+	UpdateLoadingText = preloadText;
+	var jsReturnCode = "Meeting_Add_Done("+div.id+")";
+	console.log("UpdateInclude['"+window.location.protocol+'//'+window.location.hostname+URI+'&DEBUG=true'+"', '"+eId+"', '"+preloadText+', '+UpdateReturnCode+"'];");
+	ScheduleClassOpenCount = 0;
+	UpdateInclude(URI, div.id, preloadText, jsReturnCode);
 } // END Meeting_Add.
+
+function Meeting_Add_Done(divId) {
+	var DEBUG_Meeting_Add = true;
+	if ( dialogDivContents.indexOf('Load OK') !== -1 ) { // Did the dialog contents load OK?
+		// Yes.
+		// Add one pixel to the marginBottom to deal with browser drawing issues.
+		var newClassMeetingDiv = document.getElementById(div.id);
+		var style = newClassMeetingDiv.currentStyle || window.getComputedStyle(newClassMeetingDiv);
+		var newMarginBottom = parseInt(style.marginBottom.replace('px','')) + 1 + 'px';
+		document.getElementById(div.id).style.marginBottom = newMarginBottom;
+		if ( DEBUG_Meeting_Add ) { 
+			style = newClassMeetingDiv.currentStyle || window.getComputedStyle(newClassMeetingDiv);
+			console.log("New marginBottom: " + style.marginBottom);
+		}
+	} else { // Did the dialog contents load OK?
+		// No.
+		if ( ScheduleClassOpenCount < 5 ) {
+			ScheduleClassOpenCount++;
+			
+			console.log("UpdateInclude['"+window.location.protocol+'//'+window.location.hostname+URI+'&DEBUG=true'+"', '"+divId+"', '"+UpdateLoadingText+', '+UpdateReturnCode+"'];");
+			
+			UpdateInclude(URI, divId);
+			setTimeout(function(){Meeting_Add_Done(divId)},ScheduleClassOpenCount*1000);
+		} else {
+			alert('Never got return from URI='+URI);
+		}
+	} // Did the dialog contents load OK?
+}
 
 // ScheduleViewSettings(makeChange)
 // Set schedule settings: calendar_dayview, calendar_timebegin, calendar_timeend, calendar_timeincrement, and calendar_incrementheight.
@@ -391,3 +288,60 @@ function DisplayScheduleShowHide() {
 	if ( DEBUG_DisplayScheduleShowHide_Wide ) { console.log('ScheduleTop='+ScheduleTop+' ScheduleDayTimePositions='+JSON.stringify(ScheduleDayTimePositions)); }
 
 } // END DisplayScheduleShowHide.
+
+// ScheduleClassDialogSetWidth(meetingCount)
+// Set the wicth of the Schedule Class dialogDiv.
+function ScheduleClassDialogSetWidth(meetingCount) {
+	var DEBUG_ScheduleClassDialogSetWidth = true;
+	if ( DEBUG_ScheduleClassDialogSetWidth ) { console.warn('ScheduleClassDialogSetWidth[meetingCount='+meetingCount+']'); }
+		// BEGIN Increase width of the dialogDiv to allow new class meeting to float.
+	// Also count the number of current class meetings.
+	ClassMeetingIndex = 0;
+	// Get the bounds and offsetWidth of the meetings fieldset element.
+	var eMeetingFieldset = document.getElementById('fldMeetings');
+	var MeetingFieldsetBounds = elementBounds(eMeetingFieldset,'schedule2.js 13'); 
+	if ( DEBUG_ScheduleClassDialogSetWidth ) { console.log('MeetingFieldsetBounds='+JSON.stringify(MeetingFieldsetBounds)); }
+	if ( DEBUG_ScheduleClassDialogSetWidth ) { console.log('eMeetingFieldset.offsetWidth='+eMeetingFieldset.offsetWidth); }
+	var CurrentClassMeetingsMaxWidth = 0; // Will hold the max width of the current class meetings.
+	var aCurrentClassMeetings = document.getElementsByClassName('divClassMeeting'); // Get the current class meeting containers.
+	for ( var mi=0; mi<aCurrentClassMeetings.length; mi++ ) { // Loop thru the current class meeting containers.
+		if ( DEBUG_ScheduleClassDialogSetWidth ) { console.log('aCurrentClassMeetings['+mi+'].id='+aCurrentClassMeetings[mi].id); }
+		if ( aCurrentClassMeetings[mi].offsetWidth > CurrentClassMeetingsMaxWidth ) {
+			CurrentClassMeetingsMaxWidth = aCurrentClassMeetings[mi].offsetWidth; // Keep the max width of the current class meetings.
+		}
+		ClassMeetingIndex++; // Add 1 to the class meeting index.
+	} // Loop thru the current class meeting containers.
+	if ( meetingCount > 2 ) {
+			meetingCount = 2;
+			console.log('meetingCount changed to 2');
+		}
+	var NeededFieldsetWidth;
+	if ( DEBUG_ScheduleClassDialogSetWidth ) {
+		NeededFieldsetWidth = ( CurrentClassMeetingsMaxWidth + 17 ) * meetingCount; // 15px left margin + 2* 1px border.
+		console.log('CurrentClassMeetingsMaxWidth='+CurrentClassMeetingsMaxWidth+' NeededFieldsetWidth='+NeededFieldsetWidth+' MeetingFieldsetBounds.width='+MeetingFieldsetBounds.width);
+	}
+	if ( NeededFieldsetWidth > MeetingFieldsetBounds.width ) { // Is there room for another class meeting on the right?
+		var NewMeetingFieldsetWidth = NeededFieldsetWidth + 21; // Add 15 for padding-right and a bogus 6 more.
+		console.log('NewMeetingFieldsetWidth='+NewMeetingFieldsetWidth);
+		eMeetingFieldset.style.width = NewMeetingFieldsetWidth + 'px';
+		MeetingFieldsetBounds = elementBounds(eMeetingFieldset,'schedule2.js 13'); 
+		if ( DEBUG_ScheduleClassDialogSetWidth ) { console.log('MeetingFieldsetBounds='+JSON.stringify(MeetingFieldsetBounds)); }
+		if ( DEBUG_ScheduleClassDialogSetWidth ) { console.log('eMeetingFieldset.offsetWidth='+eMeetingFieldset.offsetWidth); }
+	} // Is there room for another class meeting on the right?
+	// END Increase width of the dialogDiv to allow new class meeting to float.
+} // END ScheduleClassDialogSetWidth.
+
+// ScheduleClass_RemoveClassMeetingVerify(scmId, thisTask)
+// Verify removal of class meeting.
+function ScheduleClass_RemoveClassMeetingVerify(scmId, thisTask) {
+	var DEBUG_ScheduleClass_RemoveClassMeetingVerify = true;
+	if ( DEBUG_ScheduleClass_RemoveClassMeetingVerify ) { console.log('BEGIN ScheduleClass_RemoveClassMeetingVerify[scmId='+scmId+' thisTask='+thisTask+']'); }
+	if ( typeof thisTask === 'undefined' ) {
+		if ( DEBUG_ScheduleClass_RemoveClassMeetingVerify ) { console.log('Display div_RemoveClassMeetingVerify_'+scmId); }
+		document.getElementById('div_RemoveClassMeetingVerify_'+scmId).style.display = 'block';
+	} else if ( thisTask ) {
+		//if ( DEBUG_ScheduleClass_RemoveClassMeetingVerify ) { console.log('No clicked.'); }
+		document.getElementById('div_RemoveClassMeetingVerify_'+scmId).style.display = 'none';
+		
+	}
+} // END ScheduleClass_RemoveClassMeetingVerify.

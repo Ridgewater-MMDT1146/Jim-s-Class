@@ -1413,7 +1413,18 @@ function ScheduleClass_Open(scheduleId, departmentId, scheduleclassId) {
 	//console.warn('ScheduleClass_Open(scheduleId='+scheduleId+', departmentId='+departmentId+', scheduleclassId='+scheduleclassId+')');
 	var e_dialogDiv = document.getElementById('dialogDiv');
 	var dialogDivContents = e_dialogDiv.innerHTML;
-	if ( dialogDivContents.indexOf('Load OK') !== -1 ) {
+	if ( dialogDivContents.indexOf('Load OK') !== -1 ) { // Did the dialog contents load OK?
+		e_dialogDiv.style.display = 'block';
+		// Get ClassMeeting count.
+		var MeetingCount;
+		if ( typeof ClassMeeting[scheduleclassId] !== 'undefined' ) {
+			MeetingCount = ClassMeeting[scheduleclassId].length;
+		} else {
+			MeetingCount = 1;
+		}
+		console.log('ClassMeeting['+scheduleclassId+'].length='+MeetingCount);
+		ScheduleClassDialogSetWidth(MeetingCount); // Set dialog width.
+		// BEGIN Position the dialog.
 		var e_dialogContainer = document.getElementById('dialogContainer');
 		var docScroll = document.documentElement;
 		var docLeft = (window.pageXOffset || docScroll.scrollLeft) - (docScroll.clientLeft || 0);
@@ -1451,13 +1462,15 @@ function ScheduleClass_Open(scheduleId, departmentId, scheduleclassId) {
 			dialogContainerTop = 0;
 			e_dialogContainer.style.top = dialogContainerTop+'px';
 		}
-		e_dialogDiv.style.display = 'block';
-
+		//e_dialogDiv.style.display = 'block';
+		// END Position the dialog.
+		
 		// Get legend button and add drag event listener
 		var e_legends = e_dialogContainer.getElementsByTagName("legend");
 		e_legends[0].onmousedown = ScheduleClassDialogDrag;
 
-	} else {
+	} else { // Did the dialog contents load OK?
+		// No.
 		if ( ScheduleClassOpenCount < 5 ) {
 			ScheduleClassOpenCount++;
 			URI = '/Schedule/ScheduleClass/ScheduleClassForm.php?scheduleId='+scheduleId+'&departmentId='+departmentId;
@@ -1473,7 +1486,7 @@ function ScheduleClass_Open(scheduleId, departmentId, scheduleclassId) {
 		} else {
 			alert('Never got return from URI='+URI);
 		}
-	}
+	} // Did the dialog contents load OK?
 } // END ScheduleClass_Open.
 
 // ScheduleClass_OpenAdd(scheduleId, departmentId)
@@ -1486,7 +1499,7 @@ function ScheduleClass_OpenAdd(scheduleId, departmentId) {
 	e_dialogDiv.style.display = 'none';
 	e_dialogDiv.innerHTML = '';
 	ScheduleClassOpenCount = 0;
-	ScheduleClass_Open(scheduleId, departmentId);
+	ScheduleClass_Open(scheduleId, departmentId, 0);
 	document.addEventListener('scroll', ScheduleClass_ScrollHandler, false);
 	return false;
 } // END ScheduleClass_OpenAdd.
@@ -1498,6 +1511,7 @@ function ScheduleClass_OpenEdit(evt) {
 	evt = (evt) ? evt : window.event;
 	if ( DEBUG_ScheduleClass_OpenEdit ) { console.warn('ScheduleClass_OpenEdit[] this.id='+this.id+' evt.currentTarget.id='+evt.currentTarget.id+' mousedownFlag='+mousedownFlag); }
 	ClearTextSelection();
+	
 	evt.currentTarget.removeEventListener('mousemove', ScheduleClassDragCheckWait);
 	if ( mousedownFlag === 'mousemove' || evt.button !== 0 ) {
 		mousedownFlag = '';
@@ -1749,21 +1763,22 @@ function SetupInstructorOptions(e) {
 	if ( DEBUG_setInstructor ) { console.log('BEGIN SetupInstructorOptions[e.id='+e.id+']'); }
 	var eIdParts = e.id.split('_');
 	var scmId = eIdParts[1];
-	var campusIndex = parseInt(eIdParts[2]);
-	var instructorIndex = parseInt(eIdParts[3]);
+	//var campusIndex = parseInt(eIdParts[2]);
+	//var instructorIndex = parseInt(eIdParts[3]);
+	var instructorIndex = parseInt(eIdParts[2]);
 	if ( DEBUG_setInstructor ) { console.log('ScheduleInstructor.length='+ScheduleInstructor.length); }
 	var InstructorIdsSelected = []; // Array of instructorIds that have been selected to this point.
-	for ( c=0; c<ScheduleInstructor.length; c++ ) { // Loop thru campus indexes.
-		thisSelectId = 'selInstructor_'+scmId+'_'+campusIndex+'_'+c;
+	for ( c=0; c<ScheduleInstructor.length; c++ ) { // Loop thru instructor indexes.
+		thisSelectId = 'selInstructor_'+scmId+'_'+c;
 		if ( DEBUG_setInstructor ) { console.log('thisSelectId='+thisSelectId); }
 		thisSelect = document.getElementById(thisSelectId);
 		SelectedInstructorId = parseInt(thisSelect.options[thisSelect.selectedIndex].value);
 		if ( DEBUG_setInstructor ) { console.log('SelectedInstructorId='+SelectedInstructorId); }
 		if ( !isNaN(SelectedInstructorId) ) { InstructorIdsSelected.push(SelectedInstructorId); } // Add the instructorId to the array.
-	} // Loop thru campus indexes.
+	} // Loop thru instructor indexes.
 	if ( DEBUG_setInstructor ) { console.log('InstructorIdsSelected='+InstructorIdsSelected); }
-	for ( c=0; c<ScheduleInstructor.length; c++ ) { // Loop thru campus indexes.
-		thisSelectId = 'selInstructor_'+scmId+'_'+campusIndex+'_'+c;
+	for ( c=0; c<ScheduleInstructor.length; c++ ) { // Loop thru instructor indexes.
+		thisSelectId = 'selInstructor_'+scmId+'_'+c;
 		if ( DEBUG_setInstructor ) { console.log('thisSelectId='+thisSelectId); }
 		thisSelect = document.getElementById(thisSelectId);
 		console.log('thisSelect.selectedIndex='+thisSelect.selectedIndex);
@@ -1793,7 +1808,7 @@ function SetupInstructorOptions(e) {
 			//thisSelect.selectedIndex = SelectedInstructorId;
 			thisSelect.value = SelectedInstructorId;
 		}
-	} // Loop thru campus indexes.
+	} // Loop thru instructor indexes.
 } // END SetupInstructorOptions.
 
 // SetupNextCampusSelectOptions(scmId, campusIndex)
@@ -1894,10 +1909,10 @@ function ShowInstructorButton(e) {
 	//console.warn('ShowInstructorButton[instructorId='+instructorId+']');
 	var eIdParts = e.id.split('_');
 	var scmId = eIdParts[1];
-	var campusIndex = parseInt(eIdParts[2]);
-	var instructorIndex = parseInt(eIdParts[3]);
-	console.log('scmId='+scmId+' campusIndex='+campusIndex+' instructorIndex='+instructorIndex);
-	if ( document.getElementById('btnShowInstructor_'+scmId+'_'+campusIndex+'_'+instructorIndex) ) { document.getElementById('btnShowInstructor_'+scmId+'_'+campusIndex+'_'+instructorIndex).style.display = 'inline'; }
+	//var campusIndex = parseInt(eIdParts[2]);
+	var instructorIndex = parseInt(eIdParts[2]);
+	console.log('scmId='+scmId+' instructorIndex='+instructorIndex);
+	if ( document.getElementById('btnShowInstructor_'+scmId+'_'+instructorIndex) ) { document.getElementById('btnShowInstructor_'+scmId+'_'+instructorIndex).style.display = 'inline'; }
 } // END ShowInstructorButton.
 
 // ShowInstructorNext(e)
@@ -1906,14 +1921,15 @@ function ShowInstructorNext(e) {
 	console.log('BEGIN ShowInstructorNext[e.id='+e.id+']');
 	var eIdParts = e.id.split('_');
 	var scmId = eIdParts[1];
-	var campusIndex = parseInt(eIdParts[2]);
-	var instructorIndex = parseInt(eIdParts[3]);
+	//var campusIndex = parseInt(eIdParts[2]);
+	//var instructorIndex = parseInt(eIdParts[3]);
+	var instructorIndex = parseInt(eIdParts[2]);
 	var instructorIndexNext = instructorIndex + 1;
-	console.log('scmId='+scmId+' campusIndex='+campusIndex+' instructorIndex='+instructorIndex+' instructorIndexNext='+instructorIndexNext);
-	var btnShowInstructorId = 'btnShowInstructor_'+scmId+'_'+campusIndex+'_'+instructorIndex;
+	console.log('scmId='+scmId+' instructorIndex='+instructorIndex+' instructorIndexNext='+instructorIndexNext);
+	var btnShowInstructorId = 'btnShowInstructor_'+scmId+'_'+instructorIndex;
 	console.log('btnShowInstructorId='+btnShowInstructorId);
 	document.getElementById(btnShowInstructorId).style.display = 'none'; // Hide the current + button.
-	var divInstructorId = 'divInstructor_'+scmId+'_'+campusIndex+'_'+instructorIndexNext;
+	var divInstructorId = 'divInstructor_'+scmId+'_'+instructorIndexNext;
 	console.log('divInstructorId='+divInstructorId);
 	document.getElementById(divInstructorId).className = ''; // Remove hidden class.
 } // END ShowInstructorNext.

@@ -20,11 +20,11 @@ switch ($f['task']) {
   case 'Add class':
   case 'Update class':
 		require('Schedule/getSchedule.phpinc');
-		pageHeader($scheduleInfo['scheduleName'].' ('.$sessionInfo['YRTR'].')',$cssText,$jsText,'','','','','bodyId'); // ."Schedule '.$scheduleInfo['scheduleName'] Removed to shorten name.
+		pageHeader($scheduleInfo['scheduleName'].' ('.$sessionInfo['YRTR'].')','',$jsText,'','','','','bodyId'); // ."Schedule '.$scheduleInfo['scheduleName'] Removed to shorten name.
 		require('Schedule/ScheduleClass/ScheduleClassForm_Verify.phpinc');
 		#d_Var('$error',$error,'d+');
 		if ( !$error ) {
-			//require('Schedule/ScheduleClass/ScheduleClassForm_Process.phpinc');
+			require('Schedule/ScheduleClass/ScheduleClassForm_Process.phpinc');
 		}
 		require('Schedule/getScheduleClasses.phpinc');
 		require('Schedule/displaySchedule.phpinc');

@@ -2,8 +2,8 @@
 // Schedule/ScheduleClass/ScheduleClassForm_Process.phpinc
 // Process the scheduleclassmeeting form.
 
-//$DEBUG_ScheduleClassForm_Process = true;
-$DEBUG_ScheduleClassForm_Process_No = true;
+#$DEBUG_ScheduleClassForm_Process = true;
+#$DEBUG_ScheduleClassForm_Process_No = true;
 if ( !isset($DEBUG_ScheduleClassForm_Process_No) ) $DEBUG_ScheduleClassForm_Process_No = false;
 if ( $DEBUG_ScheduleClassForm_Process_No ) $DEBUG_ScheduleClassForm_Process = true;
 if ( !isset($DEBUG_ScheduleClassForm_Process) ) $DEBUG_ScheduleClassForm_Process = false;
@@ -71,95 +71,99 @@ if ( false || $f['uuid'] != $_SESSION['uuid'] ) {
     //displayMessage('Scheduleclass added.');
   }
 	
-	// scheduleclassmeeting table.
-	// INSERT scheduleclassmeetings.
-	$query = "
-		INSERT INTO `scheduleclassmeeting` (
-				scheduleclassId
-			, scheduleclassmeetingStartDate
-			, scheduleclassmeetingEndDate
-			, scheduleclassmeetingBeginTime
-			, scheduleclassmeetingEndTime
-			, scheduleclassmeetingOnCampus
-		) VALUES (
-				".$f['scheduleclassId']."
-			, '".query_safe($f['scheduleclassmeetingStartDate'])."'
-			, '".query_safe($f['scheduleclassmeetingEndDate'])."'
-			, '".query_safe($f['scheduleclassmeetingBeginTime'])."'
-			, '".query_safe($f['scheduleclassmeetingEndTime'])."'
-			, ".$f['scheduleclassmeetingOnCampus']."
-		)
-	";
-	d_Var('scheduleclassmeetingINSERT',$query,'q');
-	if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingINSERT = query_do($query);
-	@d_Var('$scheduleclassmeetingINSERT',$scheduleclassmeetingINSERT,'l');
-	$f['scheduleclassmeetingId'] = $GLOBALS['_QUERY']['insertId'];
-	@d_Var("\$f['scheduleclassmeetingId']",$f['scheduleclassmeetingId']);
-	//displayMessage('Scheduleclassmeeting '.$f['scheduleclassmeetingStartDate'].' added.');
-
-	// INSERT scheduleclassmeetinginstructors.
-	foreach ( $f['instructorIds'] as $instructorId ) {
+	foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop thru scheduleclassmeetingIds.
+		// scheduleclassmeeting table.
+		// INSERT scheduleclassmeetings. $scheduleclassmeetingStartDate[243] == '2017-03-13' 
 		$query = "
-			INSERT INTO `scheduleclassmeetinginstructor` (
-					scheduleclassmeetingId
-				, userId
+			INSERT INTO `scheduleclassmeeting` (
+					scheduleclassId
+				, scheduleclassmeetingStartDate
+				, scheduleclassmeetingEndDate
+				, scheduleclassmeetingBeginTime
+				, scheduleclassmeetingEndTime
+				, scheduleclassmeetingOnCampus
 			) VALUES (
-					".$f['scheduleclassmeetingId']."
-				, ".$instructorId."
+					".$f['scheduleclassId']."
+				, '".query_safe($scheduleclassmeetingStartDate[$scheduleclassmeetingId])."'
+				, '".query_safe($scheduleclassmeetingEndDate[$scheduleclassmeetingId])."'
+				, '".query_safe($scheduleclassmeetingBeginTime[$scheduleclassmeetingId])."'
+				, '".query_safe($scheduleclassmeetingEndTime[$scheduleclassmeetingId])."'
+				, ".$f['scheduleclassmeetingOnCampus'][$scheduleclassmeetingId]."
 			)
 		";
-		d_Var('scheduleclassmeetinginstructorINSERT',$query,'q');
-		if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetinginstructorINSERT = query_do($query);
-		@d_Var('$scheduleclassmeetinginstructorINSERT',$scheduleclassmeetinginstructorINSERT,'l');
-	}
-	
-	// INSERT scheduleclassmeetingrooms.
-	if ( count($f['roomIds']) ) {
-		$query = "
-			INSERT INTO `scheduleclassmeetingroom` (
-					scheduleclassmeetingId
-				, roomId
-			)
-			VALUES";
-		$prefix = ' ';
-		foreach ( $f['roomIds'] as $roomId ) {
-			$query .= "
-			".$prefix."(
-						".$f['scheduleclassmeetingId']."
-					, ".$roomId."
-				)";
-			$prefix = ',';
-		}
-		$query .= "
-		";
-		d_Var('scheduleclassmeetingroomINSERT',$query,'q');
-		if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingroomINSERT = query_do($query);
-		@d_Var('$scheduleclassmeetingroomINSERT',$scheduleclassmeetingroomINSERT,'l');
-	}
+		d_Var('scheduleclassmeetingINSERT',$query,'q');
+		if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingINSERT = query_do($query);
+		@d_Var('$scheduleclassmeetingINSERT',$scheduleclassmeetingINSERT,'l');
+		$f['scheduleclassmeetingId'] = $GLOBALS['_QUERY']['insertId'];
+		@d_Var("\$f['scheduleclassmeetingId']",$f['scheduleclassmeetingId']);
+		if ( $DEBUG_ScheduleClassForm_Process_No ) $f['scheduleclassmeetingId'] = 'DEBUG';
+		//displayMessage('Scheduleclassmeeting '.$f['scheduleclassmeetingStartDate'].' added.');
 
-	// INSERT scheduleclassmeetingweekdays.
-	if ( count($f['weekdayIds']) ) {
-		$query = "
-			INSERT INTO `scheduleclassmeetingweekday` (
-					scheduleclassmeetingId
-				, weekdayId
-			)
-			VALUES";
-		$prefix = ' ';
-		foreach ( $f['weekdayIds'] as $weekdayId ) {
-			$query .= "
-			".$prefix."(
+		// INSERT scheduleclassmeetinginstructors.
+		foreach ( $f['instructorIds'][$scheduleclassmeetingId] as $instructorId ) {
+			$query = "
+				INSERT INTO `scheduleclassmeetinginstructor` (
+						scheduleclassmeetingId
+					, userId
+				) VALUES (
 						".$f['scheduleclassmeetingId']."
-					, ".$weekdayId."
-				)";
-			$prefix = ',';
+					, ".$instructorId."
+				)
+			";
+			d_Var('scheduleclassmeetinginstructorINSERT',$query,'q');
+			if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetinginstructorINSERT = query_do($query);
+			@d_Var('$scheduleclassmeetinginstructorINSERT',$scheduleclassmeetinginstructorINSERT,'l');
 		}
-		$query .= "
-		";
-		d_Var('scheduleclassmeetingweekdayINSERT',$query,'q');
-		if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingweekdayINSERT = query_do($query);
-		@d_Var('$scheduleclassmeetingweekdayINSERT',$scheduleclassmeetingweekdayINSERT,'l');
-	}
+
+		// INSERT scheduleclassmeetingrooms.
+		if ( count($f['roomIds'][$scheduleclassmeetingId]) ) {
+			$query = "
+				INSERT INTO `scheduleclassmeetingroom` (
+						scheduleclassmeetingId
+					, roomId
+				)
+				VALUES";
+			$prefix = ' ';
+			foreach ( $f['roomIds'][$scheduleclassmeetingId] as $roomId ) {
+				$query .= "
+				".$prefix."(
+							".$f['scheduleclassmeetingId']."
+						, ".$roomId."
+					)";
+				$prefix = ',';
+			}
+			$query .= "
+			";
+			d_Var('scheduleclassmeetingroomINSERT',$query,'q');
+			if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingroomINSERT = query_do($query);
+			@d_Var('$scheduleclassmeetingroomINSERT',$scheduleclassmeetingroomINSERT,'l');
+		}
+
+		// INSERT scheduleclassmeetingweekdays.
+		if ( count($f['weekdayIds'][$scheduleclassmeetingId]) ) {
+			$query = "
+				INSERT INTO `scheduleclassmeetingweekday` (
+						scheduleclassmeetingId
+					, weekdayId
+				)
+				VALUES";
+			$prefix = ' ';
+			foreach ( $f['weekdayIds'][$scheduleclassmeetingId] as $weekdayId ) {
+				$query .= "
+				".$prefix."(
+							".$f['scheduleclassmeetingId']."
+						, ".$weekdayId."
+					)";
+				$prefix = ',';
+			}
+			$query .= "
+			";
+			d_Var('scheduleclassmeetingweekdayINSERT',$query,'q');
+			if ( !$DEBUG_ScheduleClassForm_Process_No ) $scheduleclassmeetingweekdayINSERT = query_do($query);
+			@d_Var('$scheduleclassmeetingweekdayINSERT',$scheduleclassmeetingweekdayINSERT,'l');
+		}
+	} // Loop thru scheduleclassmeetingIds.
+	
 
 	// Remember that the form was processed.
   $_SESSION['uuid'] = $f['uuid'];

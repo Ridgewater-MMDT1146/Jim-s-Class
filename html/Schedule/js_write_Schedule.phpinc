@@ -284,6 +284,7 @@ if ( $scheduleclassCount ) { // Are there schedule classes?
 			$jsText .= "
     ClassMeeting[".$scheduleclassInfo['scheduleclassId']."] ".$sp."   = [];";
 				query_seek($scheduleclassmeetingResult, 0);
+				$meetingIndex=0;
 				while ($meetingInfo = query_row($scheduleclassmeetingResult)) { // Loop thru class meetings.
 					// Get meeting rooms.
 					$query = "
@@ -350,7 +351,7 @@ if ( $scheduleclassCount ) { // Are there schedule classes?
 					$instructors = '';
 					$prefix = '';
 					if ( $scheduleclassmeetinginstructorCount ) { // Are there $instructors?
-						query_seek($scheduleclassmeetinginstructorResult, 0); $i=0;
+						query_seek($scheduleclassmeetinginstructorResult, 0);
 						while ($instructoryInfo = query_row($scheduleclassmeetinginstructorResult)) { // Loop thru  meeting days.
 							$instructors .= $prefix."'".$instructoryInfo['userId']."'";
 							$prefix = ',';
@@ -367,13 +368,14 @@ if ( $scheduleclassCount ) { // Are there schedule classes?
 					
 					$course = $ScheduleClassCourses[$scheduleclassInfo['scheduleclassId']];
 					$jsText .= "
-    ClassMeeting[".$scheduleclassInfo['scheduleclassId']."][".$i."] ".$sp."= { scmId:'".$meetingInfo['scheduleclassmeetingId']."', sDate:'".$meetingInfo['scheduleclassmeetingStartDate']."', eDate:'".$meetingInfo['scheduleclassmeetingEndDate']."', bTime:'".$meetingInfo['scheduleclassmeetingBeginTime']."', eTime:'".$meetingInfo['scheduleclassmeetingEndTime']."', onCampus:'".$meetingInfo['scheduleclassmeetingOnCampus']."', rooms:[";
+    ClassMeeting[".$scheduleclassInfo['scheduleclassId']."][".$meetingIndex."] ".$sp."= { scmId:'".$meetingInfo['scheduleclassmeetingId']."', sDate:'".$meetingInfo['scheduleclassmeetingStartDate']."', eDate:'".$meetingInfo['scheduleclassmeetingEndDate']."', bTime:'".$meetingInfo['scheduleclassmeetingBeginTime']."', eTime:'".$meetingInfo['scheduleclassmeetingEndTime']."', onCampus:'".$meetingInfo['scheduleclassmeetingOnCampus']."', rooms:[";
 					$prefix = '';
 					foreach ( $meetingInfo['rooms'] as $roomId => $room ) {
 						$jsText .= $prefix."'".$room['buildingCode'].$room['roomNumber']."'";
 						$prefix = ',';
 					}
 					$jsText .= "], days:[".$weekdays."], instructors:[".$instructors."], tdMinute:".$tdMinute." };";
+					$meetingIndex++;
 				} // Loop thru class meetings.
 		} // Are there class meetings?
 	} // Loop thru schedule classes.

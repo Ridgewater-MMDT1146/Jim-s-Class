@@ -1,6 +1,6 @@
 <?
 // Schedule/getSchedule.phpinc
-// include_purpose.
+// Get schedule info or create it if the schedule is new.
 
 #$DEBUG_getSchedule = true;
 if ( !isset($DEBUG_getSchedule) ) $DEBUG_getSchedule = false;

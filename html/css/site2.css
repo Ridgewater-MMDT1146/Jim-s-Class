@@ -1,0 +1,8 @@
+@charset "utf-8";
+/* site2.css For use by Jim Martinson */
+
+div.divClassMeeting { float: left; border: 1px solid #880000; margin-bottom: 15px; margin-left: 15px; padding: 5px; }
+label.weekday { display: inline-block; width: 20em; }
+
+.nobm { margin-bottom: 0; }
+.notm { margin-top: 0; }

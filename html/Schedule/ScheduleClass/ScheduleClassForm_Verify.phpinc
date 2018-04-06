@@ -4,30 +4,11 @@
 /** /
 ?><div style="border:2px solid blue; margin-left:30px;"><?
 /**/
-t_Begin(true); // Begin TRACKing ScheduleClassForm_Verify.phpinc.
+t_Begin(); // Begin TRACKing ScheduleClassForm_Verify.phpinc.
 #d_End();
 
 /** /
-$f['form'] is NULL
-$f['hiddenTest'] == ''
-$f['instructorId'] == 163
-$f['scheduleId'] == 2
-$f['scheduleclassEndDate'] == '2017-05-12'
-$f['scheduleclassId'] == ''
-$f['scheduleclassSection'] == 41
-$f['scheduleclassStartDate'] == '2017-01-09'
-$f['scheduleclassmeetingBeginTime'] == '13:30'
-$f['scheduleclassmeetingEndDate'] == '2017-05-12'
-$f['scheduleclassmeetingEndTime'] == '14:45'
-$f['scheduleclassmeetingId'] == ''
-$f['scheduleclassmeetingStartDate'] == '2017-01-09'
-$f['sessionId'] == 22
-$f['subtask'] is NULL
-$f['task'] == 'Schedule meetings'
-$f['uuid'] is NULL
-$f['weekdayIds'] =
-$f['weekdayIds'][0] == 3
-$f['weekdayIds'][1] == 5 
+
 /**/
 	
 d_V(false,'');
@@ -36,16 +17,17 @@ $error = array();
 
 // Verify courseId.
 f('courseId');
+#$f['courseId'] == 2382 
 #$f['courseId'] = '';
-$courseIdValid = is_valid('Class', $f['courseId'], 'courseId', 'course');
+$courseIdValid = is_valid('Class', $f['courseId'], 'courseId', 'course'); //is_valid($formLabel, $value, $fieldName, $tableName, $zeroIdOK, $database)
 d_Var('$courseIdValid',$courseIdValid);
 if ( $courseIdValid !== true ) {
 	d_Line('error','e');
 	$error['courseId'] = $courseIdValid;
 }
 
-//$f['departmentId'] == 15
 // Verify departmentId.
+#$f['departmentId'] == 15 
 f('departmentId');
 $departmentIdValid = is_valid('Class', $f['departmentId'], 'departmentId', 'department');
 d_Var('$departmentIdValid',$departmentIdValid);
@@ -54,16 +36,30 @@ if ( $departmentIdValid !== true ) {
 	$error['departmentId'] = $departmentIdValid;
 }
 
+// Verify scheduleId.
+f('scheduleId');
+#$f['scheduleId'] == 2 
+$scheduleIdValid = is_valid('', $f['scheduleId'], 'scheduleId', 'schedule');
+d_Var('scheduleIdValid',$scheduleIdValid);
+if ( $scheduleIdValid !== true ) {
+	d_Line('error','e');
+	$error['scheduleIdValid'] = 'error: invalid scheduleId ['.htmlSafe($f['scheduleId']).'].';
+}
+
 // Verify scheduleclassSection.
+#$f['scheduleclassSection'] == 41 
 f('scheduleclassSection');
+/** /
 $scheduleclassSectionValid = is_valid('Section', $f['scheduleclassSection'], 'scheduleclassSection', 'scheduleclass');
 d_Var('$scheduleclassSectionValid',$scheduleclassSectionValid);
 if ( $scheduleclassSectionValid !== true ) {
 	d_Line('error','e');
 	$error['scheduleclassSection'] = 'error';
 }
+/**/
 
 // Verify sessionId.
+#$f['sessionId'] == 22 
 f('sessionId');
 $sessionIdValid = is_valid('Class', $f['sessionId'], 'sessionId', 'session');
 d_Var('$sessionIdValid',$sessionIdValid);
@@ -72,13 +68,24 @@ if ( $sessionIdValid !== true ) {
 	$error['sessionId'] = 'error';
 }
 
+// Verify scheduleclassId.
+f('scheduleclassId');
+#$f['scheduleclassId'] == 21 
+$scheduleclassIdValid = is_valid('', $f['scheduleclassId'], 'scheduleclassId', 'scheduleclass', true); //is_valid($formLabel, $value, $fieldName, $tableName, $zeroIdOK, $database)
+d_Var('scheduleclassIdValid',$scheduleclassIdValid);
+if ( $scheduleclassIdValid !== true ) {
+	d_Line('error','e');
+	$error['scheduleclassIdValid'] = 'error: invalid scheduleclassId ['.htmlSafe($f['scheduleclassId']).'].';
+}
+
 // Verify scheduleclassEndDate.
+#$f['scheduleclassEndDate'] == '2017-05-12' 
 f('scheduleclassEndDate');
 $scheduleclassEndDate = is_date($f['scheduleclassEndDate']);
 d_Var('$scheduleclassEndDate',$scheduleclassEndDate);
 if ( !$scheduleclassEndDate ) {
 	d_Line('error','e');
-	$error['scheduleclassEndDate'] = 'error';
+	$error['scheduleclassEndDate'] = 'error: scheduleclassEndDate is not a valid date.';
 }
 
 // Verify scheduleclassStartDate.
@@ -87,11 +94,19 @@ $scheduleclassStartDate = is_date($f['scheduleclassStartDate']);
 d_Var('$scheduleclassStartDate',$scheduleclassStartDate);
 if ( !$scheduleclassStartDate ) {
 	d_Line('error','e');
-	$error['scheduleclassStartDate'] = 'error';
+	$error['scheduleclassStartDate'] = 'error: scheduleclassStartDate is not a valid date.';
 }
 
 // Verify scheduleclassOnline.
-f('scheduleclassOnline'); if ( !$f['scheduleclassOnline'] ) $f['scheduleclassOnline'] = 0;
+f('scheduleclassOnline');
+if ( $f['scheduleclassOnline'] ) {
+	if ( $f['scheduleclassOnline'] != 1 ) {
+		d_Line('error','e');
+		$error['scheduleclassOnline'] = 'error: scheduleclassOnline value sent is not valid. ['.htmlSafe($f['scheduleclassOnline']).'] sent.';
+	}
+} else {
+	$f['scheduleclassOnline'] = 0;
+}
 
 // These form variables have the scheduleclassmeetingId in the name.
 
@@ -109,6 +124,20 @@ d_V('scheduleclassmeetingIds');
 foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop thru scheduleclassmeetingIds.
 	
 	// Verify instructorId.
+	/** /
+$f['instructorId_243_0'] == 163 
+$f['instructorId_243_1'] == 21 
+$f['instructorId_243_2'] == 19 
+$f['instructorId_243_3'] == '' 
+$f['instructorId_243_4'] == '' 
+$f['instructorId_243_5'] == '' 
+$f['instructorId_add1_0'] == 18 
+$f['instructorId_add1_1'] == '' 
+$f['instructorId_add1_2'] == '' 
+$f['instructorId_add1_3'] == '' 
+$f['instructorId_add1_4'] == '' 
+$f['instructorId_add1_5'] == '' 
+	/**/
 	$instructorIndex = 0;
 	if ( !isset($f['instructorIds'][$scheduleclassmeetingId]) ) $f['instructorIds'][$scheduleclassmeetingId] = array();
 	while ( isset($f['instructorId_'.$scheduleclassmeetingId.'_'.$instructorIndex]) ) {
@@ -138,8 +167,10 @@ foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop t
 		$f['scheduleclassmeetingOnCampus'][$scheduleclassmeetingId] = 1;
 	}
 	unset($f['scheduleclassmeetingOffCampus_'.$scheduleclassmeetingId]);
-
+	
 	// Verify roomId.
+#$f['roomId_243_0'] == 33 
+#$f['roomId_243_1'] == '' 
 	if ( $f['scheduleclassmeetingOnCampus'][$scheduleclassmeetingId] ) {
 		$roomIndex = 0;
 		if ( !isset($f['roomIds'][$scheduleclassmeetingId]) ) $f['roomIds'][$scheduleclassmeetingId] = array();
@@ -164,6 +195,7 @@ foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop t
 	}
 
 	// Verify scheduleclassmeetingEndDate.
+#$f['scheduleclassmeetingEndDate_243'] == '2017-05-12' 
 	f('scheduleclassmeetingEndDate_'.$scheduleclassmeetingId);
 	$scheduleclassmeetingEndDate[$scheduleclassmeetingId] = is_date($f['scheduleclassmeetingEndDate_'.$scheduleclassmeetingId]);
 	d_Var('$scheduleclassmeetingEndDate[$scheduleclassmeetingId]',$scheduleclassmeetingEndDate[$scheduleclassmeetingId]);
@@ -175,6 +207,7 @@ foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop t
 	unset($f['scheduleclassmeetingEndDate_'.$scheduleclassmeetingId]);
 
 	// Verify scheduleclassmeetingStartDate.
+#$f['scheduleclassmeetingStartDate_243'] == '2017-03-13' 
 	f('scheduleclassmeetingStartDate_'.$scheduleclassmeetingId);
 	$scheduleclassmeetingStartDate[$scheduleclassmeetingId] = is_date($f['scheduleclassmeetingStartDate_'.$scheduleclassmeetingId]);
 	d_Var('$scheduleclassmeetingStartDate[$scheduleclassmeetingId]',$scheduleclassmeetingStartDate[$scheduleclassmeetingId]);
@@ -186,7 +219,9 @@ foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop t
 	unset($f['scheduleclassmeetingStartDate_'.$scheduleclassmeetingId]);
 
 	// Verify scheduleclassmeetingBeginTime.
+#$f['scheduleclassmeetingBeginTime_243'] == '9:30am' 
 	f('scheduleclassmeetingBeginTime_'.$scheduleclassmeetingId);
+	d_V('scheduleclassmeetingBeginTime_'.$scheduleclassmeetingId);
 	$scheduleclassmeetingBeginTime[$scheduleclassmeetingId] = valid_time($f['scheduleclassmeetingBeginTime_'.$scheduleclassmeetingId]);
 	d_Var('$scheduleclassmeetingBeginTime[$scheduleclassmeetingId]',$scheduleclassmeetingBeginTime[$scheduleclassmeetingId],'');
 	if ( !$scheduleclassmeetingBeginTime[$scheduleclassmeetingId] ) {
@@ -199,6 +234,7 @@ foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop t
 	unset($f['scheduleclassmeetingBeginTime_'.$scheduleclassmeetingId]);
 
 	// Verify scheduleclassmeetingEndTime.
+#$f['scheduleclassmeetingEndTime_243'] == '9:50am' 
 	f('scheduleclassmeetingEndTime_'.$scheduleclassmeetingId);
 	$scheduleclassmeetingEndTime[$scheduleclassmeetingId] = valid_time($f['scheduleclassmeetingEndTime_'.$scheduleclassmeetingId]);
 	d_Var('$scheduleclassmeetingEndTime[$scheduleclassmeetingId]',$scheduleclassmeetingEndTime[$scheduleclassmeetingId],'');
@@ -213,6 +249,8 @@ foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop t
 
 	// Verify weekdayId.
 	// $f['weekdayIds_229'][0]
+#$f['weekdayIds_243'] =
+#	$f['weekdayIds_243'][0] == 3 
 	f('weekdayIds_'.$scheduleclassmeetingId);
 	if ( is_array($f['weekdayIds_'.$scheduleclassmeetingId]) && count($f['weekdayIds_'.$scheduleclassmeetingId]) ) {
 		if ( !isset($f['weekdayIds'][$scheduleclassmeetingId]) ) $f['weekdayIds'][$scheduleclassmeetingId] = array();
@@ -233,9 +271,17 @@ foreach ( $f['scheduleclassmeetingIds'] as $scheduleclassmeetingId ) { // Loop t
 } // Loop thru scheduleclassmeetingIds.
 
 d_V();
+d_Var('$scheduleclassmeetingStartDate',$scheduleclassmeetingStartDate);
+d_Var('$scheduleclassmeetingEndDate',$scheduleclassmeetingEndDate);
+d_Var('$scheduleclassmeetingBeginTime',$scheduleclassmeetingBeginTime);
+d_Var('$scheduleclassmeetingEndTime',$scheduleclassmeetingEndTime);
 d_Var('$error',$error);
 
 /** /
+$scheduleclassmeetingEndDate = array();
+$scheduleclassmeetingStartDate = array();
+$scheduleclassmeetingBeginTime = array();
+$scheduleclassmeetingEndTime = array();
 ?></div><?
 /**/
 t_End(); // End TRACKing ScheduleClassForm_Verify.phpinc.

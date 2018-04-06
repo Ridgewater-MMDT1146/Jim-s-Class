@@ -54,10 +54,10 @@ function ttHide() {
 // ttLoad(e, prefix, postfix)
 // Load the text in the element and show the tooltip.
 function ttLoad(e, prefix, postfix) {
+	//console.log('ttLoad[e.id='+e.id+', prefix='+prefix+', postfix='+postfix+']');
 	if ( typeof e === 'string' ) { e = document.getElementById(e); }
 	if ( typeof prefix === 'undefined' ) { prefix = ''; }
 	if ( typeof postfix === 'undefined' ) { postfix = ''; }
-  //console.info('ttLoad[e.id='+e.id+']');
 	if ( e ) {
 		var ttText = prefix + e.innerHTML + postfix;//.replace(/</g,'&lt;');
 		//console.log('ttText='+ttText);
@@ -151,7 +151,7 @@ function ttShow(ttText, ttClass) { //, ttWidth) {
 			tt.className = ttClass;
 		}
     ttinnerHTML = ttText.replace(/&quot;/g,'"'); // Replace &quot; with ".
-		ttinnerHTML = ttinnerHTML.replace(/<\/table>\n<table/g,"</table><table"); // Remove newline betwen tables.
+		ttinnerHTML = ttinnerHTML.replace(/<\/table>\n<table/g,"</table><table"); // Remove newline between tables.
 		ttinnerHTML = ttinnerHTML.replace(/~~n/g,"\n"); // Replace ~~n with newline.
 		ttinnerHTML = ttinnerHTML.trim();
 		//console.warn('ttinnerHTML='+ttinnerHTML);

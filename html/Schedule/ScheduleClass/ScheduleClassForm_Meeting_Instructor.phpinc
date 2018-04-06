@@ -47,12 +47,12 @@ for ( $instructorIndex=0; $instructorIndex<count($instructorIds); $instructorInd
 	}
 	#d_Var('$instructorId',$instructorId,'d');
 ?>
-<div id="divInstructor<?=$_scmId?>_<?=$campusIndex?>_<?=$instructorIndex?>"<? if ( $instructorIndex > 0 ) { ?> class="<?=$instructorClass?>"<? } ?>>
+<div id="divInstructor<?=$_scmId?>_<?=$instructorIndex?>"<? if ( $instructorIndex > 0 ) { ?> class="<?=$instructorClass?>"<? } ?>>
 <?
 // Instructor
 ?>
-<label for="selInstructor<?=$_scmId?>_<?=$campusIndex?>_<?=$instructorIndex?>">Instructor:
-	<select name="instructorId<?=$_scmId?>_<?=$campusIndex?>_<?=$instructorIndex?>" id="selInstructor<?=$_scmId?>_<?=$campusIndex?>_<?=$instructorIndex?>" onChange="SetupInstructorOptions(this); ShowInstructorButton(this);">
+<label for="selInstructor<?=$_scmId?>_<?=$instructorIndex?>">Instructor:
+	<select name="instructorId<?=$_scmId?>_<?=$instructorIndex?>" id="selInstructor<?=$_scmId?>_<?=$instructorIndex?>" onChange="SetupInstructorOptions(this); ShowInstructorButton(this);">
    	<option></option>
 <?
 if ( $instructorCount ) {
@@ -90,10 +90,10 @@ while ($instructorInfo = query_row($instructorResult)) {
 			$btnShowInstructorClass = ' hidden';
 		}
 		$nextInstructorIndex = $instructorIndex+1;
-		button('+','Add another instructor', "ShowInstructorNext(this);", '', 'small'.$btnShowInstructorClass, 'btnShowInstructor'.$_scmId.'_'.$campusIndex.'_'.$instructorIndex);
+		button('+','Add another instructor', "ShowInstructorNext(this);", '', 'small'.$btnShowInstructorClass, 'btnShowInstructor'.$_scmId.'_'.$instructorIndex);
 	}
 ?>
-</div><!-- divInstructor<?=$_scmId?>_<?=$campusIndex?>_<?=$instructorIndex?> -->
+</div><!-- divInstructor<?=$_scmId?>_<?=$instructorIndex?> -->
 <?
 } // Loop thru $instructorIds.
 

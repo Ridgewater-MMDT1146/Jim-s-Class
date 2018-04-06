@@ -76,40 +76,33 @@ t_Begin(); // Begin TRACKing include_filename.phpinc.
 </div>
 <div id="divHighlightCredential">
 <h3>Highlight Credentials</h3>
+    <h4>Credential optional color</h4>
+    <p class="">Ferrari Red</p>
+    <p class="">Electric crimson</p>
+    <p class=""> Tomato</p>
+    <p class="">Orioles orange</p>
+    <p class="">Orange </p>
+    <p class="">Fulvous</p>
+    <p class="">Citrine</p>
+    <p class="">Maize</p>
+    <p class="">Yellow</p>
+    <p class="">Chartreuse</p>
+    <p class="">Lime</p>
+    <p class="">Kelly green</p>
+    <p class="">Celeste</p>
+    <p class="">Electric blue</p>
+    <p class=""> Cyan</p>
+    <p class="">Heliotrope</p>
+    <p class="">Bright ube</p>
+    <p class="">Brilliant lavender</p>
+    <p class="">Purple pizzazz</p>
+    <p class="">Magenta </p>
+    <p class="">Deep pink</p>
 </div>
 <div id="divHighlightInstructor">
 <h3>Highlight Instructors</h3>
 </div>
 <div id="divHighlightRoom">
-<h3>Highlight Rooms</h3>
-</div>
-    <div> <h4>Credential optional color</h4>
-        <p class="l_height">Ferrari Red</p>
-        <p class="">Electric crimson</p>
-        <p class=""> Tomato</p>
-        <p class="">Orioles orange</p>
-        <p class="">Orange </p>
-        <p class="">Fulvous</p>
-        <p class="">Citrine</p>
-        <p class="">Maize</p>
-        <p class="">Yellow</p>
-        <p class="">Chartreuse</p>
-        <p class="">Lime</p>
-        <p class="">Kelly green</p>
-        <p class="">Celeste</p>
-        <p class="">Electric blue</p>
-        <p class=""> Cyan</p>
-        <p class="">Heliotrope</p>
-        <p class="">Bright ube</p>
-        <p class="">Brilliant lavender</p>
-        <p class="">Purple pizzazz</p>
-        <p class="">Magenta </p>
-        <p class="">Deep pink</p>
-        <p class="">number 22</p>
-        <p class="">number 23</p>
-    </div>
-
-
 <?
 #}
 ?>

@@ -83,54 +83,59 @@ function DisplaySchedule_Highlight_Credentials() {
 			meetingIndex,
 			scId;
 	var credentialsInUse = [];
-	var credentialsInUseIndex = 0;
+	var credentialsInUseIndex = -1;
 	var cId;
 	var cYr;
+	var ScheduleClass_courseId;
+	var courseIndex;
+	var thisCourse;
 	for ( scId in ScheduleClass ) {if(ScheduleClass.hasOwnProperty(scId)) { // Loop thru classes.
-		var ScheduleClass_courseId = ScheduleClass[scId].courseId;
-		for ( var credentialIndex=0; credentialIndex<Course[ScheduleClass_courseId].credentials.length; credentialIndex++ ) {
-			var thisCredential = Course[ScheduleClass_courseId].credentials[credentialIndex];
-			if ( DEBUG_DisplaySchedule_Highlight_Credentials ) { console.log(Course[ScheduleClass_courseId].Dept+Course[ScheduleClass_courseId].Number+' thisCredential='+JSON.stringify(thisCredential)); }
-			cId = thisCredential.Id;
-			// Add cIds cId object. {cId:cId,cYr:[2,1]}
-			/** /
-			var thisCIdObject = 
-			credentialsInUse.push({cId:cId,cYr:[]})
-			cYr = thisCredential.Yr;
-			if ( typeof credentialsInUse[cId] === 'undefined' ) {
-				credentialsInUse[cId] = [];
-			}
-			if ( credentialsInUse[cId].indexOf(cYr) === -1 ) { // Is the Yr NOT in the array?
-				credentialsInUse.cIds.push(cYr);
-			}
-			/**/
-			
+		ScheduleClass_courseId = ScheduleClass[scId].courseId;
+		// Create credentialsInUse objects with { cId:cId, cYr:[] }.
+		for ( courseIndex=0; courseIndex<Course[ScheduleClass_courseId].credentials.length; courseIndex++ ) { // Loop thru Course.
+			thisCourse = Course[ScheduleClass_courseId].credentials[courseIndex];
+			if ( DEBUG_DisplaySchedule_Highlight_Credentials ) { console.log(Course[ScheduleClass_courseId].Dept+Course[ScheduleClass_courseId].Number+' thisCourse='+JSON.stringify(thisCourse)); }
+			cId = thisCourse.Id;
+			if ( HasAttributeWithValue(credentialsInUse,'cId',cId).length === 0 ) { // Is there NOT a credentialsInUse object with this cId?
+				if ( DEBUG_DisplaySchedule_Highlight_Credentials ) { console.log('cId ['+cId+'] not found.'); }
+				credentialsInUseIndex++;
+				credentialsInUse[credentialsInUseIndex] = { cId:cId, cYr:[] };
+			} else { // Is there NOT a credentialsInUse object with this cId?
+				if ( DEBUG_DisplaySchedule_Highlight_Credentials ) { console.log('cId ['+cId+'] found.'); }
+			}	 // Is there NOT a credentialsInUse object with this cId?		
 		}
 	}} // Loop thru classes.
-	var result;
-	credentialsInUse=[ {cId:1,cYr:[2,1]}, {cId:5,cYr:[1]}, {cId:5,cYr:[3]} ];
-	var valx = 1;
-	result = credentialsInUse.filter(function( credentialsInUse, val ) {return credentialsInUse.cId === val;});
-	console.log('cId 1 result='+JSON.stringify(result));
-	result = credentialsInUse.filter(function( credentialsInUse ) {return credentialsInUse.cId === 6;});
-	console.log('cId 6 result='+JSON.stringify(result));
-	result = credentialsInUse.filter(function( credentialsInUse ) {return credentialsInUse.cId === 5;});
-	console.log('cId 5 result='+JSON.stringify(result));
-	result = credentialsInUse.filter(function( credentialsInUse ) {return credentialsInUse.cYr.indexOf(1) !== -1;});
-	console.log('cYr 1 result='+JSON.stringify(result));
-	result = credentialsInUse.filter(function( credentialsInUse ) {return credentialsInUse.cYr.indexOf(2) !== -1;});
-	console.log('cYr 2 result='+JSON.stringify(result));
-	result = credentialsInUse.filter(function( credentialsInUse ) {return credentialsInUse.cYr.indexOf(4) !== -1;});
-	console.log('cYr 4 result='+JSON.stringify(result));
-	
+	if ( DEBUG_DisplaySchedule_Highlight_Credentials ) { console.log('credentialsInUse='+JSON.stringify(credentialsInUse)); }
+	// Populate cYr in credentialsInUse objects.
+	for ( scId in ScheduleClass ) {if(ScheduleClass.hasOwnProperty(scId)) { // Loop thru classes.
+		ScheduleClass_courseId = ScheduleClass[scId].courseId;
+		for ( courseIndex=0; courseIndex<Course[ScheduleClass_courseId].credentials.length; courseIndex++ ) { // Loop thru Course.
+			thisCourse = Course[ScheduleClass_courseId].credentials[courseIndex];
+			cId = thisCourse.Id;
+			cYr = thisCourse.Yr;
+			for ( credentialsInUseIndex=0; credentialsInUseIndex<credentialsInUse.length; credentialsInUseIndex++ ) {
+				var this_credentialsInUse = credentialsInUse[credentialsInUseIndex];
+				if ( this_credentialsInUse.cId === cId && this_credentialsInUse.cYr.indexOf(cYr) === -1 ) {
+					credentialsInUse[credentialsInUseIndex].cYr.push(cYr);
+				}
+			}
+		}
+	}} // Loop thru classes.
+	if ( DEBUG_DisplaySchedule_Highlight_Credentials ) { console.log('credentialsInUse='+JSON.stringify(credentialsInUse)); }
 
 	var credentialColor = {};
 	/*
+	
+	credentialsInUse=[{"cId":1,"cYr":[2,1]},{"cId":2,"cYr":[2,1]},{"cId":8,"cYr":[2,1]},{"cId":9,"cYr":[1,2]},{"cId":10,"cYr":[1,2]},{"cId":5,"cYr":[1]},{"cId":6,"cYr":[1]},{"cId":7,"cYr":[1]}]
+	
 	credentialColor = { [ {cId:1, cYr:[{Yr:1,color:'FF2800'},{Yr:2,color:'FF003F'}]}, {cId:2, cYr:[{Yr:1,color:'FF6347'},{Yr:2,color:'FB4F14'}]} ] }
 	credentialColor = { 1:[{Yr:1,color:'FF2800'},{Yr:2,color:'FF003F'}]}, {cId:2, cYr:[{Yr:1,color:'FF6347'},{Yr:2,color:'FB4F14'}]} ] }
 	credentialColor[cId][cYr].color
 	credentialColor.1.1
 	credentialColor.1.2
+	{"cId":1, "cYr":[2,1], color:'547463'} Colors a credential one color.
+	{"cId":1, "cYr":[2,1], color:['547463','123456']} Colors each credential year a different color.
+	
 	*/
 	if ( DEBUG_DisplaySchedule_Highlight_Credentials ) { console.log('credentialsInUse='+JSON.stringify(credentialsInUse)); }
 	for ( cId in credentialsInUse ) {if(credentialsInUse.hasOwnProperty(cId)) { // Loop thru credentialsInUse.
@@ -177,6 +182,22 @@ function DisplaySchedule_Highlight_Rooms() {
 	if ( DEBUG_DisplaySchedule_Highlight_Rooms ) { console.warn('DisplaySchedule_Highlight_Rooms[]'); }
 	DisplaySchedule_Highlight_None();
 } // END DisplaySchedule_Highlight_Rooms.
+
+// HasAttributeWithValue( theObject, theAttribute, theValue )
+// Search in an array of objects for an attribute with the value you are searching for.
+// Returns an array of objects that have an attribute with a value that matches.
+//    theObject = The array to search.
+// theAttribute = The attribute to search. Must be set before function call.
+//     theValue = the attribute value you are searching for.
+function HasAttributeWithValue(theArray,theAttribute,theValue) {
+	return theArray.filter(function(el) {
+		if ( typeof el[theAttribute] !== 'object' ) {
+			return el[theAttribute] === theValue;
+		} else {
+			return el[theAttribute].indexOf(theValue) !== -1 ;
+		}
+	});
+} // END HasAttributeWithValue.
 
 /** /
 									instructors = ClassMeeting[scId][meetingIndex].instructors;

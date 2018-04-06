@@ -267,26 +267,40 @@ if ( $f['scheduleclassId'] ) {
 	$scm[0]['scheduleclassmeetingBeginTime'] = '';
 	$scm[0]['scheduleclassmeetingEndDate'] = '';
 	$scm[0]['scheduleclassmeetingEndTime'] = '';
-	$scm[0]['scheduleclassmeetingOnCampus'] = 1 ;
+	$scm[0]['scheduleclassmeetingOnCampus'] = 1;
 	$scm[0]['scheduleclassmeetingStartDate'] = '';
 } // Is this a previously scheduled class?
-$scmIds = '';
+?>
+	<br>
+	<fieldset id="fldMeetings" class="ClassMeetings"><legend>Meetings: <? button('+','Add another meeting',"Meeting_Add(".$f['scheduleclassId'].");",'','small',''); ?></legend>
+<?
+#d_Var('$scm',$scm,'d+');
+$scmIdList = '';
 foreach ( $scm as $scmId => $thisMeeting ) {
+	$scmIdList = listAppend($scmIdList,$scmId);
+?>
+		<div class="divClassMeeting" id="id_classmeeting_<?=$scmId?>">
+<?
 	require('Schedule/ScheduleClass/ScheduleClassForm_Meeting.phpinc');
-}		
-				 
-				 
+?>
+		</div><!-- id_classmeeting_<?=$scmId?> -->
+<?
+}
+#d_Var('$scmIdList',$scmIdList,'d');
+?>
+	</fieldset>
+<?
 ?>
 <input type="hidden" name="scheduleId" value="<?=$_SESSION['user']['scheduleId']?>">
 <!--<input type="hidden" name="scheduleclassmeetingId" value="<?=$f['scheduleclassmeetingId']?>">-->
-<input type="hidden" name="scheduleclassmeetingIds" id="hid_scheduleclassmeetingIds" value="<?=$scmId?>">
+<input type="hidden" name="scheduleclassmeetingIds" id="hid_scheduleclassmeetingIds" value="<?=$scmIdList?>">
 
 <br>
 <?
 	if ( $f['scheduleclassId'] ) {
 		button('Update class','Update the class on the schedule'," SaveAutoscrollPosition(); scmFormDTVerify(); formSubmit(this,'Update class');",'','');
 		button('Remove class','Remove the class from the schedule',"ScheduleClass_RemoveClassVerify();",'','');
-		button('Tyson','See scmIds from hid_scheduleclassmeetingIds',"alert('hid_scheduleclassmeetingIds='+document.getElementById('hid_scheduleclassmeetingIds').value);",'','');
+		#button('Tyson','See scmIds from hid_scheduleclassmeetingIds',"alert('hid_scheduleclassmeetingIds='+document.getElementById('hid_scheduleclassmeetingIds').value);",'','');
 ?>
 <div class="p" id="div_RemoveClassVerify">
 	Are you sure you want to remove <b><?=$courseInfo['departmentCode']?><?=$courseInfo['courseNumber']?> <?=$courseInfo['courseTitle']?> - <?=$f['scheduleclassSection']?></b> from the schedule?<div class="center">

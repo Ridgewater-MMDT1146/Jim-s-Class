@@ -53,7 +53,7 @@ for ( $campusIndex=0; $campusIndex<count($campusIds); $campusIndex++ ) { // Loop
 // Campus. Removed SetupNextCampusSelectOptions(< ?=$scmId? >,< ?=$campusIndex? >); from select OnChange.
 ?>
 <label for="selCampus<?=$_scmId?>_<?=$campusIndex?>">Campus:
-	<select name="campusId<?=$_scmId?>_<?=$campusIndex?>" id="selCampus<?=$_scmId?>_<?=$campusIndex?>" onChange="SetupBuildingSelectOptions(this);">
+	<select id="selCampus<?=$_scmId?>_<?=$campusIndex?>" onChange="SetupBuildingSelectOptions(this);">
   	<option></option>
 <?
 query_seek($campusResult, 0);
@@ -94,7 +94,7 @@ if ( $f['campusId'] ) {
 }
 ?>
 <label class="<?=$buildingClass?>" id="labBuilding<?=$_scmId?>_<?=$campusIndex?>" for="selBuilding<?=$_scmId?>_<?=$campusIndex?>">Building:
-	<select name="buildingId<?=$_scmId?>_<?=$campusIndex?>" id="selBuilding<?=$_scmId?>_<?=$campusIndex?>" onChange="SetupRoomSelectOptions(this);">
+	<select id="selBuilding<?=$_scmId?>_<?=$campusIndex?>" onChange="SetupRoomSelectOptions(this);">
 <?
 if ( $buildingCount ) {
 	// Load building options.
